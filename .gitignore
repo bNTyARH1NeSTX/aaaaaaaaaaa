@@ -1,0 +1,46 @@
+# Python-related files
+*__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env
+venv/*
+ENV/
+dist/
+build/
+*.egg-info/
+.eggs/
+*.egg
+*.pytest_cache/
+
+core/tests/output
+core/tests/assets
+
+# Virtual environment
+.venv/
+.vscode/
+
+*.DS_Store
+
+storage/*
+logs/*
+samples/*
+aggregated_code.txt
+
+offload/*
+test.pdf
+
+experiments/*
+ee/ui-component/package-lock.json/*
+ee/ui-component/node-modules/*
+ee/ui-component/.next
+
+# ee/ee.toml
+
+
+ui-component/notebook-storage/notebooks.json
+ee/ui-component/package-lock.json
+ee/ee_tokens/gdrive_token_dev_user.pickle
+core/tests/integration/test_data/version_test_1.txt

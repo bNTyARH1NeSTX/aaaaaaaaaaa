@@ -1,0 +1,92 @@
+import api from './morphikApi';
+
+export interface ExtractMetadataParams {
+  file: File;
+  extractionOptions?: {
+    extractEntities?: boolean;
+    extractTables?: boolean;
+    extractText?: boolean;
+    extractImages?: boolean;
+    language?: string;
+  };
+}
+
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  page?: number;
+}
+
+export interface Entity {
+  id: string;
+  text: string;
+  type: string;
+  confidence: number;
+  boundingBox?: BoundingBox;
+  page?: number;
+  metadata?: Record<string, any>;
+}
+
+export interface Table {
+  id: string;
+  data: string[][];
+  headers?: string[];
+  boundingBox?: BoundingBox;
+  page?: number;
+}
+
+export interface Image {
+  id: string;
+  url: string;
+  boundingBox?: BoundingBox;
+  page?: number;
+  caption?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface MetadataExtractionResult {
+  documentId: string;
+  mimeType: string;
+  pageCount?: number;
+  entities: Entity[];
+  tables: Table[];
+  images: Image[];
+  rawText?: string;
+  rawMetadata: Record<string, any>;
+}
+
+export interface ExtractCapabilities {
+  supportedFileTypes: {
+    mimeType: string;
+    extension: string;
+    description: string;
+  }[];
+  extractionOptions: {
+    entities: boolean;
+    tables: boolean;
+    images: boolean;
+    text: boolean;
+  };
+  supportedLanguages: string[];
+  maxFileSize: number;
+}
+
+export const metadataExtractorApi = {
+  // Extract metadata from a document
+  extractMetadata: async (params: ExtractMetadataParams): Promise<MetadataExtractionResult> => {
+    return api.uploadFile<{ result: MetadataExtractionResult }>(
+      '/metadata/extract', 
+      params.file, 
+      { extractionOptions: params.extractionOptions }
+    ).then(data => data.result);
+  },
+
+  // Get extraction capabilities and supported file types
+  getCapabilities: async (): Promise<ExtractCapabilities> => {
+    return api.get<ExtractCapabilities>('/metadata/capabilities');
+  }
+};
+
+export default metadataExtractorApi;

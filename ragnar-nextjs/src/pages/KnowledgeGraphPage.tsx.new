@@ -1,0 +1,399 @@
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  Select,
+  Button,
+  VStack,
+  HStack,
+  SimpleGrid,
+  FormControl,
+  FormLabel,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Spinner,
+  useColorModeValue,
+  Flex,
+  Tag,
+  Input,
+  IconButton,
+  Tooltip,
+  useToast,
+  Badge,
+  CloseButton,
+} from '@chakra-ui/react';
+import { FaSearch, FaPlus, FaTimes, FaDownload, FaInfoCircle, FaNetworkWired, FaDatabase, FaSave } from 'react-icons/fa';
+
+// Mock data representing the knowledge graph
+const mockGraphData = {
+  nodes: [
+    { id: 'invoice', label: 'Invoice', type: 'document', properties: { module: 'Finance' } },
+    { id: 'customer', label: 'Customer', type: 'entity', properties: { module: 'CRM' } },
+    { id: 'product', label: 'Product', type: 'entity', properties: { module: 'Inventory' } },
+    { id: 'payment', label: 'Payment', type: 'process', properties: { module: 'Finance' } },
+    { id: 'report', label: 'Financial Report', type: 'document', properties: { module: 'Finance' } },
+    { id: 'approval', label: 'Approval Process', type: 'process', properties: { module: 'Workflow' } },
+    { id: 'user', label: 'User', type: 'entity', properties: { module: 'System' } },
+    { id: 'shipment', label: 'Shipment', type: 'process', properties: { module: 'Logistics' } },
+  ],
+  edges: [
+    { source: 'customer', target: 'invoice', label: 'has' },
+    { source: 'invoice', target: 'product', label: 'contains' },
+    { source: 'invoice', target: 'payment', label: 'requires' },
+    { source: 'payment', target: 'customer', label: 'made by' },
+    { source: 'product', target: 'shipment', label: 'requires' },
+    { source: 'shipment', target: 'customer', label: 'delivered to' },
+    { source: 'invoice', target: 'approval', label: 'goes through' },
+    { source: 'approval', target: 'user', label: 'managed by' },
+    { source: 'invoice', target: 'report', label: 'included in' },
+  ]
+};
+
+// Mock domains for domain selection
+const mockDomains = [
+  { id: 'finance', name: 'Finance' },
+  { id: 'inventory', name: 'Inventory Management' },
+  { id: 'crm', name: 'Customer Relations' },
+  { id: 'hr', name: 'Human Resources' },
+  { id: 'logistics', name: 'Logistics & Shipping' },
+];
+
+export default function KnowledgeGraphPage() {
+  const [selectedDomain, setSelectedDomain] = useState('finance');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [filters, setFilters] = useState<string[]>([]);
+  const [newFilter, setNewFilter] = useState('');
+  const graphRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
+  
+  // In a real application, this would be an actual D3 or similar graph rendering
+  useEffect(() => {
+    if (graphRef.current) {
+      // Here you would initialize and render the graph using a library like D3, Sigma, etc.
+      setIsLoading(true);
+      
+      // Simulate loading delay
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        // Render graph here in real implementation
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [selectedDomain, filters]);
+  
+  const handleAddFilter = () => {
+    if (newFilter && !filters.includes(newFilter)) {
+      setFilters([...filters, newFilter]);
+      setNewFilter('');
+    }
+  };
+  
+  const handleRemoveFilter = (filter: string) => {
+    setFilters(filters.filter(f => f !== filter));
+  };
+  
+  const handleToggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+    // In a real implementation, you would use the Fullscreen API here
+  };
+  
+  const handleExportGraph = () => {
+    // In a real implementation, this would export the graph as an image or JSON
+    toast({
+      title: "Graph exported",
+      description: "Knowledge graph has been exported to JSON",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+  
+  return (
+    <Container maxW="container.xl" py={8}>
+      <VStack spacing={8} align="stretch">
+        <Box textAlign="center">
+          <Heading as="h1" size="xl" mb={2}>
+            BNext ERP Knowledge Graph
+          </Heading>
+          <Text color="gray.600">
+            Explore and analyze relationships between business entities and processes
+          </Text>
+        </Box>
+        
+        {/* Graph Controls */}
+        <Box
+          bg={useColorModeValue('white', 'gray.800')}
+          boxShadow="base"
+          borderRadius="lg"
+          p={6}
+        >
+          <VStack spacing={4} align="stretch">
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+              <FormControl>
+                <FormLabel>Domain</FormLabel>
+                <Select 
+                  value={selectedDomain}
+                  onChange={(e) => setSelectedDomain(e.target.value)}
+                >
+                  {mockDomains.map(domain => (
+                    <option key={domain.id} value={domain.id}>{domain.name}</option>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <FormControl>
+                <FormLabel>Filter By Property</FormLabel>
+                <HStack>
+                  <Input 
+                    placeholder="E.g., module=Finance"
+                    value={newFilter}
+                    onChange={(e) => setNewFilter(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddFilter();
+                    }}
+                  />
+                  <IconButton
+                    aria-label="Add filter"
+                    icon={<FaPlus />}
+                    onClick={handleAddFilter}
+                  />
+                </HStack>
+              </FormControl>
+            </SimpleGrid>
+            
+            {filters.length > 0 && (
+              <Box>
+                <Text fontSize="sm" mb={2}>Active Filters:</Text>
+                <HStack spacing={2} wrap="wrap">
+                  {filters.map(filter => (
+                    <Tag key={filter} colorScheme="brand" size="md">
+                      <Box as="span" mr={2}>{filter}</Box>
+                      <CloseButton size="sm" onClick={() => handleRemoveFilter(filter)} />
+                    </Tag>
+                  ))}
+                </HStack>
+              </Box>
+            )}
+            
+            <HStack justifyContent="flex-end" spacing={2}>
+              <Tooltip label="Export graph as JSON">
+                <IconButton
+                  aria-label="Export graph"
+                  icon={<FaDownload />}
+                  onClick={handleExportGraph}
+                  size="sm"
+                />
+              </Tooltip>
+              <Tooltip label={isFullscreen ? "Exit fullscreen" : "View fullscreen"}>
+                <IconButton
+                  aria-label="Toggle fullscreen"
+                  icon={isFullscreen ? <FaTimes /> : <FaSearch />}
+                  onClick={handleToggleFullscreen}
+                  size="sm"
+                />
+              </Tooltip>
+            </HStack>
+          </VStack>
+        </Box>
+        
+        {/* Graph Visualization */}
+        <Tabs variant="enclosed">
+          <TabList>
+            <Tab>Graph View</Tab>
+            <Tab>Table View</Tab>
+            <Tab>Insights</Tab>
+          </TabList>
+          
+          <TabPanels>
+            <TabPanel p={0} pt={4}>
+              <Box
+                ref={graphRef}
+                bg={useColorModeValue('white', 'gray.800')}
+                height="600px"
+                borderRadius="md"
+                boxShadow="base"
+                position="relative"
+                overflow="hidden"
+              >
+                {isLoading ? (
+                  <Flex height="100%" alignItems="center" justifyContent="center">
+                    <Spinner size="xl" color="brand.500" thickness="4px" />
+                  </Flex>
+                ) : (
+                  <Box p={4}>
+                    {/* This is a placeholder for the actual graph visualization */}
+                    <Flex height="100%" direction="column" align="center" justify="center">
+                      <Box 
+                        as="div" 
+                        maxW="100%" 
+                        overflow="auto" 
+                        p={4} 
+                        borderWidth="1px" 
+                        borderRadius="lg"
+                        bg={useColorModeValue('gray.50', 'gray.700')}
+                      >
+                        <Text fontWeight="bold" mb={4} textAlign="center">
+                          Knowledge Graph: {mockDomains.find(d => d.id === selectedDomain)?.name}
+                        </Text>
+                        
+                        {/* Mock Graph Visualization */}
+                        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+                          {mockGraphData.nodes.map(node => (
+                            <Box 
+                              key={node.id}
+                              bg={useColorModeValue('white', 'gray.900')}
+                              p={3}
+                              borderRadius="md"
+                              boxShadow="sm"
+                              borderLeft="4px solid"
+                              borderColor={
+                                node.type === 'document' ? 'blue.400' :
+                                node.type === 'entity' ? 'green.400' : 'purple.400'
+                              }
+                            >
+                              <Flex justify="space-between" align="center">
+                                <Heading size="sm">{node.label}</Heading>
+                                <Badge colorScheme={
+                                  node.type === 'document' ? 'blue' :
+                                  node.type === 'entity' ? 'green' : 'purple'
+                                }>
+                                  {node.type}
+                                </Badge>
+                              </Flex>
+                              <Text fontSize="xs" mt={1} color="gray.500">
+                                ID: {node.id}
+                              </Text>
+                              <Text fontSize="xs" mt={1}>
+                                Module: {node.properties.module}
+                              </Text>
+                            </Box>
+                          ))}
+                        </SimpleGrid>
+                        
+                        <Box mt={6}>
+                          <Text fontWeight="bold" mb={2}>Relationships:</Text>
+                          <VStack spacing={2} align="stretch">
+                            {mockGraphData.edges.map((edge, idx) => (
+                              <HStack key={idx} spacing={2} fontSize="sm">
+                                <Badge>{edge.source}</Badge>
+                                <Text fontWeight="bold">—{edge.label}→</Text>
+                                <Badge>{edge.target}</Badge>
+                              </HStack>
+                            ))}
+                          </VStack>
+                        </Box>
+                      </Box>
+                    </Flex>
+                  </Box>
+                )}
+              </Box>
+            </TabPanel>
+            
+            <TabPanel p={0} pt={4}>
+              <Box 
+                bg={useColorModeValue('white', 'gray.800')}
+                borderRadius="md"
+                boxShadow="base"
+                overflow="hidden"
+              >
+                {/* Table View */}
+                <Box overflowX="auto">
+                  <Box as="table" width="100%" my={2}>
+                    <Box as="thead" bg={useColorModeValue('gray.50', 'gray.700')}>
+                      <Box as="tr">
+                        <Box as="th" px={4} py={2} textAlign="left">Node ID</Box>
+                        <Box as="th" px={4} py={2} textAlign="left">Label</Box>
+                        <Box as="th" px={4} py={2} textAlign="left">Type</Box>
+                        <Box as="th" px={4} py={2} textAlign="left">Module</Box>
+                        <Box as="th" px={4} py={2} textAlign="left">Connections</Box>
+                      </Box>
+                    </Box>
+                    <Box as="tbody">
+                      {mockGraphData.nodes.map(node => (
+                        <Box as="tr" key={node.id} borderTopWidth="1px">
+                          <Box as="td" px={4} py={2}>{node.id}</Box>
+                          <Box as="td" px={4} py={2}>{node.label}</Box>
+                          <Box as="td" px={4} py={2}>
+                            <Badge colorScheme={
+                              node.type === 'document' ? 'blue' :
+                              node.type === 'entity' ? 'green' : 'purple'
+                            }>
+                              {node.type}
+                            </Badge>
+                          </Box>
+                          <Box as="td" px={4} py={2}>{node.properties.module}</Box>
+                          <Box as="td" px={4} py={2}>
+                            {mockGraphData.edges.filter(e => 
+                              e.source === node.id || e.target === node.id
+                            ).length}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </TabPanel>
+            
+            <TabPanel p={0} pt={4}>
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <Box 
+                  bg={useColorModeValue('white', 'gray.800')}
+                  borderRadius="md"
+                  boxShadow="base"
+                  p={4}
+                >
+                  <Heading size="md" mb={4}>Domain Structure</Heading>
+                  <VStack align="stretch" spacing={3}>
+                    <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
+                      <Heading size="sm" mb={2}>Centrality Analysis</Heading>
+                      <Text fontSize="sm">
+                        The <strong>Invoice</strong> node is the most central element in the Finance domain with 4 connections.
+                      </Text>
+                    </Box>
+                    <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
+                      <Heading size="sm" mb={2}>Community Detection</Heading>
+                      <Text fontSize="sm">
+                        Two distinct communities detected: Finance-related (5 nodes) and Logistics-related (3 nodes).
+                      </Text>
+                    </Box>
+                  </VStack>
+                </Box>
+                
+                <Box 
+                  bg={useColorModeValue('white', 'gray.800')}
+                  borderRadius="md"
+                  boxShadow="base"
+                  p={4}
+                >
+                  <Heading size="md" mb={4}>Key Insights</Heading>
+                  <VStack align="stretch" spacing={3}>
+                    <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
+                      <Heading size="sm" mb={2}>Process Bottlenecks</Heading>
+                      <Text fontSize="sm">
+                        The <strong>Approval Process</strong> is a potential bottleneck as it's required for invoice processing.
+                      </Text>
+                    </Box>
+                    <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
+                      <Heading size="sm" mb={2}>Integration Opportunities</Heading>
+                      <Text fontSize="sm">
+                        Customer entity is shared between CRM and Finance domains, suggesting opportunity for tighter module integration.
+                      </Text>
+                    </Box>
+                  </VStack>
+                </Box>
+              </SimpleGrid>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
+      </VStack>
+    </Container>
+  );
+}

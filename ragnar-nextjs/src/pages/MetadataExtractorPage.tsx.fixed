@@ -1,0 +1,789 @@
+
+interface ExtractedMetadata {
+  type: string;
+  confidence: number;
+  data: any;
+}
+
+interface ProcessedDocument {
+  id: string;
+  name: string;
+  size: string;
+  type: string;
+  status: 'processing' | 'completed' | 'failed';
+  progress: number;
+  preview?: string;
+  metadata: ExtractedMetadata[];
+}
+
+// Mock data for demonstration
+const mockDocuments: ProcessedDocument[] = [
+  {
+    id: '1',
+    name: 'invoice_sample.pdf',
+    size: '2.4 MB',
+    type: 'pdf',
+    status: 'completed',
+    progress: 100,
+    preview: 'https://via.placeholder.com/400x500?text=Invoice+PDF',
+    metadata: [
+      {
+        type: 'form_fields',
+        confidence: 0.94,
+        data: {
+          invoice_number: 'INV-2023-1234',
+          date: '2023-05-15',
+          customer: 'Acme Corp',
+          total_amount: '$1,250.00',
+          payment_terms: 'Net 30',
+          status: 'Pending'
+        }
+      },
+      {
+        type: 'tables',
+        confidence: 0.91,
+        data: [
+          ['Item', 'Quantity', 'Price', 'Total'],
+          ['Widget A', '5', '$50.00', '$250.00'],
+          ['Service B', '10', '$75.00', '$750.00'],
+          ['Product C', '1', '$250.00', '$250.00']
+        ]
+      },
+      {
+        type: 'entities',
+        confidence: 0.87,
+        data: [
+          { type: 'PERSON', text: 'John Smith', position: { x: 120, y: 450, width: 80, height: 20 } },
+          { type: 'ORGANIZATION', text: 'Acme Corp', position: { x: 120, y: 150, width: 90, height: 20 } },
+          { type: 'DATE', text: '2023-05-15', position: { x: 350, y: 120, width: 100, height: 20 } }
+        ]
+      }
+    ]
+  },
+  {
+    id: '2',
+    name: 'product_catalog.jpg',
+    size: '1.8 MB',
+    type: 'image',
+    status: 'completed',
+    progress: 100,
+    preview: 'https://via.placeholder.com/400x300?text=Product+Catalog',
+    metadata: [
+      {
+        type: 'object_detection',
+        confidence: 0.89,
+        data: [
+          { label: 'Product A', box: { x: 50, y: 80, width: 200, height: 150 }, confidence: 0.92 },
+          { label: 'Product B', box: { x: 300, y: 80, width: 180, height: 150 }, confidence: 0.88 },
+          { label: 'Price Tag', box: { x: 80, y: 240, width: 100, height: 30 }, confidence: 0.95 }
+        ]
+      },
+      {
+        type: 'text_detection',
+        confidence: 0.93,
+        data: [
+          { text: 'Premium Widget', position: { x: 60, y: 60, width: 180, height: 30 } },
+          { text: '$129.99', position: { x: 80, y: 240, width: 100, height: 30 } },
+          { text: 'Deluxe Model', position: { x: 310, y: 60, width: 160, height: 30 } },
+          { text: '$149.99', position: { x: 330, y: 240, width: 100, height: 30 } }
+        ]
+      }
+    ]
+  },
+  {
+    id: '3',
+    name: 'shipping_label.png',
+    size: '0.9 MB',
+    type: 'image',
+    status: 'completed',
+    progress: 100,
+    preview: 'https://via.placeholder.com/400x300?text=Shipping+Label',
+    metadata: [
+      {
+        type: 'barcode',
+        confidence: 0.99,
+        data: {
+          format: 'CODE_128',
+          value: '123456789012',
+          position: { x: 150, y: 220, width: 200, height: 50 }
+        }
+      },
+      {
+        type: 'text_detection',
+        confidence: 0.96,
+        data: [
+          { text: 'SHIP TO:', position: { x: 50, y: 50, width: 100, height: 20 } },
+          { text: 'John Doe', position: { x: 50, y: 80, width: 150, height: 20 } },
+          { text: '123 Main St', position: { x: 50, y: 110, width: 180, height: 20 } },
+          { text: 'Anytown, CA 12345', position: { x: 50, y: 140, width: 200, height: 20 } }
+        ]
+      }
+    ]
+  }
+];
+
+export default function MetadataExtractorPage() {
+  const [documents, setDocuments] = useState<ProcessedDocument[]>(mockDocuments);
+  const [selectedDocument, setSelectedDocument] = useState<ProcessedDocument | null>(mockDocuments[0]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedTab, setSelectedTab] = useState(0);
+  const toast = useToast();
+  
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setIsProcessing(true);
+      
+      // Simulate processing delay
+      setTimeout(() => {
+        const file = event.target.files![0];
+        const newDoc: ProcessedDocument = {
+          id: (documents.length + 1).toString(),
+          name: file.name,
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          type: file.type.split('/')[0],
+          status: 'processing',
+          progress: 0,
+          metadata: []
+        };
+        
+        setDocuments([...documents, newDoc]);
+        
+        // Simulate progress updates
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 10;
+          if (progress <= 100) {
+            setDocuments(prevDocs => 
+              prevDocs.map(doc => 
+                doc.id === newDoc.id 
+                  ? { ...doc, progress } 
+                  : doc
+              )
+            );
+          } else {
+            clearInterval(interval);
+            setIsProcessing(false);
+            
+            // Add placeholder preview and metadata
+            setDocuments(prevDocs => 
+              prevDocs.map(doc => 
+                doc.id === newDoc.id 
+                  ? { 
+                      ...doc, 
+                      status: 'completed', 
+                      preview: `https://via.placeholder.com/400x300?text=${encodeURIComponent(file.name)}`,
+                      metadata: [
+                        {
+                          type: 'text_detection',
+                          confidence: 0.87,
+                          data: [
+                            { text: 'Sample Text 1', position: { x: 50, y: 50, width: 150, height: 20 } },
+                            { text: 'Sample Text 2', position: { x: 50, y: 80, width: 180, height: 20 } }
+                          ]
+                        }
+                      ]
+                    } 
+                  : doc
+              )
+            );
+            
+            toast({
+              title: 'Processing Complete',
+              description: `Metadata extracted from ${file.name}`,
+              status: 'success',
+              duration: 3000,
+              isClosable: true,
+            });
+          }
+        }, 300);
+      }, 1000);
+    }
+  };
+  
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(docs => docs.filter(doc => doc.id !== id));
+    if (selectedDocument && selectedDocument.id === id) {
+      setSelectedDocument(documents.length > 1 ? documents[0] : null);
+    }
+  };
+  
+  const renderMetadataContent = (metadata: ExtractedMetadata) => {
+    if (metadata.type === 'form_fields') {
+      return (
+        <Box>
+          <HStack justify="space-between" mb={4}>
+            <Heading size="sm">Extracted Form Fields</Heading>
+            <Badge colorScheme="green">{Math.round(metadata.confidence * 100)}% Confidence</Badge>
+          </HStack>
+          <Table variant="simple" size="sm">
+            <Thead>
+              <Tr>
+                <Th>Field</Th>
+                <Th>Value</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {Object.entries(metadata.data).map(([key, value]) => (
+                <Tr key={key}>
+                  <Td fontWeight="medium">{key.replace(/_/g, ' ')}</Td>
+                  <Td>{value as string}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+      );
+    }
+    
+    if (metadata.type === 'tables') {
+      return (
+        <Box>
+          <HStack justify="space-between" mb={4}>
+            <Heading size="sm">Extracted Tables</Heading>
+            <Badge colorScheme="green">{Math.round(metadata.confidence * 100)}% Confidence</Badge>
+          </HStack>
+          <Box overflow="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  {metadata.data[0].map((header: string, i: number) => (
+                    <Th key={i}>{header}</Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {metadata.data.slice(1).map((row: string[], rowIdx: number) => (
+                  <Tr key={rowIdx}>
+                    {row.map((cell: string, cellIdx: number) => (
+                      <Td key={cellIdx}>{cell}</Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        </Box>
+      );
+    }
+    
+    if (metadata.type === 'entities' || metadata.type === 'text_detection') {
+      return (
+        <Box>
+          <HStack justify="space-between" mb={4}>
+            <Heading size="sm">Extracted Text & Entities</Heading>
+            <Badge colorScheme="green">{Math.round(metadata.confidence * 100)}% Confidence</Badge>
+          </HStack>
+          <VStack align="stretch" spacing={3}>
+            {metadata.data.map((entity: any, idx: number) => (
+              <Box 
+                key={idx} 
+                p={2} 
+                borderWidth="1px" 
+                borderRadius="md"
+                bg={useColorModeValue('gray.50', 'gray.700')}
+              >
+                <HStack justify="space-between">
+                  <Text fontWeight="bold">
+                    {entity.text}
+                    {entity.type && (
+                      <Badge ml={2} colorScheme="purple">{entity.type}</Badge>
+                    )}
+                  </Text>
+                  <IconButton
+                    aria-label="Copy to clipboard"
+                    icon={<FaCopy />}
+                    size="xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(entity.text);
+                      toast({
+                        title: 'Copied to clipboard',
+                        status: 'info',
+                        duration: 2000,
+                      });
+                    }}
+                  />
+                </HStack>
+                <Text fontSize="xs" color="gray.500">
+                  Position: ({entity.position.x}, {entity.position.y})
+                </Text>
+              </Box>
+            ))}
+          </VStack>
+        </Box>
+      );
+    }
+    
+    if (metadata.type === 'object_detection') {
+      return (
+        <Box>
+          <HStack justify="space-between" mb={4}>
+            <Heading size="sm">Detected Objects</Heading>
+            <Badge colorScheme="green">{Math.round(metadata.confidence * 100)}% Confidence</Badge>
+          </HStack>
+          <SimpleGrid columns={{base: 1, md: 2}} spacing={4}>
+            {metadata.data.map((obj: any, idx: number) => (
+              <Box 
+                key={idx} 
+                p={3} 
+                borderWidth="1px" 
+                borderRadius="md"
+                bg={useColorModeValue('gray.50', 'gray.700')}
+              >
+                <HStack justify="space-between">
+                  <Text fontWeight="bold">{obj.label}</Text>
+                  <Badge colorScheme="green">{Math.round(obj.confidence * 100)}%</Badge>
+                </HStack>
+                <Text fontSize="xs" color="gray.500" mt={1}>
+                  Pos: ({obj.box.x}, {obj.box.y}) Size: {obj.box.width}x{obj.box.height}
+                </Text>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
+      );
+    }
+    
+    if (metadata.type === 'barcode') {
+      return (
+        <Box>
+          <HStack justify="space-between" mb={4}>
+            <Heading size="sm">Barcode</Heading>
+            <Badge colorScheme="green">{Math.round(metadata.confidence * 100)}% Confidence</Badge>
+          </HStack>
+          <Box p={4} borderWidth="1px" borderRadius="md">
+            <HStack justify="space-between">
+              <VStack align="start" spacing={1}>
+                <Text fontWeight="bold">{metadata.data.format}</Text>
+                <Text>{metadata.data.value}</Text>
+              </VStack>
+              <IconButton
+                aria-label="Copy value"
+                icon={<FaCopy />}
+                onClick={() => {
+                  navigator.clipboard.writeText(metadata.data.value);
+                  toast({
+                    title: 'Copied to clipboard',
+                    status: 'info',
+                    duration: 2000,
+                  });
+                }}
+              />
+            </HStack>
+          </Box>
+        </Box>
+      );
+    }
+    
+    return (
+      <Box>
+        <Heading size="sm" mb={4}>Raw Metadata</Heading>
+        <Code p={4} borderRadius="md" whiteSpace="pre-wrap">
+          {JSON.stringify(metadata.data, null, 2)}
+        </Code>
+      </Box>
+    );
+  };
+
+  return (
+    <Container maxW="container.xl" py={8}>
+      <VStack spacing={8} align="stretch">
+        <Box textAlign="center">
+          <Heading as="h1" size="xl" mb={2}>
+            Metadata Extraction
+          </Heading>
+          <Text color="gray.600">
+            Extract and analyze structured data from documents, images, and PDFs
+          </Text>
+        </Box>
+        
+        <SimpleGrid columns={{ base: 1, lg: 3 }} spacing={6}>
+          {/* Document List */}
+          <Box
+            bg={useColorModeValue('white', 'gray.800')}
+            boxShadow="base"
+            borderRadius="lg"
+            p={4}
+            height="max-content"
+          >
+            <VStack align="stretch" spacing={4}>
+              <HStack justify="space-between">
+                <Heading size="md">Documents</Heading>
+                {isProcessing && <Spinner size="sm" />}
+              </HStack>
+              
+              <VStack align="stretch" spacing={3} maxH="500px" overflowY="auto">
+                {documents.map(doc => (
+                  <Box
+                    key={doc.id}
+                    p={3}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    bg={selectedDocument?.id === doc.id 
+                      ? useColorModeValue('blue.50', 'blue.900') 
+                      : useColorModeValue('white', 'gray.800')
+                    }
+                    cursor="pointer"
+                    onClick={() => setSelectedDocument(doc)}
+                    position="relative"
+                  >
+                    <HStack>
+                      <Text fontWeight="medium">{doc.name}</Text>
+                      {doc.status === 'processing' && (
+                        <Spinner size="xs" />
+                      )}
+                    </HStack>
+                    <HStack fontSize="sm" color="gray.500" mt={1}>
+                      <Text>{doc.size}</Text>
+                      <Text>•</Text>
+                      <Badge>{doc.type}</Badge>
+                    </HStack>
+                    
+                    {doc.status === 'processing' && (
+                      <Progress 
+                        value={doc.progress} 
+                        size="xs" 
+                        colorScheme="blue" 
+                        mt={2}
+                        borderRadius="full"
+                      />
+                    )}
+                    
+                    <IconButton
+                      position="absolute"
+                      top={2}
+                      right={2}
+                      aria-label="Delete document"
+                      icon={<FaTrash />}
+                      size="xs"
+                      variant="ghost"
+                      colorScheme="red"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteDocument(doc.id);
+                      }}
+                    />
+                  </Box>
+                ))}
+                
+                {documents.length === 0 && (
+                  <Box 
+                    p={4} 
+                    borderWidth="1px" 
+                    borderRadius="md" 
+                    borderStyle="dashed"
+                    textAlign="center"
+                  >
+                    <Text color="gray.500">No documents available</Text>
+                  </Box>
+                )}
+              </VStack>
+              
+              <Box>
+                <FormControl>
+                  <Input
+                    type="file"
+                    display="none"
+                    id="file-upload"
+                    accept=".pdf,.png,.jpg,.jpeg,.tiff"
+                    onChange={handleFileUpload}
+                  />
+                  <Button
+                    as="label"
+                    htmlFor="file-upload"
+                    width="full"
+                    leftIcon={<FaUpload />}
+                    colorScheme="brand"
+                    isLoading={isProcessing}
+                    loadingText="Processing..."
+                    cursor="pointer"
+                  >
+                    Upload Document
+                  </Button>
+                </FormControl>
+              </Box>
+            </VStack>
+          </Box>
+          
+          {/* Document Preview and Metadata */}
+          <Box 
+            flex={1} 
+            bg={useColorModeValue('white', 'gray.800')} 
+            p={4} 
+            borderRadius="md"
+            boxShadow="base"
+          >
+            {selectedDocument ? (
+              <VStack spacing={4} align="stretch">
+                <HStack justify="space-between">
+                  <Heading size="md">{selectedDocument.name}</Heading>
+                  <HStack>
+                    <Select size="sm" maxW="200px">
+                      <option value="automatic">Automatic Extraction</option>
+                      <option value="tables">Tables Only</option>
+                      <option value="text">Text Only</option>
+                      <option value="forms">Forms Only</option>
+                    </Select>
+                    <IconButton
+                      aria-label="Download metadata"
+                      icon={<FaDownload />}
+                      size="sm"
+                      onClick={() => {
+                        const json = JSON.stringify(selectedDocument.metadata, null, 2);
+                        const blob = new Blob([json], { type: 'application/json' });
+                        const href = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = href;
+                        link.download = `${selectedDocument.name}-metadata.json`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(href);
+                      }}
+                    />
+                    <IconButton
+                      aria-label="Settings"
+                      icon={<FaCog />}
+                      size="sm"
+                    />
+                  </HStack>
+                </HStack>
+                
+                {selectedDocument.preview && (
+                  <Image
+                    src={selectedDocument.preview}
+                    alt={selectedDocument.name}
+                    borderRadius="md"
+                    maxH="300px"
+                    mx="auto"
+                  />
+                )}
+                
+                <Tabs variant="enclosed" onChange={setSelectedTab} index={selectedTab}>
+                  <TabList>
+                    <Tab>
+                      <HStack>
+                        <FaInfoCircle />
+                        <Text>Tables</Text>
+                      </HStack>
+                    </Tab>
+                    <Tab>
+                      <HStack>
+                        <FaInfoCircle />
+                        <Text>Entities</Text>
+                      </HStack>
+                    </Tab>
+                    <Tab>
+                      <HStack>
+                        <FaInfoCircle />
+                        <Text>Form Fields</Text>
+                      </HStack>
+                    </Tab>
+                    <Tab>
+                      <HStack>
+                        <FaInfoCircle />
+                        <Text>Objects</Text>
+                      </HStack>
+                    </Tab>
+                  </TabList>
+                  
+                  <TabPanels>
+                    {/* Tables Tab */}
+                    <TabPanel>
+                      {selectedDocument.metadata.find(m => m.type === 'tables') ? (
+                        <Box>
+                          {renderMetadataContent(selectedDocument.metadata.find(m => m.type === 'tables')!)}
+                        </Box>
+                      ) : (
+                        <Box textAlign="center" py={4}>
+                          <Text color="gray.500">No tables detected</Text>
+                        </Box>
+                      )}
+                    </TabPanel>
+                    
+                    {/* Entities */}
+                    <TabPanel>
+                      {selectedDocument.metadata.find(m => m.type === 'entities' || m.type === 'text_detection') ? (
+                        <Box>
+                          <HStack justify="space-between" mb={4}>
+                            <HStack>
+                              <Heading size="sm">Extracted Entities & Text</Heading>
+                              <Badge colorScheme="green">
+                                {Math.round(selectedDocument.metadata.find(m => m.type === 'entities' || m.type === 'text_detection')!.confidence * 100)}% Confidence
+                              </Badge>
+                            </HStack>
+                            <IconButton
+                              aria-label="Copy to clipboard"
+                              icon={<FaCopy />}
+                              size="sm"
+                              onClick={() => {
+                                const metadata = selectedDocument.metadata.find(m => m.type === 'entities' || m.type === 'text_detection');
+                                if (metadata) {
+                                  const text = metadata.data.map((item: any) => item.text).join('\n');
+                                  navigator.clipboard.writeText(text);
+                                  toast({
+                                    title: 'Copied to clipboard',
+                                    status: 'info',
+                                    duration: 2000,
+                                  });
+                                }
+                              }}
+                            />
+                          </HStack>
+                          
+                          {renderMetadataContent(selectedDocument.metadata.find(m => m.type === 'entities' || m.type === 'text_detection')!)}
+                        </Box>
+                      ) : (
+                        <Box textAlign="center" py={4}>
+                          <Text color="gray.500">No entities detected</Text>
+                        </Box>
+                      )}
+                    </TabPanel>
+                    
+                    {/* Form Fields */}
+                    <TabPanel>
+                      {selectedDocument.metadata.find(m => m.type === 'form_fields') ? (
+                        <Box>
+                          {renderMetadataContent(selectedDocument.metadata.find(m => m.type === 'form_fields')!)}
+                        </Box>
+                      ) : (
+                        <Box textAlign="center" py={4}>
+                          <Text color="gray.500">No form fields detected</Text>
+                        </Box>
+                      )}
+                    </TabPanel>
+                    
+                    {/* Objects */}
+                    <TabPanel>
+                      {selectedDocument.metadata.find(m => m.type === 'object_detection') ? (
+                        <Box>
+                          {renderMetadataContent(selectedDocument.metadata.find(m => m.type === 'object_detection')!)}
+                        </Box>
+                      ) : (
+                        <Box textAlign="center" py={4}>
+                          <Text color="gray.500">No objects detected</Text>
+                        </Box>
+                      )}
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
+              </VStack>
+            ) : (
+              <VStack py={8} spacing={4}>
+                <Text fontSize="lg" color="gray.500">
+                  No document selected
+                </Text>
+                <Box>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      display="none"
+                      id="file-upload-2"
+                      accept=".pdf,.png,.jpg,.jpeg,.tiff"
+                      onChange={handleFileUpload}
+                    />
+                    <Button
+                      as="label"
+                      htmlFor="file-upload-2"
+                      leftIcon={<FaUpload />}
+                      colorScheme="brand"
+                      cursor="pointer"
+                    >
+                      Upload a document to extract metadata
+                    </Button>
+                  </Box>
+                </FormControl>
+              </VStack>
+            )}
+          </Box>
+          
+          {/* Extraction Features */}
+          <Box 
+            bg={useColorModeValue('white', 'gray.800')} 
+            boxShadow="base"
+            borderRadius="lg"
+            p={4}
+            height="max-content"
+          >
+            <VStack align="stretch" spacing={4}>
+              <Heading size="md">Extraction Features</Heading>
+              
+              <SimpleGrid columns={1} spacing={4}>
+                <Card>
+                  <CardBody>
+                    <HStack mb={2}>
+                      <FaInfoCircle color="#4299E1" />
+                      <Heading size="sm">Table Extraction</Heading>
+                    </HStack>
+                    <Text fontSize="sm">
+                      Extract structured tables from documents, with row and column detection.
+                    </Text>
+                  </CardBody>
+                </Card>
+                
+                <Card>
+                  <CardBody>
+                    <HStack mb={2}>
+                      <FaInfoCircle color="#48BB78" />
+                      <Heading size="sm">Entity Recognition</Heading>
+                    </HStack>
+                    <Text fontSize="sm">
+                      Identify and classify entities such as people, organizations, dates, and locations in text.
+                    </Text>
+                  </CardBody>
+                </Card>
+                
+                <Card>
+                  <CardBody>
+                    <HStack mb={2}>
+                      <FaInfoCircle color="#ED8936" />
+                      <Heading size="sm">Form Field Detection</Heading>
+                    </HStack>
+                    <Text fontSize="sm">
+                      Identify form fields and their values in structured documents like invoices, purchase orders, and applications.
+                    </Text>
+                  </CardBody>
+                </Card>
+                
+                <Card>
+                  <CardBody>
+                    <HStack mb={2}>
+                      <FaInfoCircle color="#9F7AEA" />
+                      <Heading size="sm">Object Detection</Heading>
+                    </HStack>
+                    <Text fontSize="sm">
+                      Recognize and locate objects, logos, and visual elements within images and document scans.
+                    </Text>
+                  </CardBody>
+                </Card>
+                
+                <Card>
+                  <CardBody>
+                    <HStack mb={2}>
+                      <FaSearch color="#F56565" />
+                      <Heading size="sm">OCR Processing</Heading>
+                    </HStack>
+                    <Text fontSize="sm">
+                      Extract text from images and scanned documents with high accuracy.
+                    </Text>
+                  </CardBody>
+                </Card>
+                
+                <Card>
+                  <CardBody>
+                    <HStack mb={2}>
+                      <FaInfoCircle color="#667EEA" />
+                      <Heading size="sm">Layout Analysis</Heading>
+                    </HStack>
+                    <Text fontSize="sm">
+                      Understand the logical structure and semantic regions of documents.
+                    </Text>
+                  </CardBody>
+                </Card>
+              </SimpleGrid>
+            </VStack>
+          </Box>
+        </SimpleGrid>
+      </VStack>
+    </Container>
+  );
+}
