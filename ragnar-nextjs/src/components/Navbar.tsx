@@ -29,7 +29,7 @@ export default function Navbar() {
 
         <div className="navbar-actions-container">
           <NextLink href="/search" className="multimodal-search-link">
-            <span><FaSearch /> Multimodal Search</span>
+            <span><FaSearch /> Vector Search</span>
           </NextLink>
         </div>
       </div>
@@ -143,28 +143,23 @@ const NAV_ITEMS: Array<NavItem> = [
     href: '#',
     children: [
       {
-        label: 'Multimodal Search',
-        subLabel: 'Search across text, images, PDFs, and videos',
+        label: 'Vector Search',
+        subLabel: 'Search with pgvector embeddings',
         href: '/search',
       },
       {
-        label: 'Manual Search',
-        subLabel: 'Search BNext ERP documentation',
-        href: '/manual-search',
+        label: 'Document Management',
+        subLabel: 'Upload and manage document corpus',
+        href: '/documents',
       },
       {
         label: 'Knowledge Graph',
-        subLabel: 'Explore domain-specific knowledge graphs',
-        href: '/knowledge-graph',
+        subLabel: 'Create and explore knowledge graphs',
+        href: '/graphs',
       },
       {
-        label: 'Metadata Extraction',
-        subLabel: 'Extract and visualize document metadata',
-        href: '/metadata-extractor',
-      },
-      {
-        label: 'Smart Chat',
-        subLabel: 'Cache-augmented conversation',
+        label: 'Chat',
+        subLabel: 'AI assistant using your documents',
         href: '/chat',
       },
     ],

@@ -1,11 +1,18 @@
 import api from './morphikApi';
 
 // Types for knowledge graph components
+export interface GraphQuery {
+  query?: string;
+  filters?: Record<string, any>;
+  limit?: number;
+  domain?: string;
+}
+
 export interface Node {
   id: string;
   label: string;
   type: string;
-  properties?: Record<string, any>;
+  properties: Record<string, any>;
 }
 
 export interface Edge {
@@ -16,66 +23,79 @@ export interface Edge {
   properties?: Record<string, any>;
 }
 
+export interface Entity {
+  id: string;
+  name: string;
+  type: string;
+  properties?: Record<string, any>;
+}
+
+export interface Relationship {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  properties?: Record<string, any>;
+}
+
 export interface Graph {
   nodes: Node[];
   edges: Edge[];
+  entities?: Entity[];
+  relationships?: Relationship[];
 }
 
-export interface GraphQuery {
-  query: string;
-  filters?: Record<string, any>;
-  limit?: number;
-  domains?: string[];
+export interface GraphInfo {
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  entity_count: number;
+  relationship_count: number;
 }
 
 export interface DomainInfo {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   nodeCount: number;
   edgeCount: number;
 }
 
 // The API for knowledge graph interactions
 export const knowledgeGraphApi = {
-  // Get available domains/knowledge graphs
-  getDomains: async (): Promise<DomainInfo[]> => {
+  // Create a new graph
+  createGraph: async (name: string, description?: string, options?: {
+    extractEntities?: boolean,
+    resolveEntities?: boolean,
+    extractRelationships?: boolean,
+    promptOverrides?: Record<string, any>,
+    documents?: string[]
+  }): Promise<any> => {
     try {
-      // For development, return mock data
-      if (process.env.NODE_ENV === 'development') {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        return [
-          {
-            id: 'erp',
-            name: 'BNext ERP',
-            description: 'Knowledge graph covering BNext ERP concepts and relationships',
-            nodeCount: 1250,
-            edgeCount: 3780
-          },
-          {
-            id: 'fin',
-            name: 'Financial Domain',
-            description: 'Financial processes and accounting concepts',
-            nodeCount: 680,
-            edgeCount: 1450
-          },
-          {
-            id: 'inv',
-            name: 'Inventory Management',
-            description: 'Warehouse, inventory, and supply chain concepts',
-            nodeCount: 420,
-            edgeCount: 960
-          }
-        ];
-      }
-      
-      // In production
-      const response = await api.get<{ domains: DomainInfo[] }>('/knowledge-graph/domains');
-      return response.domains;
+      const response = await api.post<any>('/graph/create', {
+        name,
+        description,
+        extract_entities: options?.extractEntities,
+        resolve_entities: options?.resolveEntities,
+        extract_relationships: options?.extractRelationships,
+        prompt_overrides: options?.promptOverrides,
+        documents: options?.documents
+      });
+      return response.data;
     } catch (error) {
-      console.error('Error fetching knowledge graph domains:', error);
+      console.error('Error creating graph:', error);
+      throw error;
+    }
+  },
+  
+  // Get available graphs
+  getGraphs: async (): Promise<GraphInfo[]> => {
+    try {
+      const response = await api.get<GraphInfo[]>('/graphs');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching graphs:', error);
       throw error;
     }
   },
@@ -91,11 +111,11 @@ export const knowledgeGraphApi = {
         // Simple mock graph with a few nodes and edges
         return {
           nodes: [
-            { id: 'n1', label: 'Invoice', type: 'Document' },
-            { id: 'n2', label: 'Customer', type: 'Entity' },
-            { id: 'n3', label: 'Payment', type: 'Transaction' },
-            { id: 'n4', label: 'Product', type: 'Item' },
-            { id: 'n5', label: 'Line Item', type: 'Entry' }
+            { id: 'n1', label: 'Invoice', type: 'Document', properties: {} },
+            { id: 'n2', label: 'Customer', type: 'Entity', properties: {} },
+            { id: 'n3', label: 'Payment', type: 'Transaction', properties: {} },
+            { id: 'n4', label: 'Product', type: 'Item', properties: {} },
+            { id: 'n5', label: 'Line Item', type: 'Entry', properties: {} }
           ],
           edges: [
             { id: 'e1', source: 'n1', target: 'n2', label: 'ISSUED_TO' },
@@ -109,7 +129,7 @@ export const knowledgeGraphApi = {
       
       // In production
       const response = await api.post<{ graph: Graph }>('/knowledge-graph/query', params);
-      return response.graph;
+      return response.data.graph;
     } catch (error) {
       console.error('Error querying knowledge graph:', error);
       throw error;
@@ -146,12 +166,34 @@ export const knowledgeGraphApi = {
       const response = await api.get<{ node: Node & { connections: Edge[] } }>(
         `/knowledge-graph/node/${nodeId}${domain ? `?domain=${domain}` : ''}`
       );
-      return response.node;
+      return response.data.node;
     } catch (error) {
       console.error(`Error getting details for node ${nodeId}:`, error);
       throw error;
     }
-  }
+  },
+  
+  // Get graph data based on query
+  getGraphData: async (params: GraphQuery): Promise<Graph> => {
+    try {
+      const response = await api.post<{ graph: Graph }>('/knowledge-graph/query', params);
+      return response.data.graph;
+    } catch (error) {
+      console.error('Error fetching graph data:', error);
+      throw error;
+    }
+  },
+
+  // Get available domains for knowledge graphs
+  getDomains: async (): Promise<DomainInfo[]> => {
+    try {
+      const response = await api.get<{ domains: DomainInfo[] }>('/knowledge-graph/domains');
+      return response.data.domains;
+    } catch (error) {
+      console.error('Error fetching domains:', error);
+      throw error;
+    }
+  },
 };
 
 export default knowledgeGraphApi;

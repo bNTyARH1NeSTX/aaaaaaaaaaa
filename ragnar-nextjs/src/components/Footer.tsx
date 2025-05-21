@@ -37,34 +37,19 @@ export default function Footer() {
             <p className="footer-copyright">
               © {new Date().getFullYear()} RAGnar. All rights reserved.
             </p>
-            <div className="social-links-container">
-              <SocialButton label={'Twitter'} href={'#'}>
-                <FaTwitter />
-              </SocialButton>
-              <SocialButton label={'YouTube'} href={'#'}>
-                <FaYoutube />
-              </SocialButton>
-              <SocialButton label={'GitHub'} href={'#'}>
-                <FaGithub />
-              </SocialButton>
-            </div>
           </div>
           <div className="footer-column">
-            <ListHeader>Company</ListHeader>
-            <a href={'#'} className="footer-link">About</a>
-            <a href={'#'} className="footer-link">Careers</a>
-            <a href={'#'} className="footer-link">Contact</a>
+            <ListHeader>Features</ListHeader>
+            <a href="/search" className="footer-link">Vector Search</a>
+            <a href="/documents" className="footer-link">Document Management</a>
+            <a href="/graphs" className="footer-link">Knowledge Graphs</a>
+            <a href="/chat" className="footer-link">AI Chat</a>
           </div>
           <div className="footer-column">
-            <ListHeader>Support</ListHeader>
-            <a href={'#'} className="footer-link">Help Center</a>
-            <a href={'#'} className="footer-link">Terms of Service</a>
-            <a href={'#'} className="footer-link">Privacy Policy</a>
-          </div>
-          <div className="footer-column">
-            <ListHeader>Stay Connected</ListHeader>
-            <p>Subscribe to our newsletter to get the latest updates</p>
-            {/* Add newsletter signup form here if needed */}
+            <ListHeader>Resources</ListHeader>
+            <a href="https://github.com/pgvector/pgvector" className="footer-link">pgvector</a>
+            <a href="https://python.langchain.com/docs/modules/vectorstores" className="footer-link">Vector Stores</a>
+            <a href="https://github.com/morphik-ai/morphik-core" className="footer-link">GitHub</a>
           </div>
         </div>
       </div>

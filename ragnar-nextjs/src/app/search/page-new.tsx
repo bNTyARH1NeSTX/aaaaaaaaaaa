@@ -71,7 +71,7 @@ export default function SearchPage() {
   const handleUploadFile = async () => {
     if (!file) {
       toast({
-        title: 'No se ha seleccionado ningún archivo',
+        title: 'No file selected',
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -95,8 +95,8 @@ export default function SearchPage() {
       );
       
       toast({
-        title: 'Archivo subido correctamente',
-        description: 'Tu archivo ha sido procesado e indexado',
+        title: 'File uploaded successfully',
+        description: 'Your file has been processed and indexed',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -106,8 +106,8 @@ export default function SearchPage() {
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
-        title: 'Error en la subida',
-        description: 'Hubo un error al subir tu archivo',
+        title: 'Upload failed',
+        description: 'There was an error uploading your file',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -120,8 +120,8 @@ export default function SearchPage() {
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       toast({
-        title: 'Consulta requerida',
-        description: 'Por favor, introduce una consulta de búsqueda',
+        title: 'Query required',
+        description: 'Please enter a search query',
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -144,8 +144,8 @@ export default function SearchPage() {
       
       if (results.length === 0) {
         toast({
-          title: 'No se encontraron resultados',
-          description: 'Intenta modificar tu consulta o subir documentos relevantes',
+          title: 'No results found',
+          description: 'Try modifying your search query or uploading relevant documents',
           status: 'info',
           duration: 5000,
           isClosable: true,
@@ -154,8 +154,8 @@ export default function SearchPage() {
     } catch (error) {
       console.error('Error searching:', error);
       toast({
-        title: 'Error en la búsqueda',
-        description: 'Hubo un error al procesar tu búsqueda',
+        title: 'Search failed',
+        description: 'There was an error processing your search',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -168,8 +168,8 @@ export default function SearchPage() {
   const handleQueryCompletion = async () => {
     if (!searchQuery.trim()) {
       toast({
-        title: 'Consulta requerida',
-        description: 'Por favor, introduce una pregunta',
+        title: 'Query required',
+        description: 'Please enter a question',
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -197,8 +197,8 @@ export default function SearchPage() {
     } catch (error) {
       console.error('Error querying completion:', error);
       toast({
-        title: 'Error en la consulta',
-        description: 'Hubo un error al generar una respuesta',
+        title: 'Query failed',
+        description: 'There was an error generating a response',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -213,22 +213,22 @@ export default function SearchPage() {
       <VStack spacing={8} align="stretch">
         <Box textAlign="center">
           <Heading as="h1" size="xl" mb={2}>
-            Búsqueda Vectorial y Embeddings
+            Vector Search & Embeddings
           </Heading>
           <Text fontSize="lg" color="gray.600">
-            Busca a través de tus documentos usando similitud semántica con pgvector
+            Search through your documents using semantic similarity with pgvector
           </Text>
         </Box>
         
         {/* File Upload Section */}
         <Card>
           <CardHeader>
-            <Heading size="md">Subir Documentos</Heading>
+            <Heading size="md">Upload Documents</Heading>
           </CardHeader>
           <CardBody>
             <VStack spacing={4} align="stretch">
               <FormControl>
-                <FormLabel>Selecciona archivos PDF o Texto</FormLabel>
+                <FormLabel>Select PDF or Text Files</FormLabel>
                 <Input
                   type="file"
                   accept=".pdf,.txt,.docx,.md"
@@ -247,7 +247,7 @@ export default function SearchPage() {
               
               {isUploading && (
                 <Box>
-                  <Text mb={2}>Subiendo... {uploadProgress}%</Text>
+                  <Text mb={2}>Uploading... {uploadProgress}%</Text>
                   <Progress value={uploadProgress} size="sm" colorScheme="blue" />
                 </Box>
               )}
@@ -257,10 +257,10 @@ export default function SearchPage() {
                 colorScheme="blue"
                 onClick={handleUploadFile}
                 isLoading={isUploading}
-                loadingText="Subiendo..."
+                loadingText="Uploading..."
                 disabled={!file || isUploading}
               >
-                Subir Documento
+                Upload Document
               </Button>
             </VStack>
           </CardBody>
@@ -269,14 +269,14 @@ export default function SearchPage() {
         {/* Search Section */}
         <Card>
           <CardHeader>
-            <Heading size="md">Búsqueda</Heading>
+            <Heading size="md">Search</Heading>
           </CardHeader>
           <CardBody>
             <VStack spacing={4} align="stretch">
               <FormControl>
-                <FormLabel>Introduce tu consulta de búsqueda o pregunta</FormLabel>
+                <FormLabel>Enter your search query or question</FormLabel>
                 <Textarea
-                  placeholder="Ej., '¿Cómo implemento pgvector en PostgreSQL?' o 'Háblame sobre embeddings para búsqueda semántica'"
+                  placeholder="E.g., 'How do I implement pgvector in PostgreSQL?' or 'Tell me about embeddings for semantic search'"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   size="md"
@@ -292,13 +292,13 @@ export default function SearchPage() {
                   size="sm"
                   onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
                 >
-                  Opciones Avanzadas
+                  Advanced Options
                 </Button>
                 
                 {showAdvancedOptions && (
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={4} p={4} bg="gray.50" borderRadius="md">
                     <FormControl>
-                      <FormLabel fontSize="sm">Número de Resultados (Top K)</FormLabel>
+                      <FormLabel fontSize="sm">Top K Results</FormLabel>
                       <NumberInput
                         min={1}
                         max={50}
