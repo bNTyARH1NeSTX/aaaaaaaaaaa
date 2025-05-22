@@ -12,8 +12,8 @@ const ChatView: React.FC = () => {
   const { messages, input, setInput, file, setFile, isLoading, error, sendMessage } = useChat();
 
   return (
-    <div className="max-w-5xl mx-auto w-full">
-      <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-blue-100">
+    <div className="flex flex-col h-full max-w-5xl mx-auto w-full">
+      <div className="flex flex-col h-full bg-white rounded-xl shadow-xl overflow-hidden border border-blue-100">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 flex items-center justify-between">
           <div className="flex items-center">
             <div className="flex space-x-1 mr-3">
@@ -51,7 +51,7 @@ const ChatView: React.FC = () => {
           </div>
         </div>
         
-        <div className="h-[calc(100vh-16rem)] overflow-y-auto p-6 bg-gradient-to-b from-white to-blue-50">
+        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-blue-50">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center text-gray-700 space-y-5">
               <div className="p-5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-indigo-600 mb-3 shadow-lg shadow-blue-100 animate-pulse">

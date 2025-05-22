@@ -1,5 +1,5 @@
 // Definición de la URL base de la API del backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jzz72astclwap7-8000.proxy.runpod.net/';
 
 // Tipos de datos para las solicitudes y respuestas
 

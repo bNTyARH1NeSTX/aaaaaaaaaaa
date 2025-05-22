@@ -4,8 +4,8 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 250, 250, 250;
-  --background-end-rgb: 255, 255, 255;
+  --background-start-rgb: 245, 245, 245;
+  --background-end-rgb: 250, 250, 250;
   --brand-primary: #2563eb; /* Blue-600 - un poco más oscuro para mayor contraste */
   --brand-secondary: #4b5563; /* Gray-600 - mejor contraste */
   --text-light: #f8f9fa;
