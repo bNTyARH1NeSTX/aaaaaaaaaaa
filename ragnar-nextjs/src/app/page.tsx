@@ -1,101 +1,99 @@
-import React from 'react';
-import Link from 'next/link';
-import { FaSearch, FaDatabase, FaNetworkWired, FaRobot, FaFileUpload } from 'react-icons/fa';
+'use client'; // Needed for hooks and event handlers
 
-// Simplified Feature component - styling to be done with CSS
-const Feature = ({ title, text, icon, color }: { title: string; text: string; icon: React.ReactElement; color: string }) => {
-  return (
-    <div className="feature-card" style={{ borderColor: color }}>
-      <div className="feature-icon-background" style={{ backgroundColor: color }}>
-        {icon}
-      </div>
-      <h3 className="feature-title">{title}</h3>
-      <p className="feature-text">{text}</p>
-    </div>
-  );
-};
+import Link from 'next/link';
+import { ArrowRight, Search, FileText, Database, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function HomePage() {
   return (
-    <div className="homepage-container">
+    <main className="min-h-screen">
       {/* Hero Section */}
-      <section className="hero-section">
-        <div className="container-7xl">
-          <div className="hero-stack">
-            <div className="hero-text-content">
-              <h1 className="hero-heading">
-                <span className="hero-brand-main">RAGnar</span>
-                <br />
-                <span className="hero-brand-sub">Vector Embeddings & Knowledge Graphs</span>
-              </h1>
-              <p className="hero-description">
-                Powered by pgvector and semantic search, RAGnar is your intelligent document retrieval system.
-                Search with natural language, explore knowledge graphs, and get answers from your own documents
-                instantly using embeddings and vector similarity.
-              </p>
-              <div className="hero-buttons-stack">
-                <Link href="/documents" className="button button-primary">Upload Documents</Link>
-                <Link href="/search" className="button button-secondary">
-                  <FaSearch /> Vector Search
-                </Link>
-              </div>
-            </div>
-            <div className="hero-image-container">
-              <div className="hero-image-wrapper">
-                <img
-                  alt="Hero Image"
-                  src="/assets/hero-image.png"
-                  className="hero-image"
-                />
-              </div>
-            </div>
+      <section className="py-16 px-4 md:py-24 text-center">
+        <motion.div
+          className="max-w-5xl mx-auto"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-neon-pink">
+            Ragnar <span className="text-neon-cyan">Asistente</span>
+          </h1>
+          <p className="text-2xl mb-8 max-w-3xl mx-auto text-white">
+            Genere manuales paso a paso desde archivos visuales e información técnica utilizando nuestro motor de inteligencia artificial avanzado.
+          </p>
+          <div className="flex flex-col md:flex-row justify-center gap-4">
+            <Link 
+              href="/chat" 
+              className="button"
+            >
+              Iniciar Conversación <ArrowRight size={18} className="ml-2" />
+            </Link>
+            <Link 
+              href="/documents" 
+              className="file-label"
+            >
+              Ver Documentos <FileText size={18} className="ml-2" />
+            </Link>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section className="features-section">
-        <div className="features-heading-stack">
-          <h2 className="section-title">Powered by pgvector & Embeddings</h2>
-          <p className="section-subtitle">
-            Advanced features for intelligent document retrieval
-          </p>
-        </div>
-        <div className="container-7xl">
-          <div className="features-grid">
-            <Feature
-              icon={<FaSearch style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />}
-              title={'Vector Search'}
-              text={'Search your documents using semantic similarity with embeddings stored in pgvector.'}
-              color="blue"
-            />
-            <Feature
-              icon={<FaNetworkWired style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />}
-              title={'Knowledge Graphs'}
-              text={'Automatically extract entities and relationships from your documents to build searchable knowledge graphs.'}
-              color="green"
-            />
-            <Feature
-              icon={<FaFileUpload style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />}
-              title={'Document Management'}
-              text={'Upload and manage your document corpus with automatic chunking and embedding generation.'}
-              color="purple"
-            />
-            <Feature
-              icon={<FaRobot style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />}
-              title={'AI Assistant'}
-              text={'Get answers to your questions using retrieval-augmented generation from your own documents.'}
-              color="orange"
-            />
-            <Feature
-              icon={<FaDatabase style={{ width: '2.5rem', height: '2.5rem', color: 'white' }} />}
-              title={'Enterprise Integration'}
-              text={'Easily connect to existing database systems with scalable PostgreSQL-based vector store.'}
-              color="red"
-            />
+      {/* Features */}
+      <section className="py-16 px-4">
+        <motion.div
+          className="max-w-6xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h2 className="text-4xl font-bold text-center mb-12 text-neon-purple">Funcionalidades Principales</h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="card">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Zap size={24} className="text-neon-pink" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Consulta IA</h3>
+              <p className="text-white">Realice preguntas complejas sobre sus documentos y reciba respuestas precisas con referencias a las fuentes.</p>
+            </div>
+            
+            <div className="card">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Database size={24} className="text-neon-cyan" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Gestión de Documentos</h3>
+              <p className="text-white">Suba, visualice y organice sus documentos, imágenes y archivos técnicos en un solo lugar.</p>
+            </div>
+            
+            <div className="card">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                <Search size={24} className="text-neon-purple" />
+              </div>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Búsqueda Vectorial</h3>
+              <p className="text-white">Encuentre información relevante mediante búsqueda semántica avanzada en todos sus documentos.</p>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </section>
-    </div>
+
+      {/* Call to Action */}
+      <section className="py-16 px-4 text-center">
+        <motion.div
+          className="max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <h2 className="text-4xl font-bold mb-6 text-neon-pink">Comience a Generar Manuales Ahora</h2>
+          <p className="text-xl mb-8 text-white">Suba sus archivos y deje que nuestra IA cree manuales completos paso a paso.</p>
+          <Link 
+            href="/chat" 
+            className="button"
+          >
+            Ir al Chat <ArrowRight size={18} className="ml-2" />
+          </Link>
+        </motion.div>
+      </section>
+    </main>
   );
 }

@@ -297,7 +297,6 @@ tld==0.13
 tokenizers==0.21.0
 toml==0.10.2
 tomli==2.2.1
-torch==2.6.0
 torchaudio==2.6.0
 torchvision==0.21.0
 tornado==6.4.1
@@ -343,4 +342,3 @@ zlib-state==0.1.9
 zstandard==0.23.0
 litellm==1.65.4.post1
 instructor==1.7.9
-flash-attn==2.7.4.post1
