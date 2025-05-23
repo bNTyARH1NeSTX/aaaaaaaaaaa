@@ -109,18 +109,18 @@ logger.info("Document service initialized and stored on app.state")
 morphik_agent = MorphikAgent(document_service=document_service)
 
 # Enterprise-only routes (optional)
-try:
-    from ee.routers import init_app as _init_ee_app  # type: ignore  # noqa: E402
-
-    _init_ee_app(app)  # noqa: SLF001 – runtime extension
-except ModuleNotFoundError as exc:
-    logger.debug("Enterprise package not found – running in community mode.")
-    logger.error("ModuleNotFoundError: %s", exc, exc_info=True)
-except ImportError as exc:
-    logger.error("Failed to import init_app from ee.routers: %s", exc, exc_info=True)
-except Exception as exc:  # noqa: BLE001
-    logger.error("An unexpected error occurred during EE app initialization: %s", exc, exc_info=True)
-
+# try:
+#     from ee.routers import init_app as _init_ee_app  # type: ignore  # noqa: E402
+#
+#     _init_ee_app(app)  # noqa: SLF001 – runtime extension
+# except ModuleNotFoundError as exc:
+#     logger.debug("Enterprise package not found – running in community mode.")
+#     logger.error("ModuleNotFoundError: %s", exc, exc_info=True)
+# except ImportError as exc:
+#     logger.error("Failed to import init_app from ee.routers: %s", exc, exc_info=True)
+# except Exception as exc:  # noqa: BLE001
+#     logger.error("An unexpected error occurred during EE app initialization: %s", exc, exc_info=True)
+logger.info("Enterprise edition (ee) module is not used in this setup.")
 
 @app.post("/ingest/text", response_model=Document)
 @telemetry.track(operation_type="ingest_text", metadata_resolver=telemetry.ingest_text_metadata)
@@ -2073,7 +2073,7 @@ async def delete_cloud_app(
 
     # 1) Resolve app_id from apps table ----------------------------------
     async with document_service.db.async_session() as session:
-        stmt = select(AppModel).where(AppModel.user_id == user_id, AppModel.name == app_name)
+               stmt = select(AppModel).where(AppModel.user_id == user_id, AppModel.name == app_name)
         res = await session.execute(stmt)
         app_row = res.scalar_one_or_none()
 

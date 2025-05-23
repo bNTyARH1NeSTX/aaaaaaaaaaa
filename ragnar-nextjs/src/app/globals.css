@@ -2,71 +2,134 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 245, 245, 245;
-  --background-end-rgb: 250, 250, 250;
-  --brand-primary: #2563eb; /* Blue-600 - un poco más oscuro para mayor contraste */
-  --brand-secondary: #4b5563; /* Gray-600 - mejor contraste */
-  --text-light: #f8f9fa;
-  --text-dark: #111827; /* Gray-900 */
-  --container-bg-light: #ffffff;
-  --container-bg-dark: #1f2937; /* Gray-800 */
-  --link-color: #2563eb; /* Blue-600 */
-  --link-hover-color: #1d4ed8; /* Blue-700 */
-}
-
-/* Eliminamos la configuración del tema oscuro automático para 
-   hacer la aplicación más clara y brillante */
-/*
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 10, 10, 10;
-    --background-end-rgb: 20, 20, 20;
-    --brand-primary: #3b82f6;
-    --brand-secondary: #9ca3af;
-    --text-light: #111827;
-    --text-dark: #f9fafb;
-    --container-bg-light: #1f2937;
-    --container-bg-dark: #111827;
-    --link-color: #60a5fa;
-    --link-hover-color: #93c5fd;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Brand Colors (Apple Inspired) */
+    --brand-primary: 0 0% 0%; /* Black */
+    --brand-secondary: 0 0% 20%; /* Dark Gray */
+    --brand-accent: 0 84.2% 60.2%; /* Similar to destructive for now, can be a vibrant color */
+    --brand-light: 0 0% 98%; /* Almost White */
+    --brand-dark: 0 0% 13%; /* Very Dark Gray / Near Black */
+
+    /* Custom Vibrant Colors */
+    --sky-50: 204 100% 97%;
+    --sky-100: 202 93% 90%;
+    --sky-200: 203 92% 82%;
+    --sky-300: 201 90% 70%;
+    --sky-400: 199 92% 59%;
+    --sky-500: 199 90% 50%;
+    --sky-600: 198 82% 43%;
+    --sky-700: 198 76% 36%;
+    --sky-800: 198 72% 30%;
+    --sky-900: 199 65% 26%;
+    --sky-950: 200 73% 17%;
+
+    --amber-50: 39 100% 97%;
+    --amber-100: 39 100% 90%;
+    --amber-200: 39 100% 80%;
+    --amber-300: 38 96% 69%;
+    --amber-400: 37 95% 58%;
+    --amber-500: 35 93% 50%;
+    --amber-600: 30 90% 44%;
+    --amber-700: 26 86% 36%;
+    --amber-800: 23 82% 30%;
+    --amber-900: 21 80% 25%;
+    --amber-950: 19 83% 16%;
+
+    --rose-50: 355 100% 97%;
+    --rose-100: 356 100% 91%;
+    --rose-200: 355 100% 83%;
+    --rose-300: 352 97% 73%;
+    --rose-400: 349 95% 63%;
+    --rose-500: 347 90% 55%;
+    --rose-600: 342 86% 47%;
+    --rose-700: 339 84% 40%;
+    --rose-800: 337 80% 33%;
+    --rose-900: 335 73% 28%;
+    --rose-950: 336 75% 18%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    /* Brand Colors (Apple Inspired) - Dark Mode */
+    --brand-primary: 0 0% 100%; /* White */
+    --brand-secondary: 0 0% 80%; /* Light Gray */
+    /* --brand-accent: use a vibrant color from your palette e.g. hsl(var(--sky-500)) */
+    --brand-light: 0 0% 13%; /* Very Dark Gray / Near Black */
+    --brand-dark: 0 0% 7%; /* Almost Black */
   }
 }
-*/
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-  font-family: var(--font-geist-sans, sans-serif);
-  margin: 0;
-  padding: 0;
-}
-
-/* Layout y containers */
-.layout-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #f9fafb; /* Gray-50 - fondo muy claro */
-}
-
-.main-container {
-  flex: 1;
-  padding: 2rem 1rem;
-  max-width: 1280px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  * {
+    border-color: hsl(var(--border)); /* Use CSS variable directly */
+  }
+  body {
+    background-color: hsl(var(--background)); /* Use CSS variable directly */
+    color: hsl(var(--foreground)); /* Use CSS variable directly */
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-geist-sans, sans-serif); /* Ensure Geist Sans is loaded or fallback */
   }
 }
 
-/* Animaciones personalizadas */
+/* Keep existing animations and add new ones if they are not covered by tailwindcss-animate plugin */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -99,143 +162,38 @@ body {
   50% { transform: translateY(-5px); }
 }
 
-@keyframes typing {
-  0% { width: 0; }
-  100% { width: 100%; }
+/* Animations from tailwind.config.js - often handled by tailwindcss-animate but can be defined here */
+@keyframes accordion-down {
+  from { height: 0px; } /* Changed from height: 0 */
+  to { height: var(--radix-accordion-content-height); }
 }
 
-/* Clases de utilidad para animaciones */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0px; } /* Changed from height: 0 */
 }
 
-.animate-slide-up {
-  animation: slideInUp 0.5s ease-in-out;
-}
-
-.animate-pulse {
-  animation: pulse 2s infinite ease-in-out;
-}
-
-.animate-shimmer {
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-.animate-bounce {
-  animation: bounce 1s infinite ease-in-out;
-}
-
-/* Clases para efectos hover */
-.hover-scale {
-  transition: transform 0.2s ease-in-out;
-}
-
-.hover-scale:hover {
-  transform: scale(1.05);
-}
-
-.hover-lift {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.hover-lift:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* Estilos generales que pueden ser reutilizados */
-.smooth-transition {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Estilos para componentes de chat */
-.chat-container {
+/* Remove old layout and container styles if they are now handled by Tailwind utility classes or component-specific styles */
+/*
+.layout-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 64px - 4rem); /* Altura total - navbar - padding */
-  background-color: white;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  background-color: #f9fafb;
 }
 
-.chat-messages {
+.main-container {
   flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-}
-
-.message {
-  margin-bottom: 1rem;
-  max-width: 80%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-}
-
-.message-user {
-  background-color: #eff6ff; /* Blue-50 */
-  color: #1e40af; /* Blue-800 */
-  margin-left: auto;
-  border-top-right-radius: 0;
-}
-
-.message-assistant {
-  background-color: #f9fafb; /* Gray-50 */
-  color: #111827; /* Gray-900 */
-  margin-right: auto;
-  border-top-left-radius: 0;
-}
-
-.message-system {
-  background-color: #f3f4f6; /* Gray-100 */
-  color: #6b7280; /* Gray-500 */
+  padding: 2rem 1rem;
+  max-width: 1280px;
   margin: 0 auto;
-  font-style: italic;
-  font-size: 0.875rem;
-  text-align: center;
+  width: 100%;
 }
+*/
 
-.chat-input-container {
-  padding: 1rem;
-  border-top: 1px solid #e5e7eb; /* Gray-200 */
-  background-color: white;
-}
-
-.chat-input {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db; /* Gray-300 */
-  border-radius: 0.375rem;
-  outline: none;
-}
-
-.chat-input input:focus {
-  border-color: #60a5fa; /* Blue-400 */
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
-}
-
-.chat-input button {
-  background-color: #3b82f6; /* Blue-500 */
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.chat-input button:hover {
-  background-color: #2563eb; /* Blue-600 */
-}
-
-.chat-input button:disabled {
-  background-color: #9ca3af; /* Gray-400 */
-  cursor: not-allowed;
+/* Ensure text-balance utility is available if needed, or manage via Tailwind config */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

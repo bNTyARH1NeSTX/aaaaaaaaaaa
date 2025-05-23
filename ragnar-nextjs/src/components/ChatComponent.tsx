@@ -1,32 +1,7 @@
-import React from 'react';
-import useState from 'react';
-import useRef from 'react';
-import useEffect from 'react';
-import {
-  Box,
-  Flex,
-  Input,
-  Button,
-  Text,
-  Avatar,
-  VStack,
-  useColorModeValue,
-  Divider,
-  IconButton,
-  Collapse,
-  Badge,
-  Link,
-  Spinner,
-  useToast,
-  HStack,
-  Switch,
-  FormControl,
-  FormLabel,
-} from '@chakra-ui/react';
-import { SearchIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
-import ChatIcon from '@chakra-ui/icons';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { chatApi, ChatMessage as ApiChatMessage, Source } from '../api/chatApi';
+import { MessageSquare, ChevronDown, ChevronUp, Send } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -53,12 +28,7 @@ const ChatComponent = ({ manualId }: ChatComponentProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [expandedSources, setExpandedSources] = useState<{[key: string]: boolean}>({});
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
-  const toast = useToast();
-  
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  
-  // Scroll to bottom when messages change
+
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -68,7 +38,6 @@ const ChatComponent = ({ manualId }: ChatComponentProps) => {
     
     if (!newMessage.trim()) return;
     
-    // Add user message
     const userMessageId = `user-${Date.now()}`;
     const userMessage: ChatMessage = {
       id: userMessageId,
@@ -82,23 +51,13 @@ const ChatComponent = ({ manualId }: ChatComponentProps) => {
     setIsLoading(true);
     
     try {
-      // Call API
       const response = await chatApi.sendMessage({
         message: newMessage,
-        // If you have a conversation ID, you can pass it here
-        // conversationId: 'your-conversation-id', 
-        // manual_id is not a direct parameter of sendMessage. 
-        // If manualId is important for context, it might need to be
-        // handled differently, perhaps as part of the message or metadata
-        // or a specific backend endpoint that incorporates it.
-        // For now, assuming it's not directly used by sendMessage or
-        // should be part of a broader context not yet implemented here.
       });
       
-      // Add AI response
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
-        content: response.message.content, // Adjusted to use response.message.content
+        content: response.message.content,
         isUser: false,
         timestamp: new Date(),
         sources: response.sources,
@@ -107,15 +66,7 @@ const ChatComponent = ({ manualId }: ChatComponentProps) => {
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to get a response. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
       
-      // Add error message
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         content: 'Sorry, I encountered an error while processing your request. Please try again.',
@@ -137,171 +88,133 @@ const ChatComponent = ({ manualId }: ChatComponentProps) => {
   };
 
   return (
-    <Box
-      borderWidth="1px"
-      borderRadius="lg"
-      borderColor={borderColor}
-      overflow="hidden"
-      bg={bgColor}
-      boxShadow="sm"
-      height="600px"
-      display="flex"
-      flexDirection="column"
-    >
-      <Box
-        p={4}
-        bg={useColorModeValue('brand.500', 'brand.600')}
-        color="white"
-      >
-        <Flex align="center">
-          <ChatIcon mr={2} />
-          <Text fontWeight="bold">BNext ERP Assistant</Text>
-        </Flex>
-      </Box>
+    <div className="flex flex-col h-[calc(100vh-8rem)] rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-400/10 dark:to-purple-400/10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
+            <MessageSquare className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            BNext ERP Assistant
+          </h1>
+        </div>
+      </div>
       
-      <Box
-        flex="1"
-        overflowY="auto"
-        p={4}
-        bg={useColorModeValue('gray.50', 'gray.900')}
-      >
-        <VStack spacing={4} align="stretch">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50/50 to-transparent dark:from-gray-900/50">
+        <div className="space-y-6">
           {messages.map((msg) => (
-            <Box key={msg.id}>
-              <Flex
-                direction={msg.isUser ? 'row-reverse' : 'row'}
-                align="start"
-                mb={msg.sources && msg.sources.length > 0 ? 1 : 3}
-              >
-                <Avatar
-                  size="sm"
-                  name={msg.isUser ? 'User' : 'RAGnar'}
-                  src={msg.isUser ? undefined : '/ragnar-logo.png'}
-                  bg={msg.isUser ? 'blue.500' : 'brand.500'}
-                  mr={msg.isUser ? 0 : 2}
-                  ml={msg.isUser ? 2 : 0}
-                />
-                <Box
-                  maxW="80%"
-                  p={3}
-                  borderRadius="lg"
-                  bg={msg.isUser ? 'blue.500' : useColorModeValue('white', 'gray.700')}
-                  color={msg.isUser ? 'white' : useColorModeValue('gray.800', 'white')}
-                  boxShadow="sm"
-                >
-                  <Box className="markdown-content">
+            <div key={msg.id} className="animate-fadeIn">
+              <div className={`flex ${msg.isUser ? 'flex-row-reverse' : 'flex-row'} items-start gap-3 mb-3`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md ${
+                  msg.isUser 
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
+                    : 'bg-gradient-to-br from-green-500 to-emerald-600'
+                }`}>
+                  <span className="text-white font-medium">
+                    {msg.isUser ? 'U' : 'A'}
+                  </span>
+                </div>
+                <div className={`max-w-[80%] p-4 rounded-2xl shadow-md transform transition-all duration-200 hover:scale-[1.02] ${
+                  msg.isUser
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+                    : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white'
+                }`}>
+                  <div className="prose dark:prose-invert max-w-none">
                     <ReactMarkdown>
                       {msg.content}
                     </ReactMarkdown>
-                  </Box>
-                  <Text
-                    fontSize="xs"
-                    color={msg.isUser ? 'whiteAlpha.700' : useColorModeValue('gray.500', 'gray.400')}
-                    textAlign="right"
-                    mt={1}
-                  >
+                  </div>
+                  <div className={`text-xs mt-2 text-right ${
+                    msg.isUser ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
+                  }`}>
                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                </Box>
-              </Flex>
+                  </div>
+                </div>
+              </div>
               
               {msg.sources && msg.sources.length > 0 && (
-                <Box ml={10} mb={3}>
-                  <Flex align="center">
-                    <Button
-                      size="xs"
-                      onClick={() => toggleSources(msg.id)}
-                      rightIcon={expandedSources[msg.id] ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                      variant="outline"
-                      colorScheme="gray"
-                    >
-                      {expandedSources[msg.id] ? 'Hide' : 'Show'} Sources ({msg.sources.length})
-                    </Button>
-                  </Flex>
+                <div className="ml-16 mb-3">
+                  <button
+                    onClick={() => toggleSources(msg.id)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/80 rounded-lg transition-colors duration-200"
+                  >
+                    {expandedSources[msg.id] ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Hide Sources ({msg.sources.length})
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Show Sources ({msg.sources.length})
+                      </>
+                    )}
+                  </button>
                   
-                  <Collapse in={expandedSources[msg.id]} animateOpacity>
-                    <VStack
-                      mt={2}
-                      spacing={2}
-                      align="stretch"
-                      borderLeft="2px"
-                      borderColor="gray.200"
-                      pl={3}
-                    >
+                  {expandedSources[msg.id] && (
+                    <div className="mt-3 space-y-3 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
                       {msg.sources.map((source, idx) => (
-                        <Box
+                        <div
                           key={idx}
-                          p={2}
-                          borderRadius="md"
-                          bg={useColorModeValue('gray.100', 'gray.700')}
-                          fontSize="sm"
+                          className="p-4 rounded-xl bg-white dark:bg-gray-700 shadow-sm transform transition-all duration-200 hover:scale-[1.01]"
                         >
-                          <Flex justify="space-between" mb={1}>
-                            <Text fontWeight="bold">{source.source.title}</Text>
-                            <Badge colorScheme="green">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-sm font-bold">{source.source.title}</h3>
+                            <span className="px-2 py-1 text-xs font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full">
                               {Math.round(source.score * 100)}% match
-                            </Badge>
-                          </Flex>
-                          <Text noOfLines={2}>{source.content}</Text>
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                            {source.content}
+                          </p>
                           {source.source.url && (
-                            <Link
-                              color="brand.500"
-                              fontSize="xs"
+                            <a
                               href={source.source.url}
-                              isExternal
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-500 hover:text-blue-600 mt-2 inline-block"
                             >
-                              View source
-                            </Link>
+                              View source →
+                            </a>
                           )}
-                        </Box>
+                        </div>
                       ))}
-                    </VStack>
-                  </Collapse>
-                </Box>
+                    </div>
+                  )}
+                </div>
               )}
-            </Box>
+            </div>
           ))}
-          
-          {isLoading && (
-            <Flex justify="center" p={4}>
-              <Spinner
-                thickness="4px"
-                speed="0.65s"
-                emptyColor="gray.200"
-                color="brand.500"
-                size="md"
-              />
-            </Flex>
-          )}
-          
           <div ref={endOfMessagesRef} />
-        </VStack>
-      </Box>
-      
-      <Divider />
-      
-      <Box p={4}>
-        <form onSubmit={handleSubmit}>
-          <Flex>
-            <Input
-              flex="1"
-              placeholder="Type your question here..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              disabled={isLoading}
-            />
-            <IconButton
-              ml={2}
-              colorScheme="brand"
-              aria-label="Send message"
-              icon={<SearchIcon />}
-              type="submit"
-              isLoading={isLoading}
-            />
-          </Flex>
+        </div>
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-r from-blue-500/5 to-purple-500/5 dark:from-blue-400/5 dark:to-purple-400/5">
+        <form onSubmit={handleSubmit} className="flex gap-3">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 px-4 py-3 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Send className="w-5 h-5" />
+            )}
+          </button>
         </form>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 
