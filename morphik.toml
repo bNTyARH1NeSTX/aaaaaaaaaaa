@@ -140,3 +140,12 @@ otlp_retry_delay = 1
 otlp_max_export_batch_size = 512
 otlp_schedule_delay_millis = 5000
 otlp_max_queue_size = 2048
+
+[manual_generation]
+colpali_model_name = "ARHVNAAG/Bnext"
+manual_model_name = "ARHVNAAG/Manuales_finetuning_generator"
+manual_generation_image_folder = "/path/to/your/manual_gen_images"
+max_new_tokens = 1500 
+temperature = 0.3
+do_sample = true
+top_p = 0.9

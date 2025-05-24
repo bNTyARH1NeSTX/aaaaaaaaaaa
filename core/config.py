@@ -5,57 +5,46 @@ from typing import Any, Dict, Literal, Optional
 
 import tomli
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field, PostgresDsn, RedisDsn, validator, AnyHttpUrl, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict # Ensure SettingsConfigDict is imported
+
 
 load_dotenv(override=True)
 
 
+
 class Settings(BaseSettings):
-    """Morphik configuration settings."""
+    API_V1_STR: str = "/api/v1"
+    API_DOMAIN: Optional[str] = "localhost" # Default added
+    HOST: Optional[str] = "0.0.0.0"
+    PORT: Optional[int] = 8000
+    RELOAD: Optional[bool] = False # Default based on common practice for dev
+    WORKERS: Optional[int] = None # Default added
 
-    # Environment variables
-    JWT_SECRET_KEY: str
-    SESSION_SECRET_KEY: str
-    POSTGRES_URI: Optional[str] = None
-    UNSTRUCTURED_API_KEY: Optional[str] = None
-    AWS_ACCESS_KEY: Optional[str] = None
-    AWS_SECRET_ACCESS_KEY: Optional[str] = None
-    OPENAI_API_KEY: Optional[str] = None
-    ANTHROPIC_API_KEY: Optional[str] = None
-    ASSEMBLYAI_API_KEY: Optional[str] = None
+    # Security and Authentication
+    JWT_SECRET_KEY: Optional[str] = "dev-secret-key" # Placeholder default, MUST be changed for production
+    SESSION_SECRET_KEY: Optional[str] = "super-secret-dev-session-key" # Placeholder default, MUST be changed for production
+    JWT_ALGORITHM: Optional[str] = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    DEV_MODE_PERMISSIVE_ENDPOINTS: bool = False
 
-    # API configuration
-    HOST: str
-    PORT: int
-    RELOAD: bool
-    # Morphik Embedding API server configuration
-    MORPHIK_EMBEDDING_API_KEY: Optional[str] = None
-    MORPHIK_EMBEDDING_API_DOMAIN: str
+    # Registered Models (example, adjust as needed)
+    REGISTERED_MODELS: Dict[str, Any] = {}
 
-    # Auth configuration
-    JWT_ALGORITHM: str
-    dev_mode: bool = False
-    dev_entity_type: str = "developer"
-    dev_entity_id: str = "dev_user"
-    dev_permissions: list = ["read", "write", "admin"]
+    # Completion settings
+    COMPLETION_PROVIDER: str = "litellm"
+    COMPLETION_MODEL: Optional[str] = None # Made Optional
 
-    # Registered models configuration
-    REGISTERED_MODELS: Dict[str, Dict[str, Any]] = {}
+    # Agent settings
+    AGENT_MODEL: Optional[str] = None # Made Optional
 
-    # Completion configuration
-    COMPLETION_PROVIDER: Literal["litellm"] = "litellm"
-    COMPLETION_MODEL: str
+    # Document Analysis
+    DOCUMENT_ANALYSIS_MODEL: Optional[str] = None # Made Optional
 
-    # Agent configuration
-    AGENT_MODEL: str
-
-    # Document analysis configuration
-    DOCUMENT_ANALYSIS_MODEL: str
-
-    # Database configuration
-    DATABASE_PROVIDER: Literal["postgres"]
+    # Database settings
+    DATABASE_PROVIDER: Optional[str] = "postgres"
     DATABASE_NAME: Optional[str] = None
-    # Database connection pool settings
+    POSTGRES_URI: Optional[str] = None # Ensure this is set in your environment
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 30
     DB_POOL_RECYCLE: int = 3600
@@ -64,67 +53,65 @@ class Settings(BaseSettings):
     DB_MAX_RETRIES: int = 3
     DB_RETRY_DELAY: float = 1.0
 
-    # Embedding configuration
-    EMBEDDING_PROVIDER: Literal["litellm"] = "litellm"
-    EMBEDDING_MODEL: str
-    VECTOR_DIMENSIONS: int
-    EMBEDDING_SIMILARITY_METRIC: Literal["cosine", "dotProduct"]
+    # Embedding settings
+    EMBEDDING_PROVIDER: str = "litellm"
+    EMBEDDING_MODEL: Optional[str] = None # Made Optional
+    VECTOR_DIMENSIONS: Optional[int] = 1536 # Default based on log
+    EMBEDDING_SIMILARITY_METRIC: Optional[str] = "cosine"
 
-    # Parser configuration
-    CHUNK_SIZE: int
-    CHUNK_OVERLAP: int
-    USE_UNSTRUCTURED_API: bool
-    FRAME_SAMPLE_RATE: Optional[int] = None
+    # Parser settings
+    CHUNK_SIZE: Optional[int] = 1000
+    CHUNK_OVERLAP: Optional[int] = 200
+    USE_UNSTRUCTURED_API: Optional[bool] = False
+    UNSTRUCTURED_API_KEY: Optional[str] = None
     USE_CONTEXTUAL_CHUNKING: bool = False
 
-    # Rules configuration
-    RULES_PROVIDER: Literal["litellm"] = "litellm"
-    RULES_MODEL: str
-    RULES_BATCH_SIZE: int = 4096
+    # Rules settings
+    RULES_PROVIDER: str = "litellm"
+    RULES_MODEL: Optional[str] = None # Made Optional
+    RULES_BATCH_SIZE: int = 10
 
-    # Graph configuration
-    GRAPH_PROVIDER: Literal["litellm"] = "litellm"
-    GRAPH_MODEL: str
+    # Graph settings
+    GRAPH_PROVIDER: str = "litellm"
+    GRAPH_MODEL: Optional[str] = None # Made Optional
     ENABLE_ENTITY_RESOLUTION: bool = True
 
-    # Reranker configuration
-    USE_RERANKING: bool
-    RERANKER_PROVIDER: Optional[Literal["flag"]] = None
+    # Reranker settings
+    USE_RERANKING: Optional[bool] = False
+    RERANKER_PROVIDER: Optional[str] = None
     RERANKER_MODEL: Optional[str] = None
     RERANKER_QUERY_MAX_LENGTH: Optional[int] = None
     RERANKER_PASSAGE_MAX_LENGTH: Optional[int] = None
     RERANKER_USE_FP16: Optional[bool] = None
     RERANKER_DEVICE: Optional[str] = None
 
-    # Storage configuration
-    STORAGE_PROVIDER: Literal["local", "aws-s3"]
-    STORAGE_PATH: Optional[str] = None
+    # Storage settings
+    STORAGE_PROVIDER: Optional[str] = "local"
+    STORAGE_PATH: Optional[str] = "./storage" # Default local path
     AWS_REGION: Optional[str] = None
     S3_BUCKET: Optional[str] = None
+    AWS_ACCESS_KEY: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
 
-    # Vector store configuration
-    VECTOR_STORE_PROVIDER: Literal["pgvector"]
-    VECTOR_STORE_DATABASE_NAME: Optional[str] = None
+    # Vector Store settings
+    VECTOR_STORE_PROVIDER: Optional[str] = "pgvector"
 
-    # Colpali configuration
-    ENABLE_COLPALI: bool
-    # Colpali embedding mode: off, local, or api
-    COLPALI_MODE: Literal["off", "local", "api"] = "local"
+    # Morphik specific settings
+    ENABLE_COLPALI: Optional[bool] = False
+    COLPALI_MODE: str = "local"
+    MODE: str = "cloud"
+    MORPHIK_EMBEDDING_API_DOMAIN: Optional[str] = "api.morphik.ai" # Default added
 
-    # Mode configuration
-    MODE: Literal["cloud", "self_hosted"] = "cloud"
+    # Redis settings
+    REDIS_HOST: Optional[str] = "localhost"
+    REDIS_PORT: Optional[int] = 6379
 
-    # API configuration
-    API_DOMAIN: str = "api.morphik.ai"
-
-    # Redis configuration
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-
-    # Telemetry configuration
+    # Telemetry settings (existing ones from your snippet seem fine)
     TELEMETRY_ENABLED: bool = True
     HONEYCOMB_ENABLED: bool = True
     HONEYCOMB_ENDPOINT: str = "https://api.honeycomb.io"
+    HONEYCOMB_API_KEY: Optional[str] = None # Added Optional
+    HONEYCOMB_DATASET: Optional[str] = None # Added Optional
     HONEYCOMB_PROXY_ENDPOINT: str = "https://otel-proxy.onrender.com/"
     SERVICE_NAME: str = "morphik-core"
     OTLP_TIMEOUT: int = 10
@@ -133,6 +120,26 @@ class Settings(BaseSettings):
     OTLP_MAX_EXPORT_BATCH_SIZE: int = 512
     OTLP_SCHEDULE_DELAY_MILLIS: int = 5000
     OTLP_MAX_QUEUE_SIZE: int = 2048
+
+    # Manual Generation specific settings
+    COLPALI_MODEL_NAME: Optional[str] = None # Made Optional
+    MANUAL_MODEL_NAME: Optional[str] = None # Made Optional
+    MANUAL_GENERATION_IMAGE_FOLDER: Optional[str] = None
+    MANUAL_GENERATION_MAX_NEW_TOKENS: int = 1024
+    MANUAL_GENERATION_TEMPERATURE: float = 0.7
+    MANUAL_GENERATION_DO_SAMPLE: bool = True
+    MANUAL_GENERATION_TOP_P: float = 0.9
+
+    MANUAL_GEN_DB_USER: Optional[str] = None
+    MANUAL_GEN_DB_PASSWORD: Optional[str] = None
+    MANUAL_GEN_DB_HOST: Optional[str] = None
+    MANUAL_GEN_DB_PORT: Optional[int] = None
+    MANUAL_GEN_DB_NAME: Optional[str] = None
+    MANUAL_GEN_DB_URL: Optional[str] = None
+
+    # AssemblyAI settings
+    ASSEMBLYAI_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None
 
 
 @lru_cache()
@@ -356,27 +363,68 @@ def get_settings() -> Settings:
             "OTLP_MAX_QUEUE_SIZE": config["telemetry"].get("otlp_max_queue_size", 2048),
         }
 
-    settings_dict = dict(
-        ChainMap(
-            api_config,
-            auth_config,
-            registered_models,
-            completion_config,
-            agent_config,
-            database_config,
-            embedding_config,
-            parser_config,
-            reranker_config,
-            storage_config,
-            vector_store_config,
-            rules_config,
-            morphik_config,
-            redis_config,
-            graph_config,
-            document_analysis_config,
-            telemetry_config,
-            openai_config,
-        )
+    # load manual generation config
+    manual_gen_config = {
+        "COLPALI_MODEL_NAME": config["manual_generation"]["colpali_model_name"],
+        "MANUAL_MODEL_NAME": config["manual_generation"]["manual_model_name"],
+        "MANUAL_GENERATION_IMAGE_FOLDER": config["manual_generation"].get("image_folder"),
+        "MANUAL_GENERATION_MAX_NEW_TOKENS": config["manual_generation"].get("max_new_tokens", 1024),
+        "MANUAL_GENERATION_TEMPERATURE": config["manual_generation"].get("temperature", 0.7),
+        "MANUAL_GENERATION_DO_SAMPLE": config["manual_generation"].get("do_sample", True),
+        "MANUAL_GENERATION_TOP_P": config["manual_generation"].get("top_p", 0.9),
+    }
+
+    # load manual generation database config
+    manual_gen_db_config = {
+        "MANUAL_GEN_DB_USER": os.getenv("MANUAL_GEN_DB_USER"),
+        "MANUAL_GEN_DB_PASSWORD": os.getenv("MANUAL_GEN_DB_PASSWORD"),
+        "MANUAL_GEN_DB_HOST": os.getenv("MANUAL_GEN_DB_HOST"),
+        "MANUAL_GEN_DB_PORT": os.getenv("MANUAL_GEN_DB_PORT"),
+        "MANUAL_GEN_DB_NAME": os.getenv("MANUAL_GEN_DB_NAME"),
+        "MANUAL_GEN_DB_URL": os.getenv("MANUAL_GEN_DB_URL"),
+    }
+
+    # Ensure HUGGING_FACE_TOKEN is loaded from environment if not already handled
+    if "HUGGING_FACE_TOKEN" not in os.environ:
+        raise ValueError("HUGGING_FACE_TOKEN environment variable is required.")
+
+    settings_map = ChainMap(
+        os.environ,  # Highest priority
+        api_config,
+        auth_config,
+        registered_models, # Ensure REGISTERED_MODELS is explicitly passed
+        completion_config,
+        agent_config,
+        document_analysis_config,
+        database_config,
+        embedding_config,
+        parser_config,
+        rules_config,
+        graph_config,
+        reranker_config,
+        storage_config,
+        vector_store_config,
+        morphik_config,
+        redis_config,
+        telemetry_config,
+        manual_gen_config,
+        manual_gen_db_config,
+        openai_config
     )
 
-    return Settings(**settings_dict)
+    raw_settings_dict = dict(settings_map)
+    
+    # Filter the raw settings to only include fields defined in the Settings model
+    valid_field_names = Settings.model_fields.keys()
+    final_settings_kwargs = {key: value for key, value in raw_settings_dict.items() if key in valid_field_names}
+    
+    # Debug: Print which expected keys are missing from final_settings_kwargs
+    # for field_name in valid_field_names:
+    #     if field_name not in final_settings_kwargs:
+    #         print(f"DEBUG: Expected field '{field_name}' is MISSING from final_settings_kwargs before Settings instantiation.")
+            
+    # Debug: Print a sample of what's being passed
+    # print("DEBUG: final_settings_kwargs to be passed to Settings:", {k: v for i, (k, v) in enumerate(final_settings_kwargs.items()) if i < 5})
+
+
+    return Settings(**final_settings_kwargs)

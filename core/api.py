@@ -9,10 +9,11 @@ from typing import Any, Dict, List, Optional, Union
 import arq
 import jwt
 import tomli
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status, UploadFile, File, Form, Header, Query # Added Query
 from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from starlette.middleware.sessions import SessionMiddleware
+from pydantic import BaseModel, Field # Added BaseModel, Field
 
 from core.agent import MorphikAgent
 from core.app_factory import lifespan
@@ -40,6 +41,11 @@ from core.models.request import (
 )
 from core.services.telemetry import TelemetryService
 from core.services_init import document_service, storage
+
+# Import new services and models for manual generation
+from core.embedding.manual_generation_embedding_model import ManualGenerationEmbeddingModel
+from core.services.manual_generator_service import ManualGeneratorService
+
 
 # Initialize FastAPI app
 logger = logging.getLogger(__name__)
@@ -121,6 +127,126 @@ morphik_agent = MorphikAgent(document_service=document_service)
 # except Exception as exc:  # noqa: BLE001
 #     logger.error("An unexpected error occurred during EE app initialization: %s", exc, exc_info=True)
 logger.info("Enterprise edition (ee) module is not used in this setup.")
+
+# --- Pydantic Models for Manual Generation ---
+class ManualGenerationRequest(BaseModel):
+    query: str = Field(..., description="The main query or task for generating the manual content.")
+    image_path: Optional[str] = Field(default=None, description="Optional path to a specific pre-selected image to use.")
+    image_prompt: Optional[str] = Field(default=None, description="The descriptive prompt associated with the pre-selected image, if image_path is provided. This text describes the image content for the VLM.")
+    k_images: int = Field(default=1, ge=1, le=5, description="Number of relevant images to find and use if image_path is not specified.")
+
+class ManualGenerationResponse(BaseModel):
+    generated_text: str
+    relevant_images_used: List[Dict[str, Any]] # e.g., [{"image_path": "...", "prompt": "...", "respuesta": "..."}]
+    query: str
+
+# --- Dependency Providers for Manual Generation ---
+_manual_gen_embedding_model_instance: Optional[ManualGenerationEmbeddingModel] = None
+_manual_generator_service_instance: Optional[ManualGeneratorService] = None
+
+def get_manual_generation_embedding_model() -> ManualGenerationEmbeddingModel:
+    global _manual_gen_embedding_model_instance
+    if _manual_gen_embedding_model_instance is None:
+        logger.info("Initializing ManualGenerationEmbeddingModel instance.")
+        _manual_gen_embedding_model_instance = ManualGenerationEmbeddingModel(settings=settings)
+    return _manual_gen_embedding_model_instance
+
+def get_manual_generator_service() -> ManualGeneratorService:
+    global _manual_generator_service_instance
+    if _manual_generator_service_instance is None:
+        logger.info("Initializing ManualGeneratorService instance.")
+        _manual_generator_service_instance = ManualGeneratorService(settings=settings)
+    return _manual_generator_service_instance
+
+# --- Manual Generation Router ---
+manual_generation_router = APIRouter(
+    prefix="/manuals",
+    tags=["Manual Generation"],
+    responses={404: {"description": "Not found"}},
+)
+
+@manual_generation_router.post(
+    "/generate_manual",
+    response_model=ManualGenerationResponse,
+    summary="Generate manual text based on a query and relevant ERP images."
+)
+@telemetry.track(operation_type="generate_manual", metadata_resolver=None) # TODO: Implement resolve_manual_generation_metadata on TelemetryService
+async def generate_manual_endpoint(
+    request: ManualGenerationRequest,
+    auth: AuthContext = Depends(verify_token),
+    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
+    generator_service: ManualGeneratorService = Depends(get_manual_generator_service),
+):
+    """
+    Generates textual content for a manual.
+
+    - If **image_path** and **image_prompt** are provided, the specified image and its description are used.
+    - Otherwise, relevant images are found based on the **query** using the ColPali model.
+    - The **query** is then used with the selected image(s) and their descriptive prompts to generate
+      manual content using a fine-tuned Vision Language Model (VLM).
+    """
+    # Example permission check (adjust as needed)
+    # if "generate_manual" not in auth.permissions:
+    #     raise HTTPException(status_code=403, detail="User does not have permission to generate manuals.")
+
+    relevant_images_metadata = []
+
+    if request.image_path:
+        if not request.image_prompt:
+            logger.warning("image_path provided without image_prompt for manual generation.")
+            raise HTTPException(status_code=400, detail="If image_path is provided, image_prompt (description of the image content) must also be provided.")
+        logger.info(f"Using provided image: {request.image_path} for manual generation.")
+        relevant_images_metadata.append(
+            {"image_path": request.image_path, "prompt": request.image_prompt, "respuesta": ""} # 'respuesta' might be unknown or not applicable here
+        )
+    else:
+        logger.info(f"Finding relevant images for query: '{request.query}' with k={request.k_images}")
+        try:
+            found_docs = await embedding_model.find_relevant_images(
+                query=request.query,
+                k=request.k_images,
+            )
+            if not found_docs:
+                logger.warning(f"No relevant images found for query: '{request.query}'")
+                raise HTTPException(status_code=404, detail="No relevant images found for the query.")
+
+            for doc in found_docs:
+                relevant_images_metadata.append(
+                    {"image_path": doc.image_path, "prompt": doc.prompt, "respuesta": doc.respuesta}
+                )
+            logger.info(f"Found {len(relevant_images_metadata)} relevant images.")
+        except HTTPException:
+            raise # Re-raise HTTPException directly
+        except Exception as e:
+            logger.error(f"Error finding relevant images: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"An error occurred while finding relevant images: {str(e)}")
+
+    if not relevant_images_metadata:
+        logger.error("No image metadata available to generate manual after processing request.") # Should have been caught earlier
+        raise HTTPException(status_code=404, detail="No image metadata available to generate manual. Please check your query or provided image path.")
+
+    try:
+        logger.info(f"Generating manual text for query: '{request.query}' using {len(relevant_images_metadata)} image(s).")
+        generated_text_result = await generator_service.generate_manual_text(
+            query=request.query, # This is the user's task/question for the manual
+            image_metadata_list=relevant_images_metadata, # This contains image_path and their descriptive prompts
+        )
+        logger.info(f"Successfully generated manual text for query: '{request.query}'.")
+    except HTTPException:
+        raise # Re-raise HTTPException directly
+    except Exception as e:
+        logger.error(f"Error generating manual text: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An error occurred during manual text generation: {str(e)}")
+
+    return ManualGenerationResponse(
+        generated_text=generated_text_result,
+        relevant_images_used=relevant_images_metadata,
+        query=request.query,
+    )
+
+# Include the manual generation router in the main FastAPI app
+app.include_router(manual_generation_router)
+
 
 @app.post("/ingest/text", response_model=Document)
 @telemetry.track(operation_type="ingest_text", metadata_resolver=telemetry.ingest_text_metadata)
@@ -1907,7 +2033,7 @@ async def set_folder_rule(
             # Process each document
             for doc in documents:
                 try:
-                    # Get document content
+                                       # Get document content
                     logger.info(f"Processing document {doc.external_id}")
 
                     # For each document, apply the rules from the folder
@@ -2073,7 +2199,7 @@ async def delete_cloud_app(
 
     # 1) Resolve app_id from apps table ----------------------------------
     async with document_service.db.async_session() as session:
-               stmt = select(AppModel).where(AppModel.user_id == user_id, AppModel.name == app_name)
+        stmt = select(AppModel).where(AppModel.user_id == user_id, AppModel.name == app_name)
         res = await session.execute(stmt)
         app_row = res.scalar_one_or_none()
 
@@ -2144,3 +2270,98 @@ async def delete_cloud_app(
         "documents_deleted": deleted,
         "folders_deleted": folder_ids_deleted,
     }
+
+
+# START: Manual Generation Endpoint and supporting components
+
+# Pydantic Models for Manual Generation
+class ManualGenerationRequest(BaseModel):
+    query: str
+    folder_name: Optional[str] = None
+    end_user_id: Optional[str] = None
+    # Add other relevant parameters like k, temperature if needed for the service
+
+class ManualGenerationResponse(BaseModel):
+    manual_content: str
+    sources: List[ChunkSource] # Assuming ChunkSource is relevant for indicating sources
+
+# Dependency Providers
+async def get_manual_generation_embedding_model() -> ManualGenerationEmbeddingModel:
+    """
+    Provides an instance of the ManualGenerationEmbeddingModel.
+    In a production setup, this might retrieve a singleton instance
+    managed by app.state or a more sophisticated dependency injection system.
+    """
+    # Ensure ManualGenerationEmbeddingModel can be instantiated directly or has its own provider if complex.
+    return ManualGenerationEmbeddingModel()
+
+async def get_manual_generator_service(
+    # Assumes document_service is available on app.state as per existing patterns in api.py
+    doc_service: Any = Depends(lambda: app.state.document_service),
+    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model)
+) -> ManualGeneratorService:
+    """
+    Provides an instance of the ManualGeneratorService.
+    This service should encapsulate the logic for manual generation.
+    In a production setup, this might retrieve a singleton instance.
+    """
+    # ASSUMPTION: CoreManualGeneratorService is defined in 'core/services/manual_generator_service.py'
+    # and its constructor accepts 'document_service' and 'embedding_model'.
+    return ManualGeneratorService(document_service=doc_service, embedding_model=embedding_model)
+
+@app.post("/generate_manual", response_model=ManualGenerationResponse)
+@telemetry.track(operation_type="generate_manual", metadata_resolver="resolve_manual_generation_metadata") # Placeholder: "resolve_manual_generation_metadata" needs to be implemented in TelemetryService
+async def generate_manual_from_query(
+    request: ManualGenerationRequest,
+    auth: AuthContext = Depends(verify_token),
+    manual_generator: ManualGeneratorService = Depends(get_manual_generator_service)
+):
+    """
+    Generate a manual based on a query, using relevant documents as context.
+
+    Args:
+        request: ManualGenerationRequest containing the query and other parameters.
+        auth: Authentication context.
+        manual_generator: Service to handle the manual generation logic.
+
+    Returns:
+        ManualGenerationResponse: The generated manual content and sources.
+    """
+    try:
+        # Placeholder for any specific permission checks if needed for this endpoint
+        # e.g., if "generate_manual" not in auth.permissions:
+        #     raise HTTPException(status_code=403, detail="Insufficient permissions.")
+
+        # The CoreManualGeneratorService is expected to have an async method 'generate_manual'
+        response = await manual_generator.generate_manual(
+            query=request.query,
+            auth=auth,
+            folder_name=request.folder_name,
+            end_user_id=request.end_user_id
+            # Pass other parameters from request if the service's method expects them
+        )
+        return response
+    except PermissionError as e: # Catch specific permission errors from the service layer
+        logger.warning(f"Permission denied during manual generation for {auth.entity_id}: {str(e)}")
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e: # Catch validation errors or other client-side type errors from service
+        logger.warning(f"Value error during manual generation for {auth.entity_id}: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error during manual generation for {auth.entity_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected error occurred during manual generation.")
+
+# Note: The telemetry metadata_resolver "resolve_manual_generation_metadata"
+# needs to be implemented in the TelemetryService class (likely in core/services/telemetry.py).
+# Example structure for that method in TelemetryService:
+#
+# def resolve_manual_generation_metadata(self, request: ManualGenerationRequest, response: ManualGenerationResponse) -> Dict[str, Any]:
+#     return {
+#         "query_length": len(request.query),
+#         "folder_name": request.folder_name,
+#         "end_user_id": request.end_user_id,
+#         "generated_content_length": len(response.manual_content),
+#         "num_sources": len(response.sources),
+#     }
+
+# END: Manual Generation Endpoint and supporting components
