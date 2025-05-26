@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { BookOpen, Wand2, FileSearch, CheckCircle, AlertCircle, Loader2, Image, FileText } from 'lucide-react';
-import { generateManual, ManualGenerationRequest, ManualGenerationResponse } from '@/api/manualApi';
+import { generateManual, ManualGenerationRequest, ManualGenerationResponse } from '../../api/apiService';
 
 export default function ManualsPage() {
   const [formData, setFormData] = useState<ManualGenerationRequest>({

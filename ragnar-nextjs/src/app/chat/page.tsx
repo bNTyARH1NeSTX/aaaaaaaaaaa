@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, User, Bot, Loader2, AlertCircle, FileText, Database } from 'lucide-react';
-import { sendChatMessage, ChatRequest, ChatResponse, ChatMessage } from '@/api/manualApi';
+import { sendChatMessage, ChatRequest, ChatResponse, ChatMessage } from '../../api/manualApi';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([

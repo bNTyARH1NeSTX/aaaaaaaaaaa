@@ -6,8 +6,8 @@ import Layout from "@/components/Layout";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Morphik - Document Management & AI Assistant",
-  description: "Modern document management system with AI-powered chat and knowledge graphs",
+  title: "Ragnar - Gestión de Documentos y Asistente IA",
+  description: "Sistema moderno de gestión de documentos con chat impulsado por IA y grafos de conocimiento.",
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={inter.className}>
         <Layout>
           {children}

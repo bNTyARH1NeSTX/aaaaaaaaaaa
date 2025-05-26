@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: Optional[str] = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     DEV_MODE_PERMISSIVE_ENDPOINTS: bool = False
+    dev_mode: bool = True  # Habilitar modo de desarrollo
+    dev_entity_type: str = "user"
+    dev_entity_id: str = "dev-user"
+    dev_permissions: list = ["*"]
 
     # Registered Models (example, adjust as needed)
     REGISTERED_MODELS: Dict[str, Any] = {}

@@ -7,24 +7,24 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <SettingsIcon className="w-8 h-8 text-blue-600" />
-          Settings
+          Configuración
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Manage your account and application preferences
+          Administre su cuenta y preferencias de la aplicación
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Settings Menu */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Configuración</h2>
           <nav className="space-y-2">
             {[
-              { icon: User, label: 'Profile', active: true },
-              { icon: Bell, label: 'Notifications', active: false },
-              { icon: Lock, label: 'Security', active: false },
-              { icon: Palette, label: 'Appearance', active: false },
-              { icon: Database, label: 'Data & Storage', active: false },
+              { icon: User, label: 'Perfil', active: true },
+              { icon: Bell, label: 'Notificaciones', active: false },
+              { icon: Lock, label: 'Seguridad', active: false },
+              { icon: Palette, label: 'Apariencia', active: false },
+              { icon: Database, label: 'Datos y Almacenamiento', active: false },
             ].map((item, index) => (
               <button
                 key={index}
@@ -43,12 +43,12 @@ export default function SettingsPage() {
 
         {/* Settings Content */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Profile Settings</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Configuración de Perfil</h2>
           
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Display Name
+                Nombre para Mostrar
               </label>
               <input
                 type="text"
@@ -59,36 +59,36 @@ export default function SettingsPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
+                Dirección de Correo
               </label>
               <input
                 type="email"
-                defaultValue="john.doe@example.com"
+                defaultValue="juan.perez@ejemplo.com"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Language
+                Idioma
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                <option>English</option>
-                <option>Spanish</option>
-                <option>French</option>
-                <option>German</option>
+                <option>Español</option>
+                <option>Inglés</option>
+                <option>Francés</option>
+                <option>Alemán</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Time Zone
+                Zona Horaria
               </label>
               <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                <option>UTC-5 (Eastern Time)</option>
-                <option>UTC-6 (Central Time)</option>
-                <option>UTC-7 (Mountain Time)</option>
-                <option>UTC-8 (Pacific Time)</option>
+                <option>UTC-5 (Hora del Este)</option>
+                <option>UTC-6 (Hora Central)</option>
+                <option>UTC-7 (Hora de la Montaña)</option>
+                <option>UTC-8 (Hora del Pacífico)</option>
               </select>
             </div>
 
@@ -100,7 +100,7 @@ export default function SettingsPage() {
                 defaultChecked
               />
               <label htmlFor="email_notifications" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                Enable email notifications
+                Habilitar notificaciones por correo
               </label>
             </div>
 
@@ -112,17 +112,17 @@ export default function SettingsPage() {
                 defaultChecked
               />
               <label htmlFor="auto_save" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                Auto-save documents
+                Autoguardar documentos
               </label>
             </div>
 
             <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex gap-3">
                 <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
-                  Save Changes
+                  Guardar Cambios
                 </button>
                 <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors">
-                  Cancel
+                  Cancelar
                 </button>
               </div>
             </div>
