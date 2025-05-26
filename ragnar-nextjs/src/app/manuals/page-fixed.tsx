@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { BookOpen, Wand2, FileSearch, CheckCircle, AlertCircle, Loader2, Image, FileText } from 'lucide-react';
+import { BookOpen, Wand2, FileSearch, AlertCircle, CheckCircle, FileText, Loader2, Image } from 'lucide-react';
 import { generateManual, ManualGenerationRequest, ManualGenerationResponse } from '@/api/manualApi';
 
 export default function ManualsPage() {
@@ -17,9 +17,9 @@ export default function ManualsPage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'k_images') {
-      setFormData((prev: ManualGenerationRequest) => ({ ...prev, [name]: parseInt(value) || 3 }));
+      setFormData((prev) => ({ ...prev, [name]: parseInt(value) || 3 }));
     } else {
-      setFormData((prev: ManualGenerationRequest) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -90,6 +90,9 @@ export default function ManualsPage() {
                 placeholder="Ejemplo: Cómo configurar un nuevo usuario en el sistema ERP, Proceso de facturación paso a paso, Configuración de inventario..."
                 disabled={isGenerating}
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Describa qué tipo de manual desea generar y qué información debe incluir
+              </p>
             </div>
 
             <div>
@@ -109,17 +112,23 @@ export default function ManualsPage() {
                 <option value={3}>3 imágenes</option>
                 <option value={4}>4 imágenes</option>
                 <option value={5}>5 imágenes</option>
+                <option value={10}>10 imágenes</option>
               </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Número máximo de imágenes relevantes que la IA utilizará para generar el manual
+              </p>
             </div>
 
+            {/* Advanced Options */}
             <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Imagen Específica (Opcional)
-              </label>
-              <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Opciones Avanzadas (Opcional)
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label htmlFor="image_path" className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Ruta de la Imagen
+                  <label htmlFor="image_path" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Ruta de Imagen Específica
                   </label>
                   <input
                     type="text"
@@ -127,14 +136,15 @@ export default function ManualsPage() {
                     name="image_path"
                     value={formData.image_path || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
-                    placeholder="Ej: /path/to/specific/image.jpg"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="path/to/specific/image.png"
                     disabled={isGenerating}
                   />
                 </div>
+                
                 <div>
-                  <label htmlFor="image_prompt" className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    Descripción de la Imagen
+                  <label htmlFor="image_prompt" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Descripción de Imagen Específica
                   </label>
                   <input
                     type="text"
@@ -142,32 +152,37 @@ export default function ManualsPage() {
                     name="image_prompt"
                     value={formData.image_prompt || ''}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm"
-                    placeholder="Descripción del contenido de la imagen..."
+                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Descripción del contenido de la imagen específica"
                     disabled={isGenerating}
                   />
                 </div>
               </div>
+              
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Si especifica una imagen, debe proporcionar también su descripción
+              </p>
             </div>
 
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
                 disabled={isGenerating || !formData.query.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors flex items-center justify-center gap-2"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Generando...
+                    Generando Manual...
                   </>
                 ) : (
                   <>
-                    <Wand2 className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
                     Generar Manual
                   </>
                 )}
               </button>
+              
               <button
                 type="button"
                 onClick={handleReset}
@@ -213,37 +228,17 @@ export default function ManualsPage() {
                   </div>
                 </div>
                 
-                {generatedManual.relevant_images_used.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-2">
-                      Imágenes Utilizadas ({generatedManual.relevant_images_used.length})
-                    </h3>
-                    <div className="space-y-2">
-                      {generatedManual.relevant_images_used.map((image: any, index: number) => (
-                        <div key={index} className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-200 dark:border-blue-800">
-                          <div className="flex items-start gap-2">
-                            <Image className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-mono text-gray-600 dark:text-gray-400 break-all">
-                                {image.image_path}
-                              </p>
-                              {image.prompt && (
-                                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                                  <span className="font-medium">Descripción:</span> {image.prompt}
-                                </p>
-                              )}
-                              {image.respuesta && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                  <span className="font-medium">Respuesta:</span> {image.respuesta}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Image className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Imágenes Analizadas
+                    </span>
                   </div>
-                )}
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    {generatedManual.relevant_images_used} imágenes relevantes fueron utilizadas para generar este manual
+                  </p>
+                </div>
 
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                   <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -258,7 +253,7 @@ export default function ManualsPage() {
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400">
-                Complete el formulario y haga clic en &quot;Generar Manual&quot; para crear su documento
+                Complete el formulario y haga clic en "Generar Manual" para crear su documento
               </p>
             </div>
           )}

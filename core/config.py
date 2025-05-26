@@ -136,6 +136,7 @@ class Settings(BaseSettings):
     MANUAL_GEN_DB_PORT: Optional[int] = None
     MANUAL_GEN_DB_NAME: Optional[str] = None
     MANUAL_GEN_DB_URL: Optional[str] = None
+    MANUAL_GEN_DB_URI: Optional[str] = None
 
     # AssemblyAI settings
     ASSEMBLYAI_API_KEY: Optional[str] = None
@@ -382,6 +383,7 @@ def get_settings() -> Settings:
         "MANUAL_GEN_DB_PORT": os.getenv("MANUAL_GEN_DB_PORT"),
         "MANUAL_GEN_DB_NAME": os.getenv("MANUAL_GEN_DB_NAME"),
         "MANUAL_GEN_DB_URL": os.getenv("MANUAL_GEN_DB_URL"),
+        "MANUAL_GEN_DB_URI": os.getenv("MANUAL_GEN_DB_URI"),
     }
 
     # Ensure HUGGING_FACE_TOKEN is loaded from environment if not already handled

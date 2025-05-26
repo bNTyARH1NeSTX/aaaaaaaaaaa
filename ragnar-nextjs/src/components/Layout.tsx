@@ -1,41 +1,31 @@
 "use client";
 
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState } from 'react';
 import Navbar from './Navbar';
-// import Footer from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMounted, setIsMounted] = useState(false); // Add isMounted state
-
-  useEffect(() => {
-    setIsMounted(true); // Set isMounted to true after component mounts
-  }, []);
+export default function Layout({ children }: LayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+    setSidebarOpen(!sidebarOpen);
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <Navbar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      <div 
-        className={`flex-1 flex flex-col overflow-auto transition-all duration-300 ease-in-out`}
-        style={{ marginLeft: isSidebarOpen ? '16rem' : '4.375rem' }}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <main 
+        className={`transition-all duration-300 ease-in-out ${
+          sidebarOpen ? 'ml-64' : 'ml-[70px]'
+        }`}
       >
-        <main className="flex-1 overflow-auto p-8 max-w-7xl mx-auto w-full">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 min-h-[calc(100vh-4rem)]">
-            {children}
-          </div>
-        </main>
-        {/* <Footer /> */}
-      </div>
+        <div className="p-6">
+          {children}
+        </div>
+      </main>
     </div>
   );
-};
-
-export default Layout;
+}
