@@ -214,12 +214,15 @@ export const getDocument = async (documentId: string): Promise<Document | null> 
   }
 };
 
-export const uploadDocument = async (file: File, metadata?: { [key: string]: any }, rules?: any[]): Promise<Document | null> => {
+export const uploadDocument = async (file: File, metadata?: { [key: string]: any }, rules?: any[], use_colpali?: boolean): Promise<Document | null> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('metadata', JSON.stringify(metadata || {}));
     formData.append('rules', JSON.stringify(rules || [])); // Añadir rules
+    if (use_colpali !== undefined) {
+      formData.append('use_colpali', String(use_colpali));
+    }
 
     const response: AxiosResponse<Document> = await api.post('/ingest/file', formData, {
       headers: {

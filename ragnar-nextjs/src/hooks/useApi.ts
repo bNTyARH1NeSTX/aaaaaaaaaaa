@@ -25,9 +25,9 @@ export const useDocuments = () => {
     loadDocuments();
   }, []);
 
-  const uploadDocument = async (file: File, metadata?: { [key: string]: any }, rules?: any[]) => {
+  const uploadDocument = async (file: File, metadata?: { [key: string]: any }, rules?: any[], use_colpali?: boolean) => {
     try {
-      const newDoc = await api.uploadDocument(file, metadata, rules);
+      const newDoc = await api.uploadDocument(file, metadata, rules, use_colpali);
       if (newDoc) {
         setDocuments(prev => [...prev, newDoc]);
         return newDoc;

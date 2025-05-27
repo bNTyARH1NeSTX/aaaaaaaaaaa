@@ -17,9 +17,22 @@ export default function DocumentsPage() {
   const [metadataInput, setMetadataInput] = useState<string>('');
   const [rulesInput, setRulesInput] = useState<string>('');
   const [showMetadataModal, setShowMetadataModal] = useState<string | null>(null); // Stores doc.id or null
+  
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
-  const onDrop = async (acceptedFiles: File[]) => {
+  const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
+
+    // Clear any previous errors/messages
+    setUploadError(null);
+    setUploadSuccessMessage(null);
+    
+    // Set pending files
+    setPendingFiles(prevFiles => [...prevFiles, ...acceptedFiles]); // Append new files
+  };
+
+  const handleDirectUpload = async () => { // Renamed from handleUploadConfirmation
+    if (pendingFiles.length === 0) return;
 
     setIsUploading(true);
     setUploadError(null);
@@ -31,6 +44,7 @@ export default function DocumentsPage() {
     } catch (e) {
       setUploadError('Error: El JSON de Metadatos no es válido.');
       setIsUploading(false);
+      setPendingFiles([]);
       return;
     }
 
@@ -41,28 +55,30 @@ export default function DocumentsPage() {
         if (!Array.isArray(tempRules)) {
           setUploadError('Error: El JSON de Rules debe ser un Array (por ejemplo, [{"type": "metadata_extraction", ...}]).');
           setIsUploading(false);
+          setPendingFiles([]);
           return;
         }
         parsedRules = tempRules;
       } catch (e) {
         setUploadError('Error: El JSON de Rules no es válido. Asegúrese de que sea un array JSON bien formado.');
         setIsUploading(false);
+        setPendingFiles([]);
         return;
       }
     }
     // If rulesInput was empty or whitespace, parsedRules remains []
     
     try {
-      if (acceptedFiles.length === 1) {
-        const newDoc = await uploadDocument(acceptedFiles[0], parsedMetadata, parsedRules);
+      if (pendingFiles.length === 1) {
+        const newDoc = await uploadDocument(pendingFiles[0], parsedMetadata, parsedRules, useColpali);
         if (newDoc) {
           setUploadSuccessMessage(`Documento "${newDoc.filename}" subido con éxito.`);
         } else {
           setUploadError('Error subiendo el archivo. No se recibió confirmación.');
         }
-      } else if (acceptedFiles.length > 1) {
+      } else if (pendingFiles.length > 1) {
         const response = await api.uploadMultipleDocuments(
-          acceptedFiles, 
+          pendingFiles, 
           parsedMetadata, 
           parsedRules, 
           useColpali, 
@@ -94,7 +110,19 @@ export default function DocumentsPage() {
       console.error('Error uploading files:', err);
     } finally {
       setIsUploading(false);
+      setPendingFiles([]);
     }
+  };
+
+  const handleCancelUpload = () => {
+    setPendingFiles([]);
+    setUploadError(null);
+    setUploadSuccessMessage(null);
+    // Optionally reset other inputs like folderName, metadataInput etc. if desired
+    // setSelectedFolderName('');
+    // setMetadataInput('');
+    // setRulesInput('');
+    // setUseColpali(false);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -107,6 +135,7 @@ export default function DocumentsPage() {
       'text/markdown': ['.md'],
     },
     maxSize: 50 * 1024 * 1024, // 50MB por archivo
+    disabled: isUploading, // MODIFIED: Only disable if an upload is actively in progress
   });
 
   const filteredDocuments = documents.filter(doc =>
@@ -188,12 +217,23 @@ export default function DocumentsPage() {
           <div 
             {...getRootProps()} 
             className={`flex-grow w-full p-8 border-2 border-dashed rounded-lg cursor-pointer 
-              ${isDragActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}
+              ${isDragActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 
+                pendingFiles.length > 0 ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20' :
+                'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}
               transition-colors duration-200 ease-in-out text-center`}
           >
-            <input {...getInputProps()} />
+            <input {...getInputProps()} /> {/* Removed disabled prop, handled by useDropzone's disabled state */}
             <Upload className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" />
-            {isDragActive ? (
+            {pendingFiles.length > 0 ? (
+              <div>
+                <p className="text-yellow-600 dark:text-yellow-400 font-medium">
+                  {pendingFiles.length} {pendingFiles.length === 1 ? 'archivo listo' : 'archivos listos'} para subir.
+                </p>
+                <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
+                  Puede agregar más archivos o usar los botones de abajo para continuar.
+                </p>
+              </div>
+            ) : isDragActive ? (
               <p className="text-blue-600 dark:text-blue-400">Suelte los archivos aquí...</p>
             ) : (
               <p className="text-gray-600 dark:text-gray-400">
@@ -203,30 +243,30 @@ export default function DocumentsPage() {
             {isUploading && (
               <div className="mt-4 flex items-center justify-center">
                 <Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" />
-                <span className="text-blue-600 dark:text-blue-400">Subiendo archivos...</span>
+                <span className="text-blue-600 dark:text-blue-400">Subiendo archivos... No cierre esta ventana.</span>
               </div>
             )}
-            {uploadError && (
+            {uploadError && !isUploading && ( // Show uploadError only if not currently uploading
               <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 <span>{uploadError}</span>
               </div>
             )}
-            {uploadSuccessMessage && (
+            {uploadSuccessMessage && !isUploading && ( // Show success message only if not currently uploading
               <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 flex-shrink-0" />
                 <span>{uploadSuccessMessage}</span>
               </div>
             )}
-            {error && !uploadError && ( // Correctly use error from useDocuments
+            {error && !uploadError && !isUploading && ( 
               <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
                 <Info className="w-5 h-5 flex-shrink-0" />
                 <span>Error del sistema: {error}. Intente refrescar la página.</span>
               </div>
             )}
           </div>
-          <div className="w-full md:w-72 space-y-3 pt-2 md:pt-0">
-            <div> 
+          <div className="w-full md:w-72 space-y-3 pt-2 md:pt-0"> 
+            <div>
               <label htmlFor="folderName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Carpeta de Destino (Opcional)
               </label>
@@ -274,7 +314,7 @@ export default function DocumentsPage() {
                 id="useColpali"
                 checked={useColpali}
                 onChange={(e) => setUseColpali(e.target.checked)}
-                disabled={isUploading} // Disable while uploading
+                disabled={isUploading}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
               />
               <label htmlFor="useColpali" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
@@ -282,6 +322,34 @@ export default function DocumentsPage() {
               </label>
             </div>
           </div>
+        </div>
+        {/* Fixed Buttons for Upload and Cancel */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-end">
+          {pendingFiles.length > 0 && !isUploading && (
+            <button
+              onClick={handleCancelUpload}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto"
+            >
+              Cancelar ({pendingFiles.length})
+            </button>
+          )}
+          <button
+            onClick={handleDirectUpload}
+            disabled={pendingFiles.length === 0 || isUploading}
+            className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Subiendo...
+              </>
+            ) : (
+              <>
+                <Upload className="w-5 h-5" />
+                Subir {pendingFiles.length === 0 ? 'archivo(s)' : pendingFiles.length === 1 ? '1 archivo' : `${pendingFiles.length} archivos`}
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -410,7 +478,6 @@ export default function DocumentsPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
