@@ -14,6 +14,9 @@ export default function DocumentsPage() {
   const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
   const [selectedFolderName, setSelectedFolderName] = useState<string>('');
   const [useColpali, setUseColpali] = useState<boolean>(false);
+  const [metadataInput, setMetadataInput] = useState<string>('');
+  const [rulesInput, setRulesInput] = useState<string>('');
+  const [showMetadataModal, setShowMetadataModal] = useState<string | null>(null); // Stores doc.id or null
 
   const onDrop = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -21,20 +24,47 @@ export default function DocumentsPage() {
     setIsUploading(true);
     setUploadError(null);
     setUploadSuccessMessage(null);
+
+    let parsedMetadata = {};
+    try {
+      parsedMetadata = metadataInput ? JSON.parse(metadataInput) : {};
+    } catch (e) {
+      setUploadError('Error: El JSON de Metadatos no es válido.');
+      setIsUploading(false);
+      return;
+    }
+
+    let parsedRules: any[] = []; // Initialize with an empty array
+    if (rulesInput.trim()) { // Only attempt to parse if rulesInput is not empty or just whitespace
+      try {
+        const tempRules = JSON.parse(rulesInput);
+        if (!Array.isArray(tempRules)) {
+          setUploadError('Error: El JSON de Rules debe ser un Array (por ejemplo, [{"type": "metadata_extraction", ...}]).');
+          setIsUploading(false);
+          return;
+        }
+        parsedRules = tempRules;
+      } catch (e) {
+        setUploadError('Error: El JSON de Rules no es válido. Asegúrese de que sea un array JSON bien formado.');
+        setIsUploading(false);
+        return;
+      }
+    }
+    // If rulesInput was empty or whitespace, parsedRules remains []
     
     try {
       if (acceptedFiles.length === 1) {
-        const newDoc = await uploadDocument(acceptedFiles[0], { folder_name: selectedFolderName || undefined });
+        const newDoc = await uploadDocument(acceptedFiles[0], parsedMetadata, parsedRules);
         if (newDoc) {
           setUploadSuccessMessage(`Documento "${newDoc.filename}" subido con éxito.`);
         } else {
           setUploadError('Error subiendo el archivo. No se recibió confirmación.');
         }
       } else if (acceptedFiles.length > 1) {
-        const response = await api.uploadMultipleDocuments( // Ensure this is the correct function name
+        const response = await api.uploadMultipleDocuments(
           acceptedFiles, 
-          {}, 
-          [], 
+          parsedMetadata, 
+          parsedRules, 
           useColpali, 
           true, 
           selectedFolderName || undefined
@@ -56,6 +86,8 @@ export default function DocumentsPage() {
       }
       setSelectedFolderName(''); 
       setUseColpali(false); 
+      setMetadataInput('');
+      setRulesInput('');
       await refresh(); // Correctly call refresh from useDocuments
     } catch (err: any) {
       setUploadError(err.message || 'Error subiendo archivos. Por favor, intente de nuevo.');
@@ -143,7 +175,7 @@ export default function DocumentsPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <FileText className="w-8 h-8 text-blue-600" />
-          Gestor de Documentos
+          Gestión de Documentos
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           Cargue, busque y administre sus documentos y fuentes de conocimiento.
@@ -160,41 +192,41 @@ export default function DocumentsPage() {
               transition-colors duration-200 ease-in-out text-center`}
           >
             <input {...getInputProps()} />
-            <Upload key="upload-icon" className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" />
+            <Upload className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" />
             {isDragActive ? (
-              <p key="drag-active-msg" className="text-blue-600 dark:text-blue-400">Suelte los archivos aquí...</p>
+              <p className="text-blue-600 dark:text-blue-400">Suelte los archivos aquí...</p>
             ) : (
-              <p key="drag-inactive-msg" className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400">
                 Arrastre y suelte archivos aquí, o haga clic para seleccionar (Máx. 50MB por archivo)
               </p>
             )}
             {isUploading && (
-              <div key="uploading-indicator" className="mt-4 flex items-center justify-center">
+              <div className="mt-4 flex items-center justify-center">
                 <Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" />
                 <span className="text-blue-600 dark:text-blue-400">Subiendo archivos...</span>
               </div>
             )}
             {uploadError && (
-              <div key="upload-error-msg" className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+              <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 <span>{uploadError}</span>
               </div>
             )}
             {uploadSuccessMessage && (
-              <div key="upload-success-msg" className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+              <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 flex-shrink-0" />
                 <span>{uploadSuccessMessage}</span>
               </div>
             )}
             {error && !uploadError && ( // Correctly use error from useDocuments
-              <div key="system-error-msg" className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+              <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
                 <Info className="w-5 h-5 flex-shrink-0" />
                 <span>Error del sistema: {error}. Intente refrescar la página.</span>
               </div>
             )}
           </div>
           <div className="w-full md:w-72 space-y-3 pt-2 md:pt-0">
-            <div key="folder-name-option"> {/* Added key */}
+            <div> 
               <label htmlFor="folderName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Carpeta de Destino (Opcional)
               </label>
@@ -204,11 +236,39 @@ export default function DocumentsPage() {
                 value={selectedFolderName}
                 onChange={(e) => setSelectedFolderName(e.target.value)}
                 placeholder="Ej: Reportes Q1"
-                disabled={isUploading} // Disable while uploading
+                disabled={isUploading}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
-            <div key="colpali-option" className="flex items-center"> {/* Added key */}
+            <div>
+              <label htmlFor="metadataInput" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Metadatos (JSON, Opcional)
+              </label>
+              <textarea 
+                id="metadataInput"
+                value={metadataInput}
+                onChange={(e) => setMetadataInput(e.target.value)}
+                placeholder={'Ej: { "clave": "valor", "proyecto": "Ragnar" }'}
+                rows={3}
+                disabled={isUploading}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <div>
+              <label htmlFor="rulesInput" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Rules (JSON Array, Opcional)
+              </label>
+              <textarea 
+                id="rulesInput"
+                value={rulesInput}
+                onChange={(e) => setRulesInput(e.target.value)}
+                placeholder={'Ej: [ { "type": "metadata_extraction", "schema": {...} } ]'}
+                rows={3}
+                disabled={isUploading}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <div className="flex items-center">
               <input 
                 type="checkbox" 
                 id="useColpali"
@@ -268,6 +328,14 @@ export default function DocumentsPage() {
                     <p className="text-sm text-gray-500">
                       {formatFileSize(doc.size)} • {formatDate(doc.created_at)}
                     </p>
+                    {doc.metadata && Object.keys(doc.metadata).length > 0 && (
+                      <button 
+                        onClick={() => setShowMetadataModal(doc.id)}
+                        className="mt-1 text-xs text-blue-600 hover:underline dark:text-blue-400"
+                      >
+                        Ver Metadatos
+                      </button>
+                    )}
                   </div>
                 </div>
                 
@@ -312,6 +380,37 @@ export default function DocumentsPage() {
           )}
         </div>
       </div>
+
+      {/* Modal para ver Metadatos */}
+      {showMetadataModal && documents.find(doc => doc.id === showMetadataModal)?.metadata && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Metadatos de: {documents.find(doc => doc.id === showMetadataModal)?.filename}
+              </h3>
+              <button 
+                onClick={() => setShowMetadataModal(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md text-sm text-gray-800 dark:text-gray-200 overflow-x-auto">
+              {JSON.stringify(documents.find(doc => doc.id === showMetadataModal)?.metadata, null, 2)}
+            </pre>
+            {documents.find(doc => doc.id === showMetadataModal)?.rules && (
+              <>
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mt-4 mb-2">Rules Aplicadas:</h4>
+                <pre className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md text-sm text-gray-800 dark:text-gray-200 overflow-x-auto">
+                  {JSON.stringify(documents.find(doc => doc.id === showMetadataModal)?.rules, null, 2)}
+                </pre>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

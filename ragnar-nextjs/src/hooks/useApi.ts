@@ -25,9 +25,9 @@ export const useDocuments = () => {
     loadDocuments();
   }, []);
 
-  const uploadDocument = async (file: File, metadata?: { [key: string]: any }) => {
+  const uploadDocument = async (file: File, metadata?: { [key: string]: any }, rules?: any[]) => {
     try {
-      const newDoc = await api.uploadDocument(file, metadata);
+      const newDoc = await api.uploadDocument(file, metadata, rules);
       if (newDoc) {
         setDocuments(prev => [...prev, newDoc]);
         return newDoc;

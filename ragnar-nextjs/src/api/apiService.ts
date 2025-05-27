@@ -23,6 +23,7 @@ export interface Document {
   metadata?: {
     [key: string]: any;
   };
+  rules?: any[]; // Añadir rules a la interfaz Document si se espera que se devuelvan
 }
 
 export interface Folder {
@@ -213,11 +214,12 @@ export const getDocument = async (documentId: string): Promise<Document | null> 
   }
 };
 
-export const uploadDocument = async (file: File, metadata?: { [key: string]: any }): Promise<Document | null> => {
+export const uploadDocument = async (file: File, metadata?: { [key: string]: any }, rules?: any[]): Promise<Document | null> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('metadata', JSON.stringify(metadata || {}));
+    formData.append('rules', JSON.stringify(rules || [])); // Añadir rules
 
     const response: AxiosResponse<Document> = await api.post('/ingest/file', formData, {
       headers: {
@@ -260,11 +262,16 @@ export const uploadMultipleDocuments = async (
       formData.append('files', file);
     });
 
+    // Para batch, el backend espera objetos, no strings JSON en el form data directamente.
+    // Sin embargo, si el backend espera 'metadata' y 'rules' como strings JSON via Form(),
+    // entonces debemos mantener JSON.stringify.
+    // Revisando api.py: /ingest/files (batch) espera metadata y rules como objetos parseados desde JSON strings.
+    // Por lo tanto, el envío como JSON string en FormData es correcto.
     if (metadata) {
       formData.append('metadata', JSON.stringify(metadata));
     }
     if (rules) {
-      formData.append('rules', JSON.stringify(rules));
+      formData.append('rules', JSON.stringify(rules)); // Añadir rules
     }
     if (use_colpali !== undefined) {
       formData.append('use_colpali', String(use_colpali));
@@ -276,7 +283,7 @@ export const uploadMultipleDocuments = async (
       formData.append('folder_name', folder_name);
     }
 
-    const response: AxiosResponse<BatchIngestResponse> = await api.post('/documents/batch', formData, {
+    const response: AxiosResponse<BatchIngestResponse> = await api.post('/ingest/files', formData, {
       headers: {
         // Content-Type will be set to multipart/form-data by the browser/axios
       },
