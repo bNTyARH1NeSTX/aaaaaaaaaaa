@@ -245,7 +245,7 @@ async def generate_manual_endpoint(
     )
 
 # Include the manual generation router in the main FastAPI app
-app.include_router(manual_generation_router)
+app.include_router(manual_generation_router)f
 
 
 @app.post("/ingest/text", response_model=Document)

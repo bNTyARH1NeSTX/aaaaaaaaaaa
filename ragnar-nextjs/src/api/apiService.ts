@@ -33,13 +33,33 @@ export interface Folder {
   updated_at: string;
 }
 
+// Define interfaces for Node and Edge data as returned by the API
+export interface ApiNode {
+  id: string;
+  label?: string;
+  data?: { [key: string]: any }; // Flexible data structure for additional properties
+  // Backend might provide position or other layout-specific attributes in 'data'
+}
+
+export interface ApiEdge {
+  id: string;
+  source: string; // ID of the source node
+  target: string; // ID of the target node
+  label?: string;
+  data?: { [key: string]: any }; // Flexible data structure for additional properties
+}
+
 export interface Graph {
+  id: string;
   name: string;
   description?: string;
+  type?: string;
   created_at: string;
   updated_at: string;
-  nodes?: number;
-  edges?: number;
+  nodes_count?: number;
+  edges_count?: number;
+  nodes?: ApiNode[]; // Array of nodes
+  edges?: ApiEdge[]; // Array of edges
 }
 
 export interface ChunkResult {
@@ -57,6 +77,16 @@ export interface UsageStats {
   total_chat_sessions: number;
   searches_today: number;
   manuals_generated: number;
+}
+
+export interface BatchIngestResponse {
+  total_files: number;
+  successful_ingestions: number;
+  failed_ingestions: number;
+  successful_files: string[];
+  failed_files: Record<string, string>;
+  folder_id?: string;
+  folder_name?: string;
 }
 
 export interface RecentActivity {
@@ -124,7 +154,17 @@ export interface ManualGenerationResponse {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Error de API:', error.response?.data || error.message);
+    if (axios.isAxiosError(error)) {
+      console.error('Error de API (Axios):', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        config: error.config,
+      });
+    } else {
+      console.error('Error de API (General):', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -146,16 +186,20 @@ api.interceptors.request.use(
 );
 
 // === API DE DOCUMENTOS ===
-export const getDocuments = async (skip = 0, limit = 10000): Promise<Document[]> => {
+export const getDocuments = async (skip: number = 0, limit: number = 100): Promise<Document[]> => {
   try {
+    // Se cambia a POST debido a error 405 con GET y comentario en código original.
+    // console.log(`Intentando obtener documentos con POST /documents, skip: ${skip}, limit: ${limit}`);
     const response: AxiosResponse<Document[]> = await api.post('/documents', {
-      skip,
-      limit,
+      skip: skip,
+      limit: limit
     });
+    // console.log('Documentos obtenidos con POST exitosamente.');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo documentos:', error);
-    return [];
+    // console.error('Error obteniendo documentos (usando POST):', error);
+    // Propagar el error para que el hook/componente lo maneje.
+    throw error;
   }
 };
 
@@ -189,13 +233,65 @@ export const uploadDocument = async (file: File, metadata?: { [key: string]: any
 
 export const deleteDocument = async (documentId: string): Promise<boolean> => {
   try {
-    await api.delete(`/documents/${documentId}`);
-    return true;
+    const response = await api.delete(`/documents/${documentId}`);
+    // El backend devuelve un mensaje de éxito con status 200 si la eliminación es correcta.
+    // Si devuelve 404, el interceptor de errores ya lo habrá capturado.
+    return response.status === 200; 
   } catch (error) {
-    console.error('Error eliminando documento:', error);
-    return false;
+    // El error ya fue logueado por el interceptor.
+    // Aquí decidimos si queremos propagar el error o devolver un valor que indique fallo.
+    // Propagar el error permite un manejo más específico en el hook/componente.
+    console.error(`Fallo específico en deleteDocument para ID ${documentId}:`, error);
+    throw error; // Propagar para que useDocuments pueda manejarlo y establecer su propio estado de error.
   }
 };
+
+export const uploadMultipleDocuments = async (
+  files: File[], 
+  metadata?: { [key: string]: any }, 
+  rules?: any[], 
+  use_colpali?: boolean, 
+  parallel?: boolean, 
+  folder_name?: string
+): Promise<BatchIngestResponse | null> => {
+  try {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    if (metadata) {
+      formData.append('metadata', JSON.stringify(metadata));
+    }
+    if (rules) {
+      formData.append('rules', JSON.stringify(rules));
+    }
+    if (use_colpali !== undefined) {
+      formData.append('use_colpali', String(use_colpali));
+    }
+    if (parallel !== undefined) {
+      formData.append('parallel', String(parallel));
+    }
+    if (folder_name) {
+      formData.append('folder_name', folder_name);
+    }
+
+    const response: AxiosResponse<BatchIngestResponse> = await api.post('/documents/batch', formData, {
+      headers: {
+        // Content-Type will be set to multipart/form-data by the browser/axios
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error subiendo múltiples documentos:', error);
+    // Consider returning a more specific error object if needed
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.detail || 'Error en la subida de múltiples archivos');
+    }
+    throw new Error('Error desconocido en la subida de múltiples archivos');
+  }
+};
+
 
 // === API DE CARPETAS ===
 export const getFolders = async (): Promise<Folder[]> => {
@@ -229,6 +325,45 @@ export const getGraphs = async (): Promise<Graph[]> => {
   } catch (error) {
     console.error('Error obteniendo grafos:', error);
     return [];
+  }
+};
+
+export const getGraphDetails = async (graphId: string): Promise<Graph | null> => {
+  try {
+    const response: AxiosResponse<Graph> = await api.get(`/graphs/${graphId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error obteniendo detalles del grafo ${graphId}:`, error);
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      // It's often better to let the caller handle not found specifically
+      // or throw a custom error that can be caught and identified.
+      // For now, returning null as per previous patterns.
+      return null;
+    }
+    throw error; // Propagate other errors to be handled by the caller
+  }
+};
+
+export const createGraph = async (graphData: Partial<Omit<Graph, 'id' | 'created_at' | 'updated_at' | 'nodes_count' | 'edges_count'>>): Promise<Graph | null> => {
+  try {
+    const response: AxiosResponse<Graph> = await api.post('/graphs', graphData);
+    return response.data;
+  } catch (error) {
+    console.error('Error creando grafo:', error);
+    // Propagate the error so the hook or component can handle it
+    throw error;
+  }
+};
+
+export const deleteGraph = async (graphId: string): Promise<boolean> => {
+  try {
+    const response = await api.delete(`/graphs/${graphId}`);
+    // Assuming 200 or 204 No Content for successful deletion
+    return response.status === 200 || response.status === 204;
+  } catch (error) {
+    console.error(`Error eliminando grafo ${graphId}:`, error);
+    // Propagate the error so the hook or component can handle it
+    throw error;
   }
 };
 

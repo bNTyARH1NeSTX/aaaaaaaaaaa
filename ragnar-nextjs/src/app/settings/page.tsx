@@ -1,6 +1,28 @@
-import { Settings as SettingsIcon, User, Bell, Lock, Palette, Database } from 'lucide-react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, User, Bell, Lock, Palette, Database, Server, Shield, RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { useHealth } from '../../hooks/useApi';
 
 export default function SettingsPage() {
+  const { isHealthy, lastChecked, checkHealth, isLoading: isLoadingHealth } = useHealth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await checkHealth();
+    // Add a small delay for perceived responsiveness if needed, or remove if checkHealth is fast
+    setTimeout(() => setIsRefreshing(false), 300); 
+  };
+
+  // Do not render health status until client has mounted and initial check is not loading
+  const canDisplayHealth = hasMounted && !isLoadingHealth;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,6 +149,112 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Server Health Status */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <Server className="w-5 h-5" />
+          Estado del Servidor
+        </h2>
+        
+        <div className="space-y-4">
+          {hasMounted ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isLoadingHealth ? (
+                  <RefreshCw className="w-6 h-6 text-yellow-500 animate-spin" />
+                ) : isHealthy ? (
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-red-500" />
+                )}
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    {isLoadingHealth 
+                      ? 'Verificando estado inicial...'
+                      : isHealthy 
+                        ? 'Servidor funcionando correctamente' 
+                        : 'Problemas de conexión con el servidor'}
+                  </h3>
+                  {canDisplayHealth && lastChecked && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Última verificación: {lastChecked.toLocaleTimeString('es-ES')}
+                    </p>
+                  )}
+                  {!canDisplayHealth && !lastChecked && (
+                     <p className="text-sm text-gray-600 dark:text-gray-400">Comprobando...</p>
+                  )}
+                </div>
+              </div>
+              <button 
+                onClick={handleRefresh}
+                className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                disabled={isRefreshing || isLoadingHealth}
+              >
+                <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Actualizando...' : 'Actualizar'}</span>
+              </button>
+            </div>
+          ) : (
+            // Placeholder or skeleton while waiting for mount, to match server render
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                <div>
+                  <h3 className="font-medium text-gray-900 dark:text-white">
+                    Verificando estado...
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Comprobando...
+                  </p>
+                </div>
+              </div>
+               <button 
+                className="flex items-center gap-2 p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                disabled={true}
+              >
+                <RefreshCw className={`w-5 h-5`} />
+                <span>Actualizar</span>
+              </button>
+            </div>
+          )}
+
+          {hasMounted && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-md p-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Endpoint API</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
+                  {process.env.NEXT_PUBLIC_API_URL || 'https://ag61pyffws3ral-8000.proxy.runpod.net'}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-md p-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado de Servicio</h4>
+                {isLoadingHealth ? (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Verificando...</p>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${
+                      isHealthy ? 'bg-green-500' : isHealthy === false ? 'bg-red-500' : 'bg-yellow-500' // Added yellow for null state before first check
+                    }`}></span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {isHealthy ? 'Operativo' : isHealthy === false ? 'No operativo' : 'Desconocido'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-md p-4">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Versión del Servidor</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {/* TODO: Obtener versión del servidor desde API si está disponible */}
+                  No disponible
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

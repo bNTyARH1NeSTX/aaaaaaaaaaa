@@ -43,11 +43,35 @@ export const useDocuments = () => {
       const success = await api.deleteDocument(documentId);
       if (success) {
         setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+        setError(null);
       }
       return success;
     } catch (err) {
       setError('Error eliminando documento');
       throw err;
+    }
+  };
+
+  const uploadMultiple = async (
+    files: File[],
+    metadata?: { [key: string]: any },
+    rules?: any[],
+    use_colpali?: boolean,
+    parallel?: boolean,
+    folder_name?: string
+  ): Promise<api.BatchIngestResponse | null> => {
+    try {
+      setError(null); // Clear previous hook errors
+      const response = await api.uploadMultipleDocuments(files, metadata, rules, use_colpali, parallel, folder_name);
+      if (response && response.successful_ingestions > 0) {
+        await loadDocuments(); // Refresh the document list
+      }
+      // If response is null or successful_ingestions is 0, an error might have occurred or no files were processed.
+      // The api.uploadMultipleDocuments itself throws an error which will be caught below.
+      return response;
+    } catch (err: any) {
+      setError(err.message || 'Error subiendo múltiples documentos');
+      throw err; // Re-throw for the page component to catch
     }
   };
 
@@ -57,6 +81,7 @@ export const useDocuments = () => {
     error,
     uploadDocument,
     deleteDocument,
+    uploadMultiple, // Add the new function here
     refresh: loadDocuments,
   };
 };
@@ -131,11 +156,54 @@ export const useGraphs = () => {
     loadGraphs();
   }, []);
 
+  const createGraph = async (graphData: Partial<Omit<api.Graph, 'id' | 'created_at' | 'updated_at' | 'nodes_count' | 'edges_count'>>) => {
+    try {
+      setLoading(true); // Optional: set loading state for creation
+      const newGraph = await api.createGraph(graphData);
+      if (newGraph) {
+        setGraphs(prev => [...prev, newGraph]);
+        setError(null);
+        return newGraph;
+      } else {
+        throw new Error('La creación del grafo no devolvió un resultado.');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error creando grafo');
+      console.error(err);
+      throw err; // Re-throw for the component to handle
+    } finally {
+      setLoading(false); // Optional: clear loading state
+    }
+  };
+
+  const deleteGraph = async (graphId: string) => {
+    try {
+      setLoading(true); // Optional: set loading state for deletion
+      const success = await api.deleteGraph(graphId);
+      if (success) {
+        setGraphs(prev => prev.filter(g => g.id !== graphId));
+        setError(null);
+      } else {
+        // If deleteGraph returns false without throwing an error
+        throw new Error('No se pudo eliminar el grafo.');
+      }
+      return success;
+    } catch (err: any) {
+      setError(err.message || 'Error eliminando grafo');
+      console.error(err);
+      throw err; // Re-throw for the component to handle
+    } finally {
+      setLoading(false); // Optional: clear loading state
+    }
+  };
+
   return {
     graphs,
     loading,
     error,
     refresh: loadGraphs,
+    createGraph, // Add createGraph to returned object
+    deleteGraph, // Add deleteGraph to returned object
   };
 };
 
@@ -261,32 +329,47 @@ export const useChat = () => {
 
 // Hook para estado de salud del servidor
 export const useHealth = () => {
-  const [isHealthy, setIsHealthy] = useState<boolean | null>(null);
-  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [isHealthyInternal, setIsHealthyInternal] = useState<boolean | null>(null);
+  const [lastCheckedInternal, setLastCheckedInternal] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Tracks loading of the initial health check
+  const [hasMounted, setHasMounted] = useState(false);
 
-  const checkHealth = async () => {
+  const performCheck = async () => {
     try {
-      const healthy = await api.checkHealth();
-      setIsHealthy(healthy);
-      setLastChecked(new Date());
-      return healthy;
+      const healthyStatus = await api.checkHealth();
+      if (hasMounted) { // Ensure updates only happen client-side post-mount
+        setIsHealthyInternal(healthyStatus);
+        setLastCheckedInternal(new Date());
+      }
+      return healthyStatus;
     } catch (err) {
-      setIsHealthy(false);
-      setLastChecked(new Date());
+      if (hasMounted) {
+        setIsHealthyInternal(false);
+        setLastCheckedInternal(new Date());
+      }
       return false;
     }
   };
 
   useEffect(() => {
-    checkHealth();
-    // Verificar cada 30 segundos
-    const interval = setInterval(checkHealth, 30000);
+    setHasMounted(true);
+
+    const initialLoad = async () => {
+      setIsLoading(true);
+      await performCheck();
+      setIsLoading(false);
+    };
+
+    initialLoad();
+
+    const interval = setInterval(performCheck, 30000); // Subsequent checks
     return () => clearInterval(interval);
-  }, []);
+  }, []); // Effect runs once on client mount
 
   return {
-    isHealthy,
-    lastChecked,
-    checkHealth,
+    isHealthy: hasMounted && !isLoading ? isHealthyInternal : null,
+    lastChecked: hasMounted && !isLoading ? lastCheckedInternal : null,
+    isLoading: !hasMounted || isLoading, // True if not mounted yet or if initial check is running
+    checkHealth: performCheck, // Allow manual refresh
   };
 };

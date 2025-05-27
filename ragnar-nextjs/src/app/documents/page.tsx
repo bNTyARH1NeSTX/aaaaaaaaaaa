@@ -1,27 +1,65 @@
 "use client";
 
-import React, { useState } from 'react';
-import { FileText, Upload, Search, Download, Eye, Trash2, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileText, Upload, Search, Download, Eye, Trash2, AlertCircle, Loader2, CheckCircle, XCircle, Info } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { useDocuments } from '../../hooks/useApi';
+import * as api from '../../api/apiService'; // Import api service
 
 export default function DocumentsPage() {
-  const { documents, loading, error, uploadDocument, deleteDocument } = useDocuments();
+  const { documents, loading, error, uploadDocument, deleteDocument, refresh } = useDocuments();
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
+  const [selectedFolderName, setSelectedFolderName] = useState<string>('');
+  const [useColpali, setUseColpali] = useState<boolean>(false);
 
   const onDrop = async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+
     setIsUploading(true);
     setUploadError(null);
+    setUploadSuccessMessage(null);
     
     try {
-      for (const file of acceptedFiles) {
-        await uploadDocument(file);
+      if (acceptedFiles.length === 1) {
+        const newDoc = await uploadDocument(acceptedFiles[0], { folder_name: selectedFolderName || undefined });
+        if (newDoc) {
+          setUploadSuccessMessage(`Documento "${newDoc.filename}" subido con éxito.`);
+        } else {
+          setUploadError('Error subiendo el archivo. No se recibió confirmación.');
+        }
+      } else if (acceptedFiles.length > 1) {
+        const response = await api.uploadMultipleDocuments( // Ensure this is the correct function name
+          acceptedFiles, 
+          {}, 
+          [], 
+          useColpali, 
+          true, 
+          selectedFolderName || undefined
+        );
+        if (response) {
+          let successMsg = `${response.successful_ingestions} de ${response.total_files} archivos subidos con éxito.`;
+          if (response.failed_ingestions > 0) {
+            successMsg += ` ${response.failed_ingestions} fallaron.`;
+            console.warn('Archivos fallidos:', response.failed_files);
+          }
+          setUploadSuccessMessage(successMsg);
+          if (response.failed_ingestions > 0 && response.successful_ingestions === 0) {
+             setUploadError(`Todos los ${response.failed_ingestions} archivos fallaron al subirse.`);
+             setUploadSuccessMessage(null); 
+          }
+        } else {
+          setUploadError('Error subiendo los archivos. No se recibió respuesta del servidor.');
+        }
       }
-    } catch (error) {
-      setUploadError('Error subiendo archivos. Por favor, intente de nuevo.');
-      console.error('Error uploading files:', error);
+      setSelectedFolderName(''); 
+      setUseColpali(false); 
+      await refresh(); // Correctly call refresh from useDocuments
+    } catch (err: any) {
+      setUploadError(err.message || 'Error subiendo archivos. Por favor, intente de nuevo.');
+      console.error('Error uploading files:', err);
     } finally {
       setIsUploading(false);
     }
@@ -34,8 +72,9 @@ export default function DocumentsPage() {
       'application/msword': ['.doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'text/plain': ['.txt'],
+      'text/markdown': ['.md'],
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 50 * 1024 * 1024, // 50MB por archivo
   });
 
   const filteredDocuments = documents.filter(doc =>
@@ -94,74 +133,99 @@ export default function DocumentsPage() {
     }
   };
 
+  useEffect(() => {
+    console.log("Cliente: doc", documents);
+  }, [documents]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <FileText className="w-8 h-8 text-blue-600" />
-          Gestión de Documentos
+          Gestor de Documentos
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Suba, organice y administre sus documentos para procesamiento con IA
+          Cargue, busque y administre sus documentos y fuentes de conocimiento.
         </p>
       </div>
 
-      {/* Error del servidor */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <span className="text-red-700 dark:text-red-400">Error: {error}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Error de subida */}
-      {uploadError && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-            <span className="text-red-700 dark:text-red-400">{uploadError}</span>
-          </div>
-        </div>
-      )}
-
       {/* Upload Area */}
-      <div 
-        {...getRootProps()} 
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-          isDragActive 
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-        } ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        <input {...getInputProps()} disabled={isUploading} />
-        {isUploading ? (
-          <div className="flex flex-col items-center">
-            <Loader2 className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
-            <p className="text-blue-600 dark:text-blue-400">Subiendo archivos...</p>
-          </div>
-        ) : (
-          <>
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex flex-col md:flex-row gap-4 items-start">
+          <div 
+            {...getRootProps()} 
+            className={`flex-grow w-full p-8 border-2 border-dashed rounded-lg cursor-pointer 
+              ${isDragActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}
+              transition-colors duration-200 ease-in-out text-center`}
+          >
+            <input {...getInputProps()} />
+            <Upload key="upload-icon" className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" />
             {isDragActive ? (
-              <p className="text-blue-600 dark:text-blue-400">Suelte los archivos aquí...</p>
+              <p key="drag-active-msg" className="text-blue-600 dark:text-blue-400">Suelte los archivos aquí...</p>
             ) : (
-              <div>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">
-                  Arrastre y suelte archivos aquí, o haga clic para seleccionar archivos
-                </p>
-                <p className="text-sm text-gray-500">
-                  Soporta archivos PDF, DOC, DOCX y TXT (máx. 10MB)
-                </p>
+              <p key="drag-inactive-msg" className="text-gray-600 dark:text-gray-400">
+                Arrastre y suelte archivos aquí, o haga clic para seleccionar (Máx. 50MB por archivo)
+              </p>
+            )}
+            {isUploading && (
+              <div key="uploading-indicator" className="mt-4 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" />
+                <span className="text-blue-600 dark:text-blue-400">Subiendo archivos...</span>
               </div>
             )}
-          </>
-        )}
+            {uploadError && (
+              <div key="upload-error-msg" className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+            {uploadSuccessMessage && (
+              <div key="upload-success-msg" className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 flex-shrink-0" />
+                <span>{uploadSuccessMessage}</span>
+              </div>
+            )}
+            {error && !uploadError && ( // Correctly use error from useDocuments
+              <div key="system-error-msg" className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                <Info className="w-5 h-5 flex-shrink-0" />
+                <span>Error del sistema: {error}. Intente refrescar la página.</span>
+              </div>
+            )}
+          </div>
+          <div className="w-full md:w-72 space-y-3 pt-2 md:pt-0">
+            <div key="folder-name-option"> {/* Added key */}
+              <label htmlFor="folderName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Carpeta de Destino (Opcional)
+              </label>
+              <input 
+                type="text" 
+                id="folderName"
+                value={selectedFolderName}
+                onChange={(e) => setSelectedFolderName(e.target.value)}
+                placeholder="Ej: Reportes Q1"
+                disabled={isUploading} // Disable while uploading
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+            <div key="colpali-option" className="flex items-center"> {/* Added key */}
+              <input 
+                type="checkbox" 
+                id="useColpali"
+                checked={useColpali}
+                onChange={(e) => setUseColpali(e.target.checked)}
+                disabled={isUploading} // Disable while uploading
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
+              />
+              <label htmlFor="useColpali" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Usar COLPALI (si aplica)
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Search */}
+      {/* Search and Filter */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
