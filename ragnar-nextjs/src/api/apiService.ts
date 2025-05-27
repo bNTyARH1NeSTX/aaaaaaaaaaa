@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ag61pyffws3ral-8000.proxy.runpod.net';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://4bihdkshus1p65-8000.proxy.runpod.net';
 
 // Axios instance with default configuration
 const api = axios.create({
@@ -11,6 +11,22 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Interceptor para agregar token de autenticación si existe
+api.interceptors.request.use(
+  (config) => {
+    // Por ahora, usamos un token dummy para desarrollo
+    // En producción, esto debería venir del sistema de auth
+    const token = localStorage.getItem('auth_token') || 'dummy-token-for-development';
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Interfaces basadas en los modelos del backend
 export interface Document {
@@ -166,22 +182,6 @@ api.interceptors.response.use(
     } else {
       console.error('Error de API (General):', error);
     }
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para agregar token de autenticación si existe
-api.interceptors.request.use(
-  (config) => {
-    // Por ahora, usamos un token dummy para desarrollo
-    // En producción, esto debería venir del sistema de auth
-    const token = localStorage.getItem('auth_token') || 'dummy-token-for-development';
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
     return Promise.reject(error);
   }
 );

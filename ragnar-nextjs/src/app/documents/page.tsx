@@ -173,11 +173,11 @@ export default function DocumentsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 key="documents-page-title" className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <FileText className="w-8 h-8 text-blue-600" />
           Gestión de Documentos
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p key="documents-page-subtitle" className="text-gray-600 dark:text-gray-400 mt-1">
           Cargue, busque y administre sus documentos y fuentes de conocimiento.
         </p>
       </div>
