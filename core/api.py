@@ -140,6 +140,20 @@ class ManualGenerationResponse(BaseModel):
     relevant_images_used: List[Dict[str, Any]] # e.g., [{"image_path": "...", "prompt": "...", "respuesta": "..."}]
     query: str
 
+# --- Pydantic Models for Rule Templates ---
+class RuleTemplateRequest(BaseModel):
+    name: str = Field(..., description="Name of the rule template", min_length=1, max_length=100)
+    description: Optional[str] = Field(None, description="Optional description of the rule template", max_length=500)
+    rules_json: str = Field(..., description="JSON string containing the rules configuration")
+
+class RuleTemplateResponse(BaseModel):
+    id: str
+    name: str
+    description: Optional[str]
+    rules_json: str
+    created_at: str
+    updated_at: str
+
 # --- Dependency Providers for Manual Generation ---
 _manual_gen_embedding_model_instance: Optional[ManualGenerationEmbeddingModel] = None
 _manual_generator_service_instance: Optional[ManualGeneratorService] = None
@@ -1272,6 +1286,93 @@ async def get_recent_usage(
     ]
 
 
+# Rule Template endpoints
+@app.get("/rule-templates", response_model=List[RuleTemplateResponse])
+@telemetry.track(operation_type="get_rule_templates")
+async def get_rule_templates(auth: AuthContext = Depends(verify_token)) -> List[RuleTemplateResponse]:
+    """Get all rule templates accessible to the authenticated user."""
+    try:
+        db: PostgresDatabase = document_service.db
+        templates = await db.get_rule_templates(auth)
+        
+        return [
+            RuleTemplateResponse(
+                id=str(template["id"]),
+                name=template["name"],
+                description=template["description"],
+                rules_json=template["rules_json"],  # Already converted to JSON string
+                created_at=template["created_at"],
+                updated_at=template["updated_at"]
+            )
+            for template in templates
+        ]
+    except Exception as e:
+        logger.error(f"Error getting rule templates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/rule-templates", response_model=RuleTemplateResponse)
+@telemetry.track(operation_type="create_rule_template")
+async def create_rule_template(
+    request: RuleTemplateRequest,
+    auth: AuthContext = Depends(verify_token)
+) -> RuleTemplateResponse:
+    """Create a new rule template."""
+    try:
+        # Validate that rules_json is valid JSON
+        try:
+            json.loads(request.rules_json)
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="rules_json must be valid JSON")
+        
+        db: PostgresDatabase = document_service.db
+        template = await db.create_rule_template(
+            name=request.name,
+            description=request.description,
+            rules_json=request.rules_json,
+            auth=auth
+        )
+        
+        if not template:
+            raise HTTPException(status_code=400, detail="Rule template with this name already exists")
+        
+        return RuleTemplateResponse(
+            id=str(template.id),
+            name=template.name,
+            description=template.description,
+            rules_json=json.dumps(template.rules_json),  # Convert JSONB back to string
+            created_at=template.created_at,
+            updated_at=template.updated_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating rule template: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/rule-templates/{template_id}")
+@telemetry.track(operation_type="delete_rule_template")
+async def delete_rule_template(
+    template_id: str,
+    auth: AuthContext = Depends(verify_token)
+) -> Dict[str, str]:
+    """Delete a rule template by ID."""
+    try:
+        db: PostgresDatabase = document_service.db
+        success = await db.delete_rule_template(template_id, auth)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Rule template not found or insufficient permissions")
+        
+        return {"status": "success", "message": f"Rule template {template_id} deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting rule template: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Cache endpoints
 @app.post("/cache/create")
 @telemetry.track(operation_type="create_cache", metadata_resolver=telemetry.cache_create_metadata)
@@ -2015,6 +2116,8 @@ async def set_folder_rule(
             await session.commit()
 
         logger.info(f"Successfully updated folder {folder_id} with {len(request.rules)} rules")
+
+
 
         # Get updated folder
         updated_folder = await document_service.db.get_folder(folder_id, auth)

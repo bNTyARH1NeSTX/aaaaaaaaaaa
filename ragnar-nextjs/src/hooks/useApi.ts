@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as api from '../api/apiService';
 
 // Hook para documentos
@@ -371,5 +371,66 @@ export const useHealth = () => {
     lastChecked: hasMounted && !isLoading ? lastCheckedInternal : null,
     isLoading: !hasMounted || isLoading, // True if not mounted yet or if initial check is running
     checkHealth: performCheck, // Allow manual refresh
+  };
+};
+
+// Hook para Plantillas de Reglas
+export const useRuleTemplates = () => {
+  const [templates, setTemplates] = useState<api.ApiRuleTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadTemplates = useCallback(async () => {
+    try {
+      setLoading(true);
+      const fetchedTemplates = await api.getRuleTemplates();
+      setTemplates(fetchedTemplates);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Error cargando plantillas de reglas');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTemplates();
+  }, [loadTemplates]);
+
+  const createTemplate = async (name: string, description: string | null, rulesJson: string) => {
+    try {
+      const newTemplate = await api.createRuleTemplate(name, description, rulesJson);
+      if (newTemplate) {
+        setTemplates(prev => [...prev, newTemplate]);
+        return newTemplate;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error creando plantilla de regla');
+      throw err; // Re-throw for the page component to catch and display
+    }
+  };
+
+  const deleteTemplate = async (templateId: string) => {
+    try {
+      const success = await api.deleteRuleTemplate(templateId);
+      if (success) {
+        setTemplates(prev => prev.filter(t => t.id !== templateId));
+        setError(null);
+      }
+      return success;
+    } catch (err: any) {
+      setError(err.message || 'Error eliminando plantilla de regla');
+      throw err; // Re-throw for the page component to catch and display
+    }
+  };
+
+  return {
+    templates,
+    loading,
+    error,
+    refresh: loadTemplates,
+    createTemplate,
+    deleteTemplate,
   };
 };

@@ -115,6 +115,17 @@ export interface RecentActivity {
   status: string;
 }
 
+// Nueva interfaz para plantillas de reglas
+export interface ApiRuleTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  rules_json: string; // El JSON string de las reglas
+  created_at: string;
+  updated_at: string;
+  // owner_entity_id: string; // Si se implementa ownership en backend
+}
+
 // Request interfaces
 export interface IngestTextRequest {
   content: string;
@@ -461,5 +472,51 @@ export const checkHealth = async (): Promise<boolean> => {
     return false;
   }
 };
+
+// === API DE PLANTILLAS DE REGLAS ===
+
+export const getRuleTemplates = async (): Promise<ApiRuleTemplate[]> => {
+  try {
+    const response: AxiosResponse<ApiRuleTemplate[]> = await api.get('/rule-templates');
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo plantillas de reglas:', error);
+    // Devuelve un array vacío en caso de error para que la UI no se rompa
+    // Idealmente, el hook que use esto manejaría el estado de error.
+    return []; 
+  }
+};
+
+export const createRuleTemplate = async (name: string, description: string | null, rulesJson: string): Promise<ApiRuleTemplate | null> => {
+  try {
+    const payload: { name: string; description?: string; rules_json: string } = { name, rules_json: rulesJson };
+    if (description) {
+      payload.description = description;
+    }
+    const response: AxiosResponse<ApiRuleTemplate> = await api.post('/rule-templates', payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error creando plantilla de regla:', error);
+    // Lanza el error para que el componente que llama pueda manejarlo (ej. mostrar un toast)
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.detail || 'Error creando plantilla de regla');
+    }
+    throw new Error('Error desconocido creando plantilla de regla');
+  }
+};
+
+export const deleteRuleTemplate = async (templateId: string): Promise<boolean> => {
+  try {
+    const response = await api.delete(`/rule-templates/${templateId}`);
+    return response.status === 200 || response.status === 204; // 204 No Content también es éxito
+  } catch (error) {
+    console.error('Error eliminando plantilla de regla:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(error.response.data.detail || 'Error eliminando plantilla de regla');
+    }
+    throw new Error('Error desconocido eliminando plantilla de regla');
+  }
+};
+
 
 export default api;

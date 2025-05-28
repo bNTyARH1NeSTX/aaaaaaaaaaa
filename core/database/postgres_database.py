@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
@@ -101,6 +102,30 @@ class FolderModel(Base):
         Index("idx_folder_access_control", "access_control", postgresql_using="gin"),
         # Index to filter folders by app_id in system_metadata
         Index("idx_folder_system_metadata_app_id", text("(system_metadata->>'app_id')")),
+    )
+
+
+class RuleTemplateModel(Base):
+    """SQLAlchemy model for rule template data."""
+
+    __tablename__ = "rule_templates"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, index=True)
+    description = Column(String, nullable=True)
+    rules_json = Column(JSONB)
+    owner = Column(JSONB)
+    access_control = Column(JSONB, default=dict)
+    system_metadata = Column(JSONB, default=dict)
+    created_at = Column(String)  # ISO format string
+    updated_at = Column(String)  # ISO format string
+
+    # Create indexes
+    __table_args__ = (
+        Index("idx_rule_template_name", "name"),
+        Index("idx_rule_template_owner", "owner", postgresql_using="gin"),
+        Index("idx_rule_template_access_control", "access_control", postgresql_using="gin"),
+        Index("idx_rule_template_system_metadata_app_id", text("(system_metadata->>'app_id')")),
     )
 
 
@@ -330,6 +355,42 @@ class PostgresDatabase(BaseDatabase):
                 )
 
                 logger.info("Created indexes for folder_name, end_user_id, and app_id in system_metadata")
+
+                # Create rule_templates table if it doesn't exist
+                await conn.execute(
+                    text(
+                        """
+                    CREATE TABLE IF NOT EXISTS rule_templates (
+                        id TEXT PRIMARY KEY,
+                        name TEXT,
+                        description TEXT,
+                        rules_json JSONB NOT NULL,
+                        owner JSONB,
+                        access_control JSONB DEFAULT '{}',
+                        system_metadata JSONB DEFAULT '{}',
+                        created_at TEXT,
+                        updated_at TEXT
+                    );
+                    """
+                    )
+                )
+
+                # Create indexes for rule_templates table
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_rule_template_name ON rule_templates (name);"))
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_rule_template_owner ON rule_templates USING gin (owner);"))
+                await conn.execute(
+                    text("CREATE INDEX IF NOT EXISTS idx_rule_template_access_control ON rule_templates USING gin (access_control);")
+                )
+                await conn.execute(
+                    text(
+                        """
+                    CREATE INDEX IF NOT EXISTS idx_rule_template_system_metadata_app_id
+                    ON rule_templates ((system_metadata->>'app_id'));
+                    """
+                    )
+                )
+
+                logger.info("Created rule_templates table and indexes")
 
             logger.info("PostgreSQL tables and indexes created successfully")
             self._initialized = True
@@ -1583,53 +1644,212 @@ class PostgresDatabase(BaseDatabase):
             logger.error(f"Error removing document from folder: {e}")
             return False
 
-    def _check_folder_access(self, folder: Folder, auth: AuthContext, permission: str = "read") -> bool:
-        """Check if the user has the required permission for the folder."""
-        # Developer-scoped tokens: restrict by app_id on folders
-        if auth.entity_type == EntityType.DEVELOPER and auth.app_id:
-            if folder.system_metadata.get("app_id") != auth.app_id:
-                return False
+    # Rule Template CRUD Methods
+    async def create_rule_template(
+        self, 
+        name: str, 
+        description: Optional[str], 
+        rules_json: str, 
+        auth: AuthContext,
+        template_id: Optional[str] = None
+    ) -> Optional[RuleTemplateModel]:
+        """Create a new rule template."""
+        try:
+            # Generate UUID if not provided
+            if template_id is None:
+                template_id = str(uuid.uuid4())
+                
+            async with self.async_session() as session:
+                # Check if a template with the same name already exists for this user/app
+                existing = await session.execute(
+                    select(RuleTemplateModel).where(
+                        and_(
+                            RuleTemplateModel.name == name,
+                            text(f"owner->>'id' = '{auth.entity_id}'"),
+                            text(f"owner->>'type' = '{auth.entity_type.value}'")
+                        )
+                    )
+                )
+                
+                if existing.scalar_one_or_none():
+                    logger.warning(f"Rule template with name '{name}' already exists for user {auth.entity_id}")
+                    return None
 
+                # Create owner and access control
+                owner = {
+                    "type": auth.entity_type.value,
+                    "id": auth.entity_id
+                }
+                
+                access_control = {
+                    "readers": [auth.entity_id],
+                    "writers": [auth.entity_id],
+                    "admins": [auth.entity_id]
+                }
+                
+                # Add user_id to access_control if available
+                if auth.user_id:
+                    access_control["user_id"] = [auth.user_id]
+
+                system_metadata = {}
+                if auth.app_id:
+                    system_metadata["app_id"] = auth.app_id
+
+                now = datetime.now(UTC).isoformat()
+                
+                # Create the rule template
+                template = RuleTemplateModel(
+                    id=template_id,
+                    name=name,
+                    description=description,
+                    rules_json=json.loads(rules_json),  # Store as JSONB
+                    owner=owner,
+                    access_control=access_control,
+                    system_metadata=system_metadata,
+                    created_at=now,
+                    updated_at=now
+                )
+                
+                session.add(template)
+                await session.commit()
+                await session.refresh(template)  # Refresh to get updated data
+                
+                logger.info(f"Created rule template '{name}' with ID {template_id}")
+                return template
+                
+        except Exception as e:
+            logger.error(f"Error creating rule template: {e}")
+            return None
+
+    async def get_rule_templates(self, auth: AuthContext) -> List[Dict[str, Any]]:
+        """Get all rule templates accessible to the user."""
+        try:
+            async with self.async_session() as session:
+                # Build access filter for rule templates
+                where_clauses = []
+                
+                # Owner check
+                where_clauses.append(
+                    f"(owner->>'id' = '{auth.entity_id}' AND owner->>'type' = '{auth.entity_type.value}')"
+                )
+                
+                # Access control checks
+                where_clauses.append(f"access_control->'readers' ? '{auth.entity_id}'")
+                where_clauses.append(f"access_control->'writers' ? '{auth.entity_id}'")
+                where_clauses.append(f"access_control->'admins' ? '{auth.entity_id}'")
+                
+                # User ID check for cloud mode
+                if auth.user_id:
+                    where_clauses.append(f"access_control->'user_id' ? '{auth.user_id}'")
+                
+                # Developer-scoped tokens: restrict by app_id
+                if auth.entity_type == EntityType.DEVELOPER and auth.app_id:
+                    app_filter = f"system_metadata->>'app_id' = '{auth.app_id}'"
+                    access_filter = " OR ".join(where_clauses)
+                    final_filter = f"({access_filter}) AND ({app_filter})"
+                else:
+                    final_filter = " OR ".join(where_clauses)
+                
+                query = select(RuleTemplateModel).where(text(final_filter)).order_by(RuleTemplateModel.created_at.desc())
+                
+                result = await session.execute(query)
+                templates = result.scalars().all()
+                
+                # Convert to dict format expected by API
+                template_list = []
+                for template in templates:
+                    template_dict = {
+                        "id": template.id,
+                        "name": template.name,
+                        "description": template.description,
+                        "rules_json": json.dumps(template.rules_json),  # Convert back to JSON string
+                        "created_at": template.created_at,
+                        "updated_at": template.updated_at
+                    }
+                    template_list.append(template_dict)
+                
+                logger.info(f"Found {len(template_list)} rule templates for user {auth.entity_id}")
+                return template_list
+                
+        except Exception as e:
+            logger.error(f"Error getting rule templates: {e}")
+            return []
+
+    async def delete_rule_template(self, template_id: str, auth: AuthContext) -> bool:
+        """Delete a rule template if user has admin access."""
+        try:
+            async with self.async_session() as session:
+                # Get the template first
+                result = await session.execute(
+                    select(RuleTemplateModel).where(RuleTemplateModel.id == template_id)
+                )
+                template = result.scalar_one_or_none()
+                
+                if not template:
+                    logger.warning(f"Rule template {template_id} not found")
+                    return False
+                
+                # Check if user has admin access
+                if not self._check_rule_template_access(template, auth, "admin"):
+                    logger.warning(f"User {auth.entity_id} does not have admin access to template {template_id}")
+                    return False
+                
+                # Delete the template
+                await session.delete(template)
+                await session.commit()
+                
+                logger.info(f"Deleted rule template {template_id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error deleting rule template: {e}")
+            return False
+
+    def _check_rule_template_access(self, template: RuleTemplateModel, auth: AuthContext, permission: str = "read") -> bool:
+        """Check if user has required permission for rule template."""
+        # Developer-scoped tokens: restrict by app_id
+        if auth.entity_type == EntityType.DEVELOPER and auth.app_id:
+            if template.system_metadata.get("app_id") != auth.app_id:
+                return False
+        
         # Admin always has access
         if "admin" in auth.permissions:
             return True
-
-        # Check if folder is owned by the user
-        if (
-            auth.entity_type
-            and auth.entity_id
-            and folder.owner.get("type") == auth.entity_type.value
-            and folder.owner.get("id") == auth.entity_id
-        ):
-
+        
+        # Check if template is owned by the user
+        owner = template.owner or {}
+        if (owner.get("type") == auth.entity_type.value and 
+            owner.get("id") == auth.entity_id):
+            
             # In cloud mode, also verify user_id if present
-            if auth.user_id:
-                if get_settings().MODE == "cloud":  # Call get_settings() directly
-                    # Assuming access_control.user_id is a list of user IDs
-                    folder_user_ids = folder.access_control.get("user_id", [])
-                    if auth.user_id not in folder_user_ids:
-                        return False
+            if auth.user_id and get_settings().MODE == "cloud":
+                template_user_ids = template.access_control.get("user_id", [])
+                if auth.user_id not in template_user_ids:
+                    return False
             return True
-
+        
         # Check access control lists
-        access_control = folder.access_control or {}
-        # ACLs for folders store entries as "entity_type_value:entity_id"
-        entity_qualifier = f"{auth.entity_type.value}:{auth.entity_id}"
-
+        access_control = template.access_control or {}
+        
         if permission == "read":
             readers = access_control.get("readers", [])
-            if entity_qualifier in readers:
+            if auth.entity_id in readers:
                 return True
-
+        
         if permission == "write":
             writers = access_control.get("writers", [])
-            if entity_qualifier in writers:
+            if auth.entity_id in writers:
                 return True
-
-        # For admin permission, check admins list
-        if permission == "admin":  # This check is for folder-level admin, not global admin
+        
+        if permission == "admin":
             admins = access_control.get("admins", [])
-            if entity_qualifier in admins:
+            if auth.entity_id in admins:
                 return True
-
+        
+        # Check user_id access in cloud mode
+        if auth.user_id:
+            user_ids = access_control.get("user_id", [])
+            if auth.user_id in user_ids:
+                return True
+        
         return False
