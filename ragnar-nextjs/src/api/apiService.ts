@@ -94,12 +94,18 @@ export interface Graph {
 
 export interface ChunkResult {
   content: string;
+  score: number;
+  document_id: string;
+  chunk_number: number;
   metadata: {
-    filename: string;
+    filename?: string;
     page?: number;
+    is_image?: boolean;
     [key: string]: any;
   };
-  score: number;
+  content_type: string;
+  filename?: string;
+  download_url?: string;
 }
 
 export interface UsageStats {
@@ -155,6 +161,7 @@ export interface RetrieveRequest {
   k?: number;
   folder_name?: string;
   end_user_id?: string;
+  use_colpali?: boolean;
 }
 
 export interface CompletionQueryRequest {

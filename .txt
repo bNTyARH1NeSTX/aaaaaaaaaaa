@@ -62,8 +62,29 @@ apt-get install -y poppler-utils tesseract-ocr libmagic-dev
 ALTER USER postgres WITH PASSWORD 'postgres';
 pip install git+https://github.com/illuin-tech/colpali
 
-
+# Install via apt
+sudo apt-get update
+sudo apt-get install -y poppler-utils tesseract-ocr libmagic-dev
 
 
 service postgresql start
 
+# Install NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+
+# Set up NVM environment (add these to your .bashrc or .zshrc)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# Restart your terminal or source your profile
+source ~/.bashrc  # or ~/.zshrc
+
+# Update npm to the latest version
+npm install -g npm
+
+# Install the latest LTS version of Node.js
+nvm install --lts
+
+# Use the installed version
+nvm use --lts

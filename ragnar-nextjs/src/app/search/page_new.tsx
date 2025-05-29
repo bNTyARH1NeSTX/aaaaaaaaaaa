@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search as SearchIcon, FileText, Clock, Loader2, AlertCircle, Eye, Image, X } from 'lucide-react';
 import { useSearch } from '../../hooks/useApi';
 
@@ -10,45 +10,6 @@ export default function SearchPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [useColpali, setUseColpali] = useState(false);
   const [selectedResult, setSelectedResult] = useState<any>(null);
-  const [mounted, setMounted] = useState(false);
-
-  // Fix hydration issue by ensuring component is mounted on client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Log selectedResult when modal opens for debugging
-  useEffect(() => {
-    if (selectedResult) {
-      console.log("Selected Result for Modal:", selectedResult);
-    }
-  }, [selectedResult]);
-
-  // Prevent hydration mismatch by not rendering loading-dependent content on server
-  if (!mounted) {
-    return (
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <SearchIcon className="w-8 h-8 text-blue-600" />
-            Búsqueda de Documentos
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Busque en su colección de documentos utilizando búsqueda semántica impulsada por IA
-          </p>
-        </div>
-        {/* Show minimal UI during SSR */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="animate-pulse">
-            <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
-            <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg w-24"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,8 +106,7 @@ export default function SearchPage() {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <SearchIcon className="w-4 h-4" />
-              )
-              }
+              )}
               Buscar
             </button>
             {results.length > 0 && (
@@ -218,25 +178,11 @@ export default function SearchPage() {
                 <div key={index} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                      onClick={() => setSelectedResult(result)}>
                   <div className="flex items-start space-x-4">
-                    {result.metadata.is_image ? (
-                      <div className="w-16 h-16 flex-shrink-0 mt-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
-                        <img 
-                          src={result.content.startsWith('data:') ? result.content : `data:${result.content_type};base64,${result.content}`}
-                          alt="Vista previa"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 7v2.99s-1.99.01-2 0V7c0-1.1-.9-2-2-2s-2 .9-2 2v1c0 .55-.45 1-1 1s-1-.45-1-1V7c0-2.21 1.79-4 4-4s4 1.79 4 4zM9.5 8C10.33 8 11 7.33 11 6.5S10.33 5 9.5 5 8 5.67 8 6.5 8.67 8 9.5 8zM19 13c0-.55-.45-1-1-1s-1 .45-1 1-.45 1-1 1-1-.45-1-1 .45-1 1-1 1 .45 1 1zm-3 7H8c-1.1 0-2-.9-2-2v-5l2-2 3 3 2-2 3 3v5z"/></svg></div>';
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <FileText className="w-8 h-8 text-gray-400 flex-shrink-0 mt-1" />
-                    )}
+                    <FileText className="w-8 h-8 text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                          {result.metadata.filename || result.filename || 'Sin nombre'}
+                          {result.metadata.filename}
                         </h3>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
@@ -247,12 +193,6 @@ export default function SearchPage() {
                               Página {result.metadata.page}
                             </span>
                           )}
-                          {result.metadata.is_image && (
-                            <div className="flex items-center space-x-1">
-                              <Image className="w-3 h-3 text-purple-600" />
-                              <span className="text-xs text-purple-600">Imagen</span>
-                            </div>
-                          )}
                           {useColpali && (
                             <div className="flex items-center space-x-1">
                               <Eye className="w-3 h-3 text-purple-600" />
@@ -262,11 +202,7 @@ export default function SearchPage() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                        {result.metadata.is_image ? (
-                          <span className="italic text-gray-500">Contenido visual - haz clic para ver detalles</span>
-                        ) : (
-                          highlightText(result.content, query)
-                        )}
+                        {highlightText(result.content, query)}
                       </p>
                       <div className="mt-2 flex items-center text-xs text-gray-400">
                         <span>Hacer clic para ver detalles</span>
@@ -340,8 +276,8 @@ export default function SearchPage() {
       {/* Result Detail Modal */}
       {selectedResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Detalles del Resultado
               </h3>
@@ -353,11 +289,11 @@ export default function SearchPage() {
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto flex-1">
-              <div className="space-y-6">
+            <div className="p-6 overflow-y-auto">
+              <div className="space-y-4">
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archivo</h4>
-                  <p className="text-sm text-gray-900 dark:text-white">{selectedResult.metadata.filename || selectedResult.filename || 'Sin nombre'}</p>
+                  <p className="text-sm text-gray-900 dark:text-white">{selectedResult.metadata.filename}</p>
                 </div>
                 
                 {selectedResult.metadata.page && (
@@ -372,32 +308,10 @@ export default function SearchPage() {
                   <p className="text-sm text-gray-900 dark:text-white">{(selectedResult.score * 100).toFixed(1)}%</p>
                 </div>
                 
-                {/* Mostrar imagen si es un chunk de imagen */}
-                {selectedResult.metadata.is_image && selectedResult.content && (
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen</h4>
-                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                      <img 
-                        src={selectedResult.content.startsWith('data:') ? selectedResult.content : `data:${selectedResult.content_type};base64,${selectedResult.content}`}
-                        alt="Contenido visual del documento"
-                        className="max-w-full h-auto rounded-lg shadow-sm"
-                        onError={(e) => {
-                          console.error('Error loading image:', e);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-                
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contenido</h4>
-                  <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    {selectedResult.metadata.is_image ? (
-                      <p className="text-gray-500 italic">Este es un chunk de imagen. El contenido visual se muestra arriba.</p>
-                    ) : (
-                      highlightText(selectedResult.content, query)
-                    )}
+                  <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    {highlightText(selectedResult.content, query)}
                   </div>
                 </div>
                 

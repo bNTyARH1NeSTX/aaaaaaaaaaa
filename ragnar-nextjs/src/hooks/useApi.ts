@@ -254,11 +254,11 @@ export const useSearch = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const search = async (query: string, k = 10) => {
+  const search = async (query: string, k = 10, use_colpali = false) => {
     try {
       setLoading(true);
       setError(null);
-      const searchResults = await api.searchChunks({ query, k });
+      const searchResults = await api.searchChunks({ query, k, use_colpali });
       setResults(searchResults);
       return searchResults;
     } catch (err) {
