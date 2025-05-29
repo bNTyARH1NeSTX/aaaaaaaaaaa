@@ -513,13 +513,13 @@ async def ingest_file(
 @app.post("/ingest/files", response_model=BatchIngestResponse)
 @telemetry.track(operation_type="queue_batch_ingest", metadata_resolver=telemetry.batch_ingest_metadata)
 async def batch_ingest_files(
-    files: List[UploadFile] = File(...),
     metadata: str = Form("{}"),
     rules: str = Form("[]"),
     use_colpali: Optional[bool] = Form(None),  # Keep Optional[bool] for Form
     parallel: Optional[bool] = Form(True),
     folder_name: Optional[str] = Form(None),
     end_user_id: Optional[str] = Form(None),
+    files: List[UploadFile] = File(...), # Moved files to be after other Form fields
     auth: AuthContext = Depends(verify_token),
     redis: arq.ArqRedis = Depends(get_redis_pool),
 ) -> BatchIngestResponse:
@@ -527,14 +527,15 @@ async def batch_ingest_files(
     Batch ingest multiple files using the task queue.
 
     Args:
-        files: List of files to ingest
         metadata: JSON string of metadata (either a single dict or list of dicts)
         rules: JSON string of rules list. Can be either:
                - A single list of rules to apply to all files
                - A list of rule lists, one per file
         use_colpali: Whether to use ColPali-style embedding
+        parallel: Whether to run ingestion jobs in parallel (not fully implemented for true parallelism yet)
         folder_name: Optional folder to scope the documents to
         end_user_id: Optional end-user ID to scope the documents to
+        files: List of files to ingest
         auth: Authentication context
         redis: Redis connection pool for background tasks
 

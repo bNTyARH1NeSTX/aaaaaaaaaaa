@@ -109,6 +109,8 @@ class Settings(BaseSettings):
     # Redis settings
     REDIS_HOST: Optional[str] = "localhost"
     REDIS_PORT: Optional[int] = 6379
+    REDIS_DB: Optional[int] = 0
+    REDIS_PASSWORD: Optional[str] = None
 
     # Telemetry settings (existing ones from your snippet seem fine)
     TELEMETRY_ENABLED: bool = True
@@ -145,6 +147,7 @@ class Settings(BaseSettings):
     # AssemblyAI settings
     ASSEMBLYAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
 
 
 @lru_cache()

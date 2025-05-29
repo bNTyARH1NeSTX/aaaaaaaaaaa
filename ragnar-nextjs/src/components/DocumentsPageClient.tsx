@@ -165,20 +165,30 @@ export default function DocumentsPageClient() {
       try {
         const response = await hookUploadMultipleDocuments(pendingFiles, metadata, rulesArray, useColpali);
         if (response) {
+            // successful_ingestions is now the count of documents returned
+            const successfulIngestionsCount = response.documents ? response.documents.length : 0;
+            // failed_ingestions is now the count of errors returned
+            const failedIngestionsCount = response.errors ? response.errors.length : 0;
+
             setCurrentBatchProgress(prev => ({ 
                 ...prev, 
-                completedFiles: response.successful_ingestions, 
-                currentFileProgress: 100
+                completedFiles: successfulIngestionsCount, 
+                currentFileProgress: 100 // Mark current file as done, overall progress reflects queued files
             }));
-            if(response.failed_ingestions > 0) {
-                setCurrentBatchError(`${response.failed_ingestions} archivos fallaron al subir. Revisa la consola para más detalles.`);
-                console.error("Batch upload failures:", response.failed_files);
+
+            if(failedIngestionsCount > 0) {
+                // Construct an error message from response.errors
+                const errorDetails = response.errors.map(err => Object.entries(err).map(([fileName, errMsg]) => `${fileName}: ${errMsg}`).join(', ')).join('; ');
+                setCurrentBatchError(`${failedIngestionsCount} archivos fallaron al iniciar la subida. Detalles: ${errorDetails}`);
+                console.error("Batch upload initiation failures:", response.errors);
             }
-            if(response.successful_ingestions === pendingFiles.length) {
+
+            if(successfulIngestionsCount === pendingFiles.length) {
                 setCurrentBatchSuccess(true);
                 clearAllMetadata();
-            } else if (response.successful_ingestions > 0) {
-                setCurrentBatchSuccess(false);
+            } else if (successfulIngestionsCount > 0) {
+                // Partial success in queuing
+                setCurrentBatchSuccess(false); // Not fully successful, but some were queued.
             }
         } else {
             throw new Error("La subida por lotes no devolvió una respuesta.")

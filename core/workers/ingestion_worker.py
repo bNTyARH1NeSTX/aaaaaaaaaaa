@@ -4,7 +4,7 @@ import logging
 import os
 import time
 import urllib.parse as up
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from arq.connections import RedisSettings
@@ -28,7 +28,19 @@ from core.vector_store.multi_vector_store import MultiVectorStore
 from core.vector_store.pgvector_store import PGVectorStore
 
 # Enterprise routing helpers
-from ee.db_router import get_database_for_app, get_vector_store_for_app
+# from ee.db_router import get_database_for_app, get_vector_store_for_app
+
+async def get_database_for_app(app_id: Optional[str]) -> PostgresDatabase:
+    """Fallback implementation for enterprise routing"""
+    database = PostgresDatabase(uri=settings.POSTGRES_URI)
+    return database
+
+async def get_vector_store_for_app(app_id: Optional[str]) -> Optional[PGVectorStore]:
+    """Fallback implementation for enterprise routing"""
+    if not hasattr(settings, 'POSTGRES_URI') or not settings.POSTGRES_URI:
+        return None
+    vector_store = PGVectorStore(uri=settings.POSTGRES_URI)
+    return vector_store
 
 logger = logging.getLogger(__name__)
 
@@ -475,6 +487,7 @@ async def process_ingestion_job(
         embedding_start = time.time()
         embeddings = await document_service.embedding_model.embed_for_ingestion(processed_chunks)
         logger.debug(f"Generated {len(embeddings)} embeddings")
+            
         embedding_time = time.time() - embedding_start
         phase_times["generate_embeddings"] = embedding_time
         embeddings_per_second = len(embeddings) / embedding_time if embedding_time > 0 else 0
@@ -524,7 +537,7 @@ async def process_ingestion_job(
 
         # Update document status to completed before storing
         doc.system_metadata["status"] = "completed"
-        doc.system_metadata["updated_at"] = datetime.now(UTC)
+        doc.system_metadata["updated_at"] = datetime.now(timezone.utc)
 
         # 11. Store chunks and update document with is_update=True
         store_start = time.time()
@@ -571,7 +584,7 @@ async def process_ingestion_job(
             "status": "completed",
             "filename": original_filename,
             "content_type": content_type,
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as e:
@@ -615,7 +628,7 @@ async def process_ingestion_job(
                                 **doc.system_metadata,
                                 "status": "failed",
                                 "error": str(e),
-                                "updated_at": datetime.now(UTC),
+                                "updated_at": datetime.now(timezone.utc),
                             }
                         },
                         auth=auth,
@@ -631,284 +644,279 @@ async def process_ingestion_job(
             "status": "failed",
             "filename": original_filename,
             "error": str(e),
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
 
-async def startup(ctx):
-    """
-    Worker startup: Initialize all necessary services that will be reused across jobs.
+async def startup(ctx: Dict[str, Any]):
+    """Initialize resources when the worker starts."""
+    logger.info("Worker starting up...")
+    # Initialize services and store them in the context for reuse in tasks
+    # This avoids re-initializing for every job
 
-    This initialization is similar to what happens in core/api.py during app startup,
-    but adapted for the worker context.
-    """
-    logger.info("Worker starting up. Initializing services...")
+    # Initialize TelemetryService
+    ctx["telemetry"] = TelemetryService()
 
-    # Initialize database
-    logger.info("Initializing database...")
-    database = PostgresDatabase(uri=settings.POSTGRES_URI)
-    # database = PostgresDatabase(uri="postgresql+asyncpg://morphik:morphik@postgres:5432/morphik")
-    success = await database.initialize()
-    if success:
-        logger.info("Database initialization successful")
-    else:
-        logger.error("Database initialization failed")
-    ctx["database"] = database
-
-    # Initialize vector store
-    logger.info("Initializing primary vector store...")
-    vector_store = PGVectorStore(uri=settings.POSTGRES_URI)
-    # vector_store = PGVectorStore(uri="postgresql+asyncpg://morphik:morphik@postgres:5432/morphik")
-    success = await vector_store.initialize()
-    if success:
-        logger.info("Primary vector store initialization successful")
-    else:
-        logger.error("Primary vector store initialization failed")
-    ctx["vector_store"] = vector_store
-
-    # Initialize storage
-    if settings.STORAGE_PROVIDER == "local":
-        storage = LocalStorage(storage_path=settings.STORAGE_PATH)
-    elif settings.STORAGE_PROVIDER == "aws-s3":
-        storage = S3Storage(
-            aws_access_key=settings.AWS_ACCESS_KEY,
-            aws_secret_key=settings.AWS_SECRET_ACCESS_KEY,
+    # Initialize storage based on settings
+    if settings.STORAGE_PROVIDER == "s3":
+        storage_instance = S3Storage(
+            bucket_name=settings.S3_BUCKET,
             region_name=settings.AWS_REGION,
-            default_bucket=settings.S3_BUCKET,
+            aws_access_key_id=settings.AWS_ACCESS_KEY,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            endpoint_url=getattr(settings, 'S3_ENDPOINT_URL', None),
         )
     else:
-        raise ValueError(f"Unsupported storage provider: {settings.STORAGE_PROVIDER}")
-    ctx["storage"] = storage
-
-    # Initialize parser
-    parser = MorphikParser(
-        chunk_size=settings.CHUNK_SIZE,
-        chunk_overlap=settings.CHUNK_OVERLAP,
-        use_unstructured_api=settings.USE_UNSTRUCTURED_API,
-        unstructured_api_key=settings.UNSTRUCTURED_API_KEY,
-        assemblyai_api_key=settings.ASSEMBLYAI_API_KEY,
-        anthropic_api_key=settings.ANTHROPIC_API_KEY,
-        use_contextual_chunking=settings.USE_CONTEXTUAL_CHUNKING,
-    )
-    ctx["parser"] = parser
+        storage_instance = LocalStorage(storage_path=settings.STORAGE_PATH)
+    ctx["storage"] = storage_instance
+    logger.info(f"Storage initialized: {settings.STORAGE_PROVIDER}")
 
     # Initialize embedding model
-    embedding_model = LiteLLMEmbeddingModel(model_key=settings.EMBEDDING_MODEL)
-    logger.info(f"Initialized LiteLLM embedding model with model key: {settings.EMBEDDING_MODEL}")
-    ctx["embedding_model"] = embedding_model
+    ctx["embedding_model"] = LiteLLMEmbeddingModel(model_key=settings.EMBEDDING_MODEL)
+    logger.info("Embedding model initialized")
 
-    # Skip initializing completion model and reranker since they're not needed for ingestion
-
-    # Initialize ColPali embedding model and vector store per mode
+    # Initialize ColPali embedding model if configured
     colpali_embedding_model = None
-    colpali_vector_store = None
-
-    if settings.COLPALI_MODE != "off":
-        logger.info(f"Initializing ColPali components (mode={settings.COLPALI_MODE}) ...")
-        # Choose embedding implementation
-        match settings.COLPALI_MODE:
-            case "local":
-                colpali_embedding_model = ColpaliEmbeddingModel()
-            case "api":
-                colpali_embedding_model = ColpaliApiEmbeddingModel()
-            case _:
-                raise ValueError(f"Unsupported COLPALI_MODE: {settings.COLPALI_MODE}")
-
-        # Vector store is needed for both local and api modes
-        colpali_vector_store = MultiVectorStore(uri=settings.POSTGRES_URI)
-        # colpali_vector_store = MultiVectorStore(uri="postgresql+asyncpg://morphik:morphik@postgres:5432/morphik")
-        success = await asyncio.to_thread(colpali_vector_store.initialize)
-        if success:
-            logger.info("ColPali vector store initialization successful")
-        else:
-            logger.error("ColPali vector store initialization failed")
+    if hasattr(settings, 'COLPALI_API_URL') and settings.COLPALI_API_URL:
+        colpali_embedding_model = ColpaliApiEmbeddingModel(
+            api_url=settings.COLPALI_API_URL, 
+            model_name=getattr(settings, 'COLPALI_EMBEDDING_MODEL', 'vidore/colpali')
+        )
+    elif hasattr(settings, 'ENABLE_COLPALI') and settings.ENABLE_COLPALI:
+        # Use local ColPali model
+        colpali_embedding_model = ColpaliEmbeddingModel()
     ctx["colpali_embedding_model"] = colpali_embedding_model
+    logger.info(f"ColPali embedding model initialized: {colpali_embedding_model is not None}")
+
+    # Initialize parser
+    ctx["parser"] = MorphikParser()
+    logger.info("Parser initialized")
+
+    # Initialize rules processor  
+    ctx["rules_processor"] = RulesProcessor()
+    logger.info("Rules processor initialized")
+
+    # Initialize main database
+    db = PostgresDatabase(uri=settings.POSTGRES_URI)
+    await db.initialize()
+    ctx["database"] = db
+    logger.info("Main database connected.")
+
+    # Initialize main vector store
+    vector_store = PGVectorStore(uri=settings.POSTGRES_URI)
+    await vector_store.initialize()
+    ctx["vector_store"] = vector_store
+    logger.info("Main vector store connected.")
+
+    # Initialize ColPali vector store if configured
+    colpali_vector_store = None
+    if ctx["colpali_embedding_model"]:
+        try:
+            # Use MultiVectorStore for ColPali
+            from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
+            
+            # Get database URI for MultiVectorStore
+            uri_raw = db.engine.url.render_as_string(hide_password=False)
+            parsed = urlparse(uri_raw)
+            query = parse_qs(parsed.query)
+            if "sslmode" not in query and settings.MODE == "cloud":
+                query["sslmode"] = ["require"]
+                parsed = parsed._replace(query=urlencode(query, doseq=True))
+            uri_final = urlunparse(parsed)
+            
+            colpali_vector_store = MultiVectorStore(uri=uri_final)
+            await asyncio.to_thread(colpali_vector_store.initialize)
+            logger.info("ColPali vector store connected.")
+        except Exception as e:
+            logger.warning(f"Failed to initialize ColPali vector store: {e}")
     ctx["colpali_vector_store"] = colpali_vector_store
-    ctx["cache_factory"] = None
 
-    # Initialize rules processor
-    rules_processor = RulesProcessor()
-    ctx["rules_processor"] = rules_processor
-
-    # Initialize telemetry service
-    telemetry = TelemetryService()
-    ctx["telemetry"] = telemetry
-
-    # Create the document service using only the components needed for ingestion
-    document_service = DocumentService(
-        storage=storage,
-        database=database,
-        vector_store=vector_store,
-        embedding_model=embedding_model,
-        parser=parser,
-        cache_factory=None,
-        enable_colpali=(settings.COLPALI_MODE != "off"),
-        colpali_embedding_model=colpali_embedding_model,
-        colpali_vector_store=colpali_vector_store,
-    )
-    ctx["document_service"] = document_service
-
-    logger.info("Worker startup complete. All services initialized.")
+    logger.info("Worker startup complete.")
 
 
-async def shutdown(ctx):
-    """
-    Worker shutdown: Clean up resources.
+async def shutdown(ctx: Dict[str, Any]):
+    """Clean up resources when the worker shuts down."""
+    logger.info("Worker shutting down...")
+    
+    db = ctx.get("database")
+    if db and hasattr(db, 'disconnect'):
+        try:
+            await db.disconnect()
+            logger.info("Main database disconnected.")
+        except Exception as e:
+            logger.warning(f"Error disconnecting database: {e}")
 
-    Properly close connections and cleanup resources to prevent leaks.
-    """
-    logger.info("Worker shutting down. Cleaning up resources...")
+    vector_store = ctx.get("vector_store")
+    if vector_store and hasattr(vector_store, 'disconnect'):
+        try:
+            await vector_store.disconnect()
+            logger.info("Main vector store disconnected.")
+        except Exception as e:
+            logger.warning(f"Error disconnecting vector store: {e}")
 
-    # Close database connections
-    if "database" in ctx and hasattr(ctx["database"], "engine"):
-        logger.info("Closing database connections...")
-        await ctx["database"].engine.dispose()
-
-    # Close vector store connections if they exist
-    if "vector_store" in ctx and hasattr(ctx["vector_store"], "engine"):
-        logger.info("Closing vector store connections...")
-        await ctx["vector_store"].engine.dispose()
-
-    # Close colpali vector store connections if they exist
-    if "colpali_vector_store" in ctx and hasattr(ctx["colpali_vector_store"], "engine"):
-        logger.info("Closing colpali vector store connections...")
-        await ctx["colpali_vector_store"].engine.dispose()
-
-    # Close any other open connections or resources that need cleanup
+    colpali_vector_store = ctx.get("colpali_vector_store")
+    if colpali_vector_store and hasattr(colpali_vector_store, 'disconnect'):
+        try:
+            await colpali_vector_store.disconnect()
+            logger.info("ColPali vector store disconnected.")
+        except Exception as e:
+            logger.warning(f"Error disconnecting ColPali vector store: {e}")
+            
     logger.info("Worker shutdown complete.")
 
 
-def redis_settings_from_env() -> RedisSettings:
+async def get_services_for_app(app_id: Optional[str], ctx: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Create RedisSettings from environment variables for ARQ worker.
-
-    Returns:
-        RedisSettings configured for Redis connection with optimized performance
+    Dynamically gets or creates database and vector store connections based on app_id.
+    If app_id is None or ee routing is disabled, uses main connections from ctx.
     """
-    url = up.urlparse(os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0"))
+    if not app_id or not settings.MORPHEUS_MODE_ENABLED: # MORPHEUS_MODE_ENABLED implies EE
+        # Fallback to pre-initialized main services if not in EE mode or no app_id
+        # This part needs to ensure that the main services are initialized if not already
+        # For simplicity, we'll assume they are initialized during startup and available in ctx
+        # However, a robust solution might involve initializing them here if not found.
 
-    # Use ARQ's supported parameters with optimized values for stability
-    # For high-volume ingestion (100+ documents), these settings help prevent timeouts
-    return RedisSettings(
-        host=settings.REDIS_HOST,
-        port=settings.REDIS_PORT,
-        database=int(url.path.lstrip("/") or 0),
-        conn_timeout=5,  # Increased connection timeout (seconds)
-        conn_retries=15,  # More retries for transient connection issues
-        conn_retry_delay=1,  # Quick retry delay (seconds)
+        if "db" not in ctx or "vector_store" not in ctx:
+            # Initialize main database if not already in context
+            main_db = PostgresDatabase(
+                db_url=settings.DATABASE_URL,
+                vector_db_url=settings.VECTOR_DB_URL,
+                redis_url=settings.REDIS_URL,
+            )
+            await main_db.connect()
+            ctx["db"] = main_db # Store for potential reuse within the same job context
+
+            # Initialize main vector store if not already in context
+            main_vector_store = PGVectorStore(
+                db_url=settings.VECTOR_DB_URL,
+                table_name=settings.PGVECTOR_TABLE_NAME,
+                embedding_model=LiteLLMEmbeddingModel(model_key=settings.EMBEDDING_MODEL),
+            )
+            await main_vector_store.connect()
+            ctx["vector_store"] = main_vector_store # Store for potential reuse
+
+            # Initialize ColPali vector store if configured
+            colpali_vector_store = None
+            if settings.COLPALI_API_URL and settings.COLPALI_EMBEDDING_MODEL:
+                colpali_embedding_model = ColpaliApiEmbeddingModel(
+                    api_url=settings.COLPALI_API_URL, model_name=settings.COLPALI_EMBEDDING_MODEL
+                )
+                colpali_vector_store = PGVectorStore(
+                    db_url=settings.VECTOR_DB_URL,
+                    table_name=settings.COLPALI_PGVECTOR_TABLE_NAME,
+                    embedding_model=colpali_embedding_model,
+                )
+                await colpali_vector_store.connect()
+            ctx["colpali_vector_store"] = colpali_vector_store
+
+
+        db_instance = ctx["db"]
+        vector_store_instance = ctx["vector_store"]
+        colpali_vs_instance = ctx.get("colpali_vector_store")
+
+    # else:
+    #     # EE mode: Get app-specific connections
+    #     db_instance = await get_database_for_app(app_id)
+    #     # For vector store, decide if it needs to be app-specific or can use a shared one
+    #     # This example assumes it might also be app-specific via a similar getter
+    #     vector_store_instance = await get_vector_store_for_app(app_id, LiteLLMEmbeddingModel(model_key=settings.EMBEDDING_MODEL))
+    #     # Handle ColPali vector store similarly if it needs to be app-specific
+    #     colpali_vs_instance = None # Placeholder, adjust if ColPali is app-specific in EE
+    #     if settings.COLPALI_API_URL and settings.COLPALI_EMBEDDING_MODEL:
+    #         colpali_embedding_model = ColpaliApiEmbeddingModel(
+    #             api_url=settings.COLPALI_API_URL, model_name=settings.COLPALI_EMBEDDING_MODEL
+    #         )
+    #         # This might also need an app-specific version or a shared one
+    #         colpali_vs_instance = await get_vector_store_for_app(
+    #             app_id,
+    #             colpali_embedding_model,
+    #             table_name_suffix="_colpali" # Example: differentiate table
+    #         )
+
+
+    # Re-create DocumentService with the potentially app-specific db and vector_store
+    # Storage and telemetry can often be shared
+    document_service_instance = DocumentService(
+        db=db_instance,
+        storage=ctx["storage"], # Shared storage
+        vector_store=vector_store_instance,
+        colpali_vector_store=colpali_vs_instance,
+        telemetry=ctx["telemetry"], # Shared telemetry
     )
 
+    parser_instance = MorphikParser(
+        document_service=document_service_instance, storage=ctx["storage"], telemetry=ctx["telemetry"]
+    )
+    rules_processor_instance = RulesProcessor(document_service=document_service_instance, telemetry=ctx["telemetry"])
 
-# ARQ Worker Settings
+    return {
+        "db": db_instance,
+        "vector_store": vector_store_instance,
+        "colpali_vector_store": colpali_vs_instance,
+        "document_service": document_service_instance,
+        "parser": parser_instance,
+        "rules_processor": rules_processor_instance,
+        "storage": ctx["storage"], # Pass along shared services
+        "telemetry": ctx["telemetry"],
+    }
+
+
+async def ingest_file_content(ctx: Dict[str, Any], document_id: str, auth_context_dict: Dict[str, Any]):
+    """
+    Ingests the file content for a document.
+
+    This function handles the ingestion of file content for a given document ID.
+    It retrieves the document, processes the file content through parsing and
+    embedding, and updates the document with the new content and metadata.
+
+    Args:
+        ctx: The ARQ context dictionary
+        document_id: The ID of the document to ingest
+        auth_context_dict: The authentication context as a dictionary
+
+    Returns:
+        A dictionary with the document ID and processing status
+    """
+    # Extract auth context from the provided dictionary
+    auth_context = AuthContext(
+        entity_type=EntityType(auth_context_dict.get("entity_type", "unknown")),
+        entity_id=auth_context_dict.get("entity_id", ""),
+        app_id=auth_context_dict.get("app_id"),
+        permissions=set(auth_context_dict.get("permissions", ["read"])),
+        user_id=auth_context_dict.get("user_id", auth_context_dict.get("entity_id", "")),
+    )
+
+    # Forcing the use of ColPali in this specific ingestion flow
+    use_colpali = True
+
+    # Directly call the processing function with the extracted parameters
+    result = await process_ingestion_job(
+        ctx=ctx,
+        document_id=document_id,
+        file_key="",  # File key is not used in this direct ingestion flow
+        bucket="",    # Bucket is not used in this direct ingestion flow
+        original_filename="",  # Original filename is not used in this direct ingestion flow
+        content_type="",  # Content type is not used in this direct ingestion flow
+        metadata_json="{}",  # Empty metadata JSON
+        auth_dict=auth_context_dict,
+        rules_list=[],  # No rules applied in this direct ingestion flow
+        use_colpali=use_colpali,
+    )
+
+    logger.info(f"Ingestion complete for document {document_id}")
+    return result
+
+
+# Define WorkerSettings class for ARQ
 class WorkerSettings:
-    """
-    ARQ Worker settings for the ingestion worker.
-
-    This defines the functions available to the worker, startup and shutdown handlers,
-    and any specific Redis settings.
-    """
-
-    functions = [process_ingestion_job]
+    functions = [process_ingestion_job, ingest_file_content]
     on_startup = startup
     on_shutdown = shutdown
-
-    # Use robust Redis settings that handle connection issues
-    redis_settings = redis_settings_from_env()
-
-    # Result storage settings
-    keep_result_ms = 24 * 60 * 60 * 1000  # Keep results for 24 hours (24 * 60 * 60 * 1000 ms)
-
-    # Concurrency settings - optimized for high-volume ingestion
-    max_jobs = 3  # Reduced to prevent resource contention during batch processing
-
-    # Resource management
-    health_check_interval = 600  # Extended to 10 minutes to reduce Redis overhead
-    job_timeout = 7200  # Extended to 2 hours for large document processing
-    max_tries = 5  # Retry failed jobs up to 5 times
-    poll_delay = 2.0  # Increased poll delay to prevent Redis connection saturation
-
-    # High reliability settings
-    allow_abort_jobs = False  # Don't abort jobs on worker shutdown
-    retry_jobs = True  # Always retry failed jobs
-
-    # Prevent queue blocking on error
-    skip_queue_when_queues_read_fails = True  # Continue processing other queues if one fails
-
-    # Log Redis and connection pool information for debugging
-    @staticmethod
-    async def health_check(ctx):
-        """
-        Enhanced periodic health check to log connection status and job stats.
-        Monitors Redis memory, database connections, and job processing metrics.
-        """
-        database = ctx.get("database")
-        vector_store = ctx.get("vector_store")
-        job_stats = ctx.get("job_stats", {})
-
-        # Get detailed Redis info
-        try:
-            redis_info = await ctx["redis"].info(section=["Server", "Memory", "Clients", "Stats"])
-
-            # Server and resource usage info
-            redis_version = redis_info.get("redis_version", "unknown")
-            used_memory = redis_info.get("used_memory_human", "unknown")
-            used_memory_peak = redis_info.get("used_memory_peak_human", "unknown")
-            clients_connected = redis_info.get("connected_clients", "unknown")
-            rejected_connections = redis_info.get("rejected_connections", 0)
-            total_commands = redis_info.get("total_commands_processed", 0)
-
-            # DB keys
-            db_info = redis_info.get("db0", {})
-            keys_count = db_info.get("keys", 0) if isinstance(db_info, dict) else 0
-
-            # Log comprehensive server status
-            logger.info(
-                f"Redis Status: v{redis_version} | "
-                f"Memory: {used_memory} (peak: {used_memory_peak}) | "
-                f"Clients: {clients_connected} (rejected: {rejected_connections}) | "
-                f"DB Keys: {keys_count} | Commands: {total_commands}"
-            )
-
-            # Check for memory warning thresholds
-            if isinstance(used_memory, str) and used_memory.endswith("G"):
-                memory_value = float(used_memory[:-1])
-                if memory_value > 1.0:  # More than 1GB used
-                    logger.warning(f"Redis memory usage is high: {used_memory}")
-
-            # Check for connection issues
-            if rejected_connections and int(rejected_connections) > 0:
-                logger.warning(f"Redis has rejected {rejected_connections} connections")
-        except Exception as e:
-            logger.error(f"Failed to get Redis info: {str(e)}")
-
-        # Log job statistics with detailed processing metrics
-        ongoing = job_stats.get("ongoing", 0)
-        queued = job_stats.get("queued", 0)
-
-        logger.info(
-            f"Job Stats: completed={job_stats.get('complete', 0)} | "
-            f"failed={job_stats.get('failed', 0)} | "
-            f"retried={job_stats.get('retried', 0)} | "
-            f"ongoing={ongoing} | queued={queued}"
-        )
-
-        # Warn if too many jobs are queued/backed up
-        if queued > 50:
-            logger.warning(f"Large job queue backlog: {queued} jobs waiting")
-
-        # Test database connectivity with extended timeout
-        if database and hasattr(database, "async_session"):
-            try:
-                async with database.async_session() as session:
-                    await session.execute(text("SELECT 1"))
-                    logger.debug("Database connection is healthy")
-            except Exception as e:
-                logger.error(f"Database connection test failed: {str(e)}")
-
-        # Test vector store connectivity if available
-        if vector_store and hasattr(vector_store, "async_session"):
-            try:
-                async with vector_store.get_session_with_retry() as session:
-                    logger.debug("Vector store connection is healthy")
-            except Exception as e:
-                logger.error(f"Vector store connection test failed: {str(e)}")
+    redis_settings = RedisSettings(
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        database=settings.REDIS_DB,
+        password=settings.REDIS_PASSWORD if settings.REDIS_PASSWORD else None,
+    )
+    # Add other worker settings as needed, e.g., max_jobs, job_timeout, etc.
+    # Example: job_timeout = 300  # 5 minutes

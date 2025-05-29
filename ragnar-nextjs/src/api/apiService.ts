@@ -110,13 +110,15 @@ export interface UsageStats {
 }
 
 export interface BatchIngestResponse {
-  total_files: number;
-  successful_ingestions: number;
-  failed_ingestions: number;
-  successful_files: string[];
-  failed_files: Record<string, string>;
-  folder_id?: string;
-  folder_name?: string;
+  documents: Document[]; // Changed to match backend
+  errors: Array<{ [key: string]: string }>; // Changed to match backend
+  // total_files: number;
+  // successful_ingestions: number;
+  // failed_ingestions: number;
+  // successful_files: string[];
+  // failed_files: Record<string, string>;
+  // folder_id?: string;
+  // folder_name?: string;
 }
 
 export interface RecentActivity {

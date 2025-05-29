@@ -63,11 +63,14 @@ export const useDocuments = () => {
     try {
       setError(null); // Clear previous hook errors
       const response = await api.uploadMultipleDocuments(files, metadata, rules, use_colpali, parallel, folder_name);
-      if (response && response.successful_ingestions > 0) {
+      // The response itself is now BatchIngestResponse | null
+      // We check if documents were returned as an indication of successful queuing
+      if (response && response.documents && response.documents.length > 0) {
         await loadDocuments(); // Refresh the document list
       }
-      // If response is null or successful_ingestions is 0, an error might have occurred or no files were processed.
-      // The api.uploadMultipleDocuments itself throws an error which will be caught below.
+      // If response is null or response.documents is empty, an error might have occurred or no files were processed.
+      // The api.uploadMultipleDocuments itself throws an error which will be caught below if it's a network/request level error.
+      // Specific ingestion errors for individual files would be in response.errors
       return response;
     } catch (err: any) {
       setError(err.message || 'Error subiendo múltiples documentos');
