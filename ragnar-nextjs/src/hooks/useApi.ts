@@ -42,7 +42,7 @@ export const useDocuments = () => {
     try {
       const success = await api.deleteDocument(documentId);
       if (success) {
-        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+        setDocuments(prev => prev.filter(doc => doc.external_id !== documentId));
         setError(null);
       }
       return success;

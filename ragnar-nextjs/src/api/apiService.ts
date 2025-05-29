@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
-// API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://4bihdkshus1p65-8000.proxy.runpod.net';
+// API Configurationa
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://n97f0c99o4ucau-8000.proxy.runpod.net';
 
 // Axios instance with default configuration
 const api = axios.create({
@@ -30,16 +30,29 @@ api.interceptors.request.use(
 
 // Interfaces basadas en los modelos del backend
 export interface Document {
-  id: string;
-  filename: string;
-  size: number;
-  status: 'processing' | 'completed' | 'error';
-  created_at: string;
-  updated_at: string;
-  metadata?: {
-    [key: string]: any;
+  external_id: string;
+  filename?: string; // Made optional to align with backend
+  content_type: string;
+  owner: { [key: string]: string };
+  metadata: { [key: string]: any };
+  storage_info: { [key: string]: any }; // For potential size or other info
+  storage_files: Array<{
+    bucket: string;
+    key: string;
+    version: number;
+    filename?: string;
+    content_type?: string;
+    timestamp: string; // from StorageFileInfo.timestamp
+  }>;
+  system_metadata: {
+    created_at: string; // from Document.system_metadata.created_at
+    updated_at: string; // from Document.system_metadata.updated_at
+    version: number;
+    folder_name?: string;
+    end_user_id?: string; // Added
+    status: 'processing' | 'completed' | 'error' | 'failed'; // Added from Document.system_metadata.status
   };
-  rules?: any[]; // Añadir rules a la interfaz Document si se espera que se devuelvan
+  rules?: any[]; // Added back if it was used by other parts of the application
 }
 
 export interface Folder {

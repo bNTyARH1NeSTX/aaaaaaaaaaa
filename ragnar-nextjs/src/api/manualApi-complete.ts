@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 // API Configuration - Using the RunPod backend URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://4bihdkshus1p65-8000.proxy.runpod.net';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://n97f0c99o4ucau-8000.proxy.runpod.net';
 
 // Axios instance with default configuration
 const api = axios.create({
