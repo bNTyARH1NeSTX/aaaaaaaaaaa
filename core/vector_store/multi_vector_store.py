@@ -238,7 +238,7 @@ class MultiVectorStore(BaseVectorStore):
                     chunk.document_id,
                     chunk.chunk_number,
                     chunk.content,
-                    str(chunk.metadata),
+                    json.dumps(chunk.metadata),
                     binary_embeddings,
                 )
             )
