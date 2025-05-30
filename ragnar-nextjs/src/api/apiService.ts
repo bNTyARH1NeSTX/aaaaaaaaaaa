@@ -371,12 +371,12 @@ export const getGraphs = async (): Promise<Graph[]> => {
   }
 };
 
-export const getGraphDetails = async (graphId: string): Promise<Graph | null> => {
+export const getGraphDetails = async (graphName: string): Promise<Graph | null> => {
   try {
-    const response: AxiosResponse<Graph> = await api.get(`/graphs/${graphId}`);
+    const response: AxiosResponse<Graph> = await api.get(`/graph/${graphName}`);
     return response.data;
   } catch (error) {
-    console.error(`Error obteniendo detalles del grafo ${graphId}:`, error);
+    console.error(`Error obteniendo detalles del grafo ${graphName}:`, error);
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       // It's often better to let the caller handle not found specifically
       // or throw a custom error that can be caught and identified.
@@ -387,9 +387,10 @@ export const getGraphDetails = async (graphId: string): Promise<Graph | null> =>
   }
 };
 
-export const createGraph = async (graphData: Partial<Omit<Graph, 'id' | 'created_at' | 'updated_at' | 'nodes_count' | 'edges_count'>>): Promise<Graph | null> => {
+export const createGraph = async (graphData: any): Promise<Graph | null> => {
   try {
-    const response: AxiosResponse<Graph> = await api.post('/graphs', graphData);
+    // The graphData already comes in the correct CreateGraphRequest format from the frontend
+    const response: AxiosResponse<Graph> = await api.post('/graph/create', graphData);
     return response.data;
   } catch (error) {
     console.error('Error creando grafo:', error);
@@ -398,13 +399,13 @@ export const createGraph = async (graphData: Partial<Omit<Graph, 'id' | 'created
   }
 };
 
-export const deleteGraph = async (graphId: string): Promise<boolean> => {
+export const deleteGraph = async (graphName: string): Promise<boolean> => {
   try {
-    const response = await api.delete(`/graphs/${graphId}`);
+    const response = await api.delete(`/graph/${graphName}`);
     // Assuming 200 or 204 No Content for successful deletion
     return response.status === 200 || response.status === 204;
   } catch (error) {
-    console.error(`Error eliminando grafo ${graphId}:`, error);
+    console.error(`Error eliminando grafo ${graphName}:`, error);
     // Propagate the error so the hook or component can handle it
     throw error;
   }

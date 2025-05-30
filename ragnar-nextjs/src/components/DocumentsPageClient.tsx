@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useDocuments, useRuleTemplates } from "@/hooks/useApi";
-import { FileText, XCircle, CheckCircle, Save, Trash2, AlertCircle } from 'lucide-react';
+import { FileText, XCircle, CheckCircle, Save, Trash2, AlertCircle, Eye } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -675,23 +675,50 @@ export default function DocumentsPageClient() {
                     )}
                   </div>
                   
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      if (window.confirm(`¿Estás seguro de que quieres eliminar "${doc.filename}"?`)) {
-                        try {
-                          await deleteDocument(doc.external_id);
-                        } catch (error) {
-                          console.error('Failed to delete document:', error);
-                          alert('Error al eliminar el documento. Por favor, inténtalo de nuevo.');
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Crear URL para ver el documento
+                        if (doc.storage_files && doc.storage_files.length > 0) {
+                          // Si hay archivos en storage_files, usar el primero
+                          const storageFile = doc.storage_files[0];
+                          const viewUrl = `https://b6xdtaxulzi1fd-8000.proxy.runpod.net/documents/${doc.external_id}/download`;
+                          window.open(viewUrl, '_blank');
+                        } else if (doc.storage_info && doc.storage_info.key) {
+                          // Fallback a storage_info si existe
+                          const viewUrl = `https://b6xdtaxulzi1fd-8000.proxy.runpod.net/documents/${doc.external_id}/download`;
+                          window.open(viewUrl, '_blank');
+                        } else {
+                          alert('No se puede obtener la URL del documento.');
                         }
-                      }
-                    }}
-                    className="text-red-600 hover:text-red-700 hover:border-red-300 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                      }}
+                      className="text-blue-600 hover:text-blue-700 hover:border-blue-300 hover:bg-blue-50"
+                      title="Ver documento"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (window.confirm(`¿Estás seguro de que quieres eliminar "${doc.filename}"?`)) {
+                          try {
+                            await deleteDocument(doc.external_id);
+                          } catch (error) {
+                            console.error('Failed to delete document:', error);
+                            alert('Error al eliminar el documento. Por favor, inténtalo de nuevo.');
+                          }
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-700 hover:border-red-300 hover:bg-red-50"
+                      title="Eliminar documento"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

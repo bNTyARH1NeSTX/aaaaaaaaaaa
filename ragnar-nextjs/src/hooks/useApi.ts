@@ -159,7 +159,7 @@ export const useGraphs = () => {
     loadGraphs();
   }, []);
 
-  const createGraph = async (graphData: Partial<Omit<api.Graph, 'id' | 'created_at' | 'updated_at' | 'nodes_count' | 'edges_count'>>) => {
+  const createGraph = async (graphData: any) => {
     try {
       setLoading(true); // Optional: set loading state for creation
       const newGraph = await api.createGraph(graphData);
@@ -179,12 +179,12 @@ export const useGraphs = () => {
     }
   };
 
-  const deleteGraph = async (graphId: string) => {
+  const deleteGraph = async (graphName: string) => {
     try {
       setLoading(true); // Optional: set loading state for deletion
-      const success = await api.deleteGraph(graphId);
+      const success = await api.deleteGraph(graphName);
       if (success) {
-        setGraphs(prev => prev.filter(g => g.id !== graphId));
+        setGraphs(prev => prev.filter(g => g.name !== graphName));
         setError(null);
       } else {
         // If deleteGraph returns false without throwing an error

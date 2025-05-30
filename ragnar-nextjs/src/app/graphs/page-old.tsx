@@ -309,286 +309,130 @@ export default function GraphsPage() {
           Crear Nuevo Grafo
         </h2>
         
-        <div className="space-y-6">
-          {/* Basic Configuration */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="newGraphName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Nombre del Grafo *
-              </label>
-              <input
-                id="newGraphName"
-                type="text"
-                value={newGraphName}
-                onChange={(e) => setNewGraphName(e.target.value)}
-                placeholder="Ej: Análisis Q4 2024"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="selectedGraphType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Tipo de Análisis
-              </label>
-              <select
-                id="selectedGraphType"
-                value={selectedGraphType}
-                onChange={(e) => setSelectedGraphType(e.target.value as 'entity' | 'topic' | 'custom')}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              >
-                <option value="entity">Extracción de Entidades</option>
-                <option value="topic">Análisis de Tópicos</option>
-                <option value="custom">Configuración Personalizada</option>
-              </select>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+          <div className="md:col-span-2">
+            <label htmlFor="newGraphName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Nombre del Grafo
+            </label>
+            <input
+              id="newGraphName"
+              type="text"
+              value={newGraphName}
+              onChange={(e) => setNewGraphName(e.target.value)}
+              placeholder="Ej: Análisis Q4 2024"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
           </div>
-
-          {/* Document Selection */}
-          <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Selección de Documentos
-              </h3>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {selectedDocuments.size} documento(s) seleccionado(s)
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Buscar Documentos
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={documentSearchTerm}
-                    onChange={(e) => setDocumentSearchTerm(e.target.value)}
-                    placeholder="Buscar por nombre o ID..."
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Filtrar por Carpeta
-                </label>
-                <select
-                  value={folderFilter}
-                  onChange={(e) => setFolderFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">Todas las carpetas</option>
-                  {uniqueFolders.map(folder => (
-                    <option key={folder} value={folder}>{folder}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Tipo de Contenido
-                </label>
-                <select
-                  value={contentTypeFilter}
-                  onChange={(e) => setContentTypeFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">Todos los tipos</option>
-                  {uniqueContentTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Selection Actions */}
-            <div className="flex gap-2 mb-4">
-              <button
-                onClick={selectAllFilteredDocuments}
-                className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200 dark:hover:bg-blue-800"
-              >
-                Seleccionar Todos ({filteredDocuments.length})
-              </button>
-              <button
-                onClick={clearDocumentSelection}
-                className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
-              >
-                Limpiar Selección
-              </button>
-            </div>
-
-            {/* Document List */}
-            <div className="max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-md">
-              {loadingDocuments ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-                  <span className="ml-2 text-gray-600 dark:text-gray-400">Cargando documentos...</span>
-                </div>
-              ) : filteredDocuments.length > 0 ? (
-                <div className="divide-y divide-gray-200 dark:divide-gray-600">
-                  {filteredDocuments.map(doc => (
-                    <div
-                      key={doc.external_id}
-                      className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedDocuments.has(doc.external_id)}
-                        onChange={() => toggleDocumentSelection(doc.external_id)}
-                        className="mr-3 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                          {doc.filename || doc.external_id}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {doc.content_type} • {doc.system_metadata.folder_name || 'Sin carpeta'}
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-400 dark:text-gray-500">
-                        {new Date(doc.system_metadata.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center p-8 text-gray-500 dark:text-gray-400">
-                  {documents.length === 0 ? 'No hay documentos disponibles' : 'No se encontraron documentos con los filtros aplicados'}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Advanced Options */}
-          <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-            <button
-              onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-              className="flex items-center justify-between w-full text-left"
+          
+          <div>
+            <label htmlFor="selectedGraphType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Tipo de Grafo
+            </label>
+            <select
+              id="selectedGraphType"
+              value={selectedGraphType}
+              onChange={(e) => setSelectedGraphType(e.target.value as 'entity' | 'topic' | 'custom')}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
             >
-              <h3 className="text-md font-medium text-gray-900 dark:text-white flex items-center gap-2">
-                <SettingsIcon className="w-4 h-4" />
-                Configuración Avanzada
-              </h3>
-              {showAdvancedOptions ? (
-                <ChevronUp className="w-4 h-4 text-gray-500" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              )}
-            </button>
-
-            {showAdvancedOptions && (
-              <div className="mt-4 space-y-4">
-                {selectedGraphType === 'entity' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Prompt Personalizado para Extracción de Entidades
-                    </label>
-                    <textarea
-                      value={customPrompts.entityExtraction}
-                      onChange={(e) => setCustomPrompts(prev => ({ ...prev, entityExtraction: e.target.value }))}
-                      placeholder="Deje en blanco para usar el prompt por defecto..."
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Prompt Personalizado para Extracción de Relaciones
-                  </label>
-                  <textarea
-                    value={customPrompts.relationshipExtraction}
-                    onChange={(e) => setCustomPrompts(prev => ({ ...prev, relationshipExtraction: e.target.value }))}
-                    placeholder="Deje en blanco para usar el prompt por defecto..."
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-
-                {/* Custom Metadata Filters */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Filtros de Metadatos Personalizados
-                  </label>
-                  <div className="space-y-2">
-                    {Object.entries(metadataFilters).map(([key, value], index) => (
-                      <div key={index} className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Clave"
-                          value={key}
-                          onChange={(e) => {
-                            const newFilters = { ...metadataFilters };
-                            delete newFilters[key];
-                            if (e.target.value) {
-                              newFilters[e.target.value] = value;
-                            }
-                            setMetadataFilters(newFilters);
-                          }}
-                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Valor"
-                          value={value}
-                          onChange={(e) => {
-                            setMetadataFilters(prev => ({ ...prev, [key]: e.target.value }));
-                          }}
-                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        />
-                        <button
-                          onClick={() => {
-                            const newFilters = { ...metadataFilters };
-                            delete newFilters[key];
-                            setMetadataFilters(newFilters);
-                          }}
-                          className="px-3 py-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      onClick={() => setMetadataFilters(prev => ({ ...prev, '': '' }))}
-                      className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      + Agregar filtro de metadatos
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+              <option value="entity">Grafo de Entidades</option>
+              <option value="topic">Grafo de Temas</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
+          
+          <div className="md:col-span-4">
+            <label htmlFor="newGraphDescription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Descripción (Opcional)
+            </label>
+            <textarea
+              id="newGraphDescription"
+              value={newGraphDescription}
+              onChange={(e) => setNewGraphDescription(e.target.value)}
+              placeholder="Breve descripción del propósito o contenido del grafo"
+              rows={2}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
           </div>
 
-          {/* Create Button */}
-          <div className="flex justify-end">
+          <div className="md:col-span-4">
             <button
               onClick={handleCreateGraph}
-              disabled={!newGraphName.trim() || isCreating}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              disabled={isCreating || !newGraphName.trim()}
+              className="w-full md:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-md transition-colors flex items-center justify-center gap-2"
             >
               {isCreating ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Creando Grafo...
-                </>
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  Crear Grafo
-                </>
+                <Plus className="w-4 h-4" />
               )}
+              Crear Grafo
             </button>
           </div>
         </div>
       </div>
+
+      {/* Graph Options Templates - Can be removed or adapted if direct creation is preferred */}
+      {/* For now, let's comment it out to simplify the UI focus on creation and visualization */}
+      {/* 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Network className="w-8 h-8 text-purple-600" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Grafo de Entidades</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Visualice entidades y sus relaciones a través de los documentos
+          </p>
+          <button 
+            onClick={() => {
+              setSelectedGraphType('entity');
+              setNewGraphName('Grafo de Entidades');
+            }}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors"
+          >
+            Usar esta Plantilla
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Zap className="w-8 h-8 text-orange-600" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Grafo de Temas</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Explore grupos temáticos y relaciones semánticas
+          </p>
+          <button 
+            onClick={() => {
+              setSelectedGraphType('topic');
+              setNewGraphName('Grafo de Temas');
+            }}
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded-md transition-colors"
+          >
+            Usar esta Plantilla
+          </button>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <SettingsIcon className="w-8 h-8 text-green-600" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Grafo Personalizado</h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Cree visualizaciones personalizadas con parámetros específicos
+          </p>
+          <button 
+            onClick={() => {
+              setSelectedGraphType('custom');
+              setNewGraphName('Grafo Personalizado');
+            }}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition-colors"
+          >
+            Usar esta Plantilla
+          </button>
+        </div>
+      </div>
+      */}
 
       {/* Existing Graphs List */}
       {loadingGraphs ? (
@@ -656,7 +500,7 @@ export default function GraphsPage() {
               No hay grafos disponibles
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Cree su primer grafo seleccionando documentos y configurando el análisis
+              Cree su primer grafo usando las plantillas de arriba
             </p>
           </div>
         </div>

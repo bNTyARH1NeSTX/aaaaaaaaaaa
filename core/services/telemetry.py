@@ -829,6 +829,14 @@ class TelemetryService:
             ]
         )
 
+        self.delete_graph_metadata = MetadataExtractor(
+            [
+                MetadataField("name", "kwargs"),
+                MetadataField("folder_name", "kwargs"),
+                MetadataField("end_user_id", "kwargs"),
+            ]
+        )
+
         self.set_folder_rule_metadata = MetadataExtractor(
             [
                 MetadataField("folder_id", "kwargs"),

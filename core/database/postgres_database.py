@@ -1853,3 +1853,91 @@ class PostgresDatabase(BaseDatabase):
                 return True
         
         return False
+
+    async def delete_graph(self, name: str, auth: AuthContext, system_filters: Optional[Dict[str, Any]] = None) -> bool:
+        """Delete a graph if user has admin access."""
+        try:
+            # First check if graph exists and user has access
+            graph = await self.get_graph(name, auth, system_filters)
+            if not graph:
+                logger.warning(f"Graph '{name}' not found or user does not have access")
+                return False
+
+            # Check if user has admin access
+            if not self._check_graph_access(graph, auth, "admin"):
+                logger.warning(f"User {auth.entity_id} does not have admin access to graph '{name}'")
+                return False
+
+            async with self.async_session() as session:
+                # Build access filter and system filters
+                access_filter = self._build_access_filter(auth)
+                
+                where_clauses = [f"({access_filter})", "name = :name"]
+                params = {"name": name}
+                
+                if system_filters:
+                    # Apply system filters to ensure we only delete graphs in the right scope
+                    if system_filters.get("folder_name"):
+                        where_clauses.append("system_metadata->>'folder_name' = :folder_name")
+                        params["folder_name"] = system_filters["folder_name"]
+                    if system_filters.get("end_user_id"):
+                        where_clauses.append("system_metadata->>'end_user_id' = :end_user_id")
+                        params["end_user_id"] = system_filters["end_user_id"]
+
+                where_clause = " AND ".join(where_clauses)
+                query = select(GraphModel).where(text(where_clause))
+                
+                result = await session.execute(query, params)
+                graph_model = result.scalar_one_or_none()
+                
+                if not graph_model:
+                    logger.warning(f"Graph '{name}' not found with specified filters")
+                    return False
+                
+                # Delete the graph
+                await session.delete(graph_model)
+                await session.commit()
+                
+                logger.info(f"Deleted graph '{name}' (ID: {graph_model.id})")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error deleting graph '{name}': {e}")
+            return False
+
+    def _check_graph_access(self, graph: Graph, auth: AuthContext, permission: str = "read") -> bool:
+        """Check if user has required permission for graph."""
+        try:
+            # Check ownership
+            if graph.owner.get("id") == auth.entity_id and graph.owner.get("type") == auth.entity_type.value:
+                return True
+
+            # Check access control lists
+            access_control = graph.access_control or {}
+            
+            # For cloud mode, check user_id if present
+            if get_settings().MODE == "cloud" and auth.user_id:
+                if auth.user_id in access_control.get("user_id", []):
+                    return True
+
+            # Check entity-based permissions
+            entity_qualifier = f"{auth.entity_type.value}:{auth.entity_id}"
+            
+            if permission == "read":
+                # Read permission: check readers, writers, or admins
+                return (entity_qualifier in access_control.get("readers", []) or
+                       entity_qualifier in access_control.get("writers", []) or
+                       entity_qualifier in access_control.get("admins", []))
+            elif permission == "write":
+                # Write permission: check writers or admins
+                return (entity_qualifier in access_control.get("writers", []) or
+                       entity_qualifier in access_control.get("admins", []))
+            elif permission == "admin":
+                # Admin permission: check admins only
+                return entity_qualifier in access_control.get("admins", [])
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error checking graph access: {e}")
+            return False

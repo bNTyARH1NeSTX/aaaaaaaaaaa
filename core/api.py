@@ -2414,3 +2414,52 @@ async def get_manual_generator_service(
     return ManualGeneratorService(document_service=doc_service, embedding_model=embedding_model)
 
 # END: Manual Generation Endpoint and supporting components
+
+@app.delete("/graph/{name}")
+@telemetry.track(operation_type="delete_graph", metadata_resolver=telemetry.delete_graph_metadata)
+async def delete_graph(
+    name: str,
+    auth: AuthContext = Depends(verify_token),
+    folder_name: Optional[Union[str, List[str]]] = None,
+    end_user_id: Optional[str] = None,
+) -> Dict[str, str]:
+    """
+    Delete a graph by name.
+
+    This endpoint deletes a graph if the user has admin access to it.
+
+    Args:
+        name: Name of the graph to delete
+        auth: Authentication context
+        folder_name: Optional folder to scope the operation to
+        end_user_id: Optional end-user ID to scope the operation to
+
+    Returns:
+        Dict: Success message
+    """
+    try:
+        # Create system filters for folder and user scoping
+        system_filters = {}
+        if folder_name:
+            system_filters["folder_name"] = folder_name
+        if end_user_id:
+            system_filters["end_user_id"] = end_user_id
+
+        # Check if graph exists and user has access
+        graph = await document_service.db.get_graph(name, auth, system_filters)
+        if not graph:
+            raise HTTPException(status_code=404, detail=f"Graph '{name}' not found")
+
+        # Delete the graph
+        success = await document_service.db.delete_graph(name, auth, system_filters)
+        if not success:
+            raise HTTPException(status_code=500, detail=f"Failed to delete graph '{name}'")
+        
+        return {"message": f"Graph '{name}' deleted successfully"}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
+    except Exception as e:
+        logger.error(f"Error deleting graph: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
