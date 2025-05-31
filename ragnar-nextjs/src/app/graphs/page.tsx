@@ -22,12 +22,80 @@ import * as api from '../../api/apiService'; // Import api service
 
 // Helper to transform API graph data to ReactFlow format
 const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: Edge[] } => {
-  const nodes: Node[] = (apiGraph.nodes || []).map((node, index) => ({
-    id: node.id,
-    data: { label: node.label || node.id, ...node.data },
-    position: node.data?.position || { x: Math.random() * 400, y: Math.random() * 400 }, // Use provided position or randomize
-    type: node.data?.type || 'default',
-  }));
+  const nodeCount = apiGraph.nodes?.length || 0;
+  
+  // Calculate grid layout for better spacing
+  const gridSize = Math.ceil(Math.sqrt(nodeCount));
+  const nodeSpacing = 250; // Increased spacing between nodes
+  const startX = -((gridSize - 1) * nodeSpacing) / 2; // Center the grid
+  const startY = -((gridSize - 1) * nodeSpacing) / 2;
+  
+  const nodes: Node[] = (apiGraph.nodes || []).map((node, index) => {
+    let position;
+    
+    // Use existing position if available, otherwise calculate grid position
+    if (node.data?.position) {
+      position = node.data.position;
+    } else {
+      const row = Math.floor(index / gridSize);
+      const col = index % gridSize;
+      position = {
+        x: startX + col * nodeSpacing + (Math.random() - 0.5) * 50, // Add small random offset
+        y: startY + row * nodeSpacing + (Math.random() - 0.5) * 50
+      };
+    }
+    
+    // Generate colors based on node type or label
+    const getNodeColor = (node: any) => {
+      if (node.data?.color) return node.data.color;
+      
+      // Color scheme based on node type or properties
+      const nodeType = node.data?.type || 'default';
+      const colorMap: { [key: string]: string } = {
+        'entity': '#dbeafe', // blue
+        'person': '#fef3c7', // yellow
+        'organization': '#d1fae5', // green
+        'location': '#fce7f3', // pink
+        'concept': '#e0e7ff', // indigo
+        'topic': '#fed7d7', // red
+        'default': '#f3f4f6' // gray
+      };
+      
+      // If no specific type, generate color based on label hash
+      if (!colorMap[nodeType]) {
+        const hash = node.label?.charCodeAt(0) || 0;
+        const colors = ['#dbeafe', '#fef3c7', '#d1fae5', '#fce7f3', '#e0e7ff', '#fed7d7'];
+        return colors[hash % colors.length];
+      }
+      
+      return colorMap[nodeType];
+    };
+    
+    return {
+      id: node.id,
+      data: { 
+        label: node.label || node.id, 
+        ...node.data 
+      },
+      position,
+      type: node.data?.type || 'default',
+      style: {
+        background: getNodeColor(node),
+        border: '2px solid #1a73e8',
+        borderRadius: '8px',
+        padding: '10px',
+        fontSize: '12px',
+        fontWeight: '500',
+        color: '#1f2937',
+        minWidth: '120px',
+        minHeight: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      },
+    };
+  });
 
   const edges: Edge[] = (apiGraph.edges || []).map(edge => ({
     id: edge.id,
@@ -35,7 +103,22 @@ const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: E
     target: edge.target,
     label: edge.label,
     data: edge.data,
-    type: edge.data?.type || 'default',
+    type: edge.data?.type || 'smoothstep',
+    style: {
+      stroke: '#6b7280',
+      strokeWidth: 2,
+    },
+    labelStyle: {
+      fontSize: '11px',
+      fontWeight: '500',
+      fill: '#374151',
+    },
+    labelBgStyle: {
+      fill: '#f9fafb',
+      stroke: '#e5e7eb',
+      strokeWidth: 1,
+      fillOpacity: 0.9,
+    },
   }));
 
   return { nodes, edges };
@@ -234,14 +317,15 @@ export default function GraphsPage() {
     }
   };
 
-  const handleViewGraph = async (graphId: string) => {
+  const handleViewGraph = async (graphName: string) => {
+    console.log('handleViewGraph called with:', graphName, typeof graphName);
     setLoadingGraphDetails(true);
     setGraphDetailsError(null);
     setSelectedGraph(null);
     setNodes([]);
     setEdges([]);
     try {
-      const graphDetails = await api.getGraphDetails(graphId);
+      const graphDetails = await api.getGraphDetails(graphName);
       if (graphDetails) {
         setSelectedGraph(graphDetails);
         const { nodes: flowNodes, edges: flowEdges } = transformApiGraphToFlow(graphDetails);
@@ -629,7 +713,10 @@ export default function GraphsPage() {
                 
                 <div className="flex items-center justify-start space-x-2">
                   <button 
-                    onClick={() => handleViewGraph(graph.id)}
+                    onClick={() => {
+                      console.log('Clicking View button for graph:', graph);
+                      handleViewGraph(graph.name);
+                    }}
                     className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-sm"
                   >
                     <Eye className="w-4 h-4" />
@@ -685,7 +772,7 @@ export default function GraphsPage() {
               </p>
               {selectedGraph && (
                 <button 
-                  onClick={() => handleViewGraph(selectedGraph.id)} 
+                  onClick={() => handleViewGraph(selectedGraph.name)} 
                   className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
                 >
                   Reintentar Carga
@@ -694,7 +781,7 @@ export default function GraphsPage() {
             </div>
           </div>
         ) : selectedGraph && nodes.length > 0 ? (
-          <div style={{ height: '600px', border: '1px solid #eee', borderRadius: '8px' }} className="dark:border-gray-600">
+          <div style={{ height: '700px', border: '1px solid #eee', borderRadius: '8px' }} className="dark:border-gray-600">
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -702,12 +789,35 @@ export default function GraphsPage() {
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               fitView
+              fitViewOptions={{
+                padding: 50,
+                includeHiddenNodes: false,
+                minZoom: 0.1,
+                maxZoom: 1.5
+              }}
+              minZoom={0.1}
+              maxZoom={2}
+              defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
               attributionPosition="bottom-right"
               className="bg-gray-50 dark:bg-gray-700/30"
+              proOptions={{ hideAttribution: true }}
             >
-              <Controls />
-              <MiniMap nodeStrokeWidth={3} zoomable pannable />
-              <Background color={document.documentElement.classList.contains('dark') ? "#404040" : "#ddd"} gap={16} />
+              <Controls showZoom={true} showFitView={true} showInteractive={true} />
+              <MiniMap 
+                nodeStrokeWidth={3} 
+                zoomable 
+                pannable 
+                style={{
+                  height: 120,
+                  width: 200,
+                }}
+                position="top-right"
+              />
+              <Background 
+                color={document.documentElement.classList.contains('dark') ? "#404040" : "#ddd"} 
+                gap={20} 
+                size={1}
+              />
             </ReactFlow>
           </div>
         ) : (

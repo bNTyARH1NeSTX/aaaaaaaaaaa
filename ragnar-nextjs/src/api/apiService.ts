@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 // API Configurationa
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://n97f0c99o4ucau-8000.proxy.runpod.net';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://lqkq229rvwe6oi-8000.proxy.runpod.net';
 
 // Axios instance with default configuration
 const api = axios.create({
@@ -86,10 +86,12 @@ export interface Graph {
   type?: string;
   created_at: string;
   updated_at: string;
-  nodes_count?: number;
-  edges_count?: number;
-  nodes?: ApiNode[]; // Array of nodes
-  edges?: ApiEdge[]; // Array of edges
+  nodes_count: number;
+  edges_count: number;
+  nodes: ApiNode[]; // Array of nodes
+  edges: ApiEdge[]; // Array of edges
+  metadata?: { [key: string]: any };
+  document_ids?: string[];
 }
 
 export interface ChunkResult {
@@ -373,16 +375,30 @@ export const getGraphs = async (): Promise<Graph[]> => {
 
 export const getGraphDetails = async (graphName: string): Promise<Graph | null> => {
   try {
-    const response: AxiosResponse<Graph> = await api.get(`/graph/${graphName}`);
+    const url = `/graph/${graphName}`;
+    console.log('Making request to:', url, 'with graphName:', graphName);
+    const response: AxiosResponse<Graph> = await api.get(url);
+    console.log('Full response:', response);
+    console.log('Response data:', response.data);
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
     return response.data;
   } catch (error) {
-    console.error(`Error obteniendo detalles del grafo ${graphName}:`, error);
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      // It's often better to let the caller handle not found specifically
-      // or throw a custom error that can be caught and identified.
-      // For now, returning null as per previous patterns.
-      return null;
+    if (axios.isAxiosError(error)) {
+      console.log('Axios error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        url: error.config?.url,
+        method: error.config?.method
+      });
+      if (error.response?.status === 404) {
+        console.warn(`Graph not found: ${graphName}`);
+        return null;
+      }
     }
+    console.error('Error obteniendo detalles del grafo:', error);
     throw error; // Propagate other errors to be handled by the caller
   }
 };

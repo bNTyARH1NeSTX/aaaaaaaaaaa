@@ -167,7 +167,7 @@ class EntityResolver:
 
         system_message = {
             "role": "system",
-            "content": "You are an entity resolution expert. Your task is to identify and group different representations of the same real-world entity.",
+            "content": "Eres un experto en resolución de entidades. Tu tarea es identificar y agrupar diferentes representaciones de la misma entidad del mundo real.",
         }
 
         user_message = {"role": "user", "content": prompt}
@@ -242,25 +242,25 @@ class EntityResolver:
 
         # Otherwise use the default prompt
         prompt = f"""
-Below is a list of entities extracted from a document:
+A continuación hay una lista de entidades extraídas de un documento:
 
 {entities_str}
 
-Your task is to identify entities in this list that refer to the EXACT SAME real-world concept or object, differing ONLY by name, abbreviation, or minor spelling variations. Group these synonymous entities together.
+Tu tarea es identificar entidades en esta lista que se refieren al MISMO concepto u objeto del mundo real, diferenciándose SOLO por el nombre, abreviación o variaciones menores de ortografía. Agrupa estas entidades sinónimas juntas.
 
-**CRITICAL RULES:**
-1.  **Synonymy ONLY:** Only group entities if they are truly synonymous (e.g., "JFK", "John F. Kennedy", "Kennedy").
-2.  **DO NOT Group Related Concepts:** DO NOT group distinct entities even if they are related. For example:
-    * A company and its products (e.g., "Apple" and "iPhone" must remain separate).
-    * An organization and its specific projects or vehicles (e.g., "SpaceX", "Falcon 9", and "Starship" must remain separate).
-    * A person and their title (e.g. "Elon Musk" and "CEO" must remain separate unless the list only contained variations like "CEO Musk").
-3.  **Canonical Form:** For each group of synonyms, choose the most complete and formal name as the "canonical" form.
-4.  **Omit Unique Entities:** If an entity has no synonyms in the provided list, DO NOT include it in the output JSON. The output should only contain groups of two or more synonymous entities.
+**REGLAS CRÍTICAS:**
+1.  **SOLO Sinonimia:** Solo agrupa entidades si son verdaderamente sinónimas (ej., "JFK", "John F. Kennedy", "Kennedy").
+2.  **NO Agrupes Conceptos Relacionados:** NO agrupes entidades distintas aunque estén relacionadas. Por ejemplo:
+    * Una empresa y sus productos (ej., "Apple" e "iPhone" deben permanecer separados).
+    * Una organización y sus proyectos o vehículos específicos (ej., "SpaceX", "Falcon 9" y "Starship" deben permanecer separados).
+    * Una persona y su título (ej. "Elon Musk" y "CEO" deben permanecer separados a menos que la lista solo contenga variaciones como "CEO Musk").
+3.  **Forma Canónica:** Para cada grupo de sinónimos, elige el nombre más completo y formal como la forma "canónica".
+4.  **Omite Entidades Únicas:** Si una entidad no tiene sinónimos en la lista proporcionada, NO la incluyas en el JSON de salida. La salida debe contener solo grupos de dos o más entidades sinónimas.
 
-**Output Format:**
-Format your response as a JSON object containing a single key "entity_groups", which is an array. Each element in the array represents a group of synonyms and must have:
-- "canonical": The chosen standard form.
-- "variants": An array of all synonymous variants found in the input list (including the canonical form).
+**Formato de Salida:**
+Formatea tu respuesta como un objeto JSON que contenga una sola clave "entity_groups", que es un array. Cada elemento en el array representa un grupo de sinónimos y debe tener:
+- "canonical": La forma estándar elegida.
+- "variants": Un array de todas las variantes sinónimas encontradas en la lista de entrada (incluyendo la forma canónica).
 
 ```json
 {str(entities_example_dict)}

@@ -773,18 +773,18 @@ class GraphService:
         system_message = {
             "role": "system",
             "content": (
-                "You are an entity extraction and relationship extraction assistant. Extract entities and "
-                "their relationships from text precisely and thoroughly, extract as many entities and "
-                "relationships as possible. "
-                "For entities, include entity label and type (some examples: PERSON, ORGANIZATION, LOCATION, "
-                "CONCEPT, etc.). If the user has given examples, use those, these are just suggestions"
-                "For relationships, use a simple format with source, target, and relationship fields. "
-                "Be very through, there are many relationships that are not obvious"
-                "IMPORTANT: The source and target fields must be simple strings representing "
-                "entity labels. For example: "
-                "if you extract entities 'Entity A' and 'Entity B', a relationship would have source: 'Entity A', "
-                "target: 'Entity B', relationship: 'relates to'. "
-                "Respond directly in json format, without any additional text or explanations. "
+                "Eres un asistente de extracción de entidades y relaciones. Extrae entidades y "
+                "sus relaciones del texto de manera precisa y exhaustiva, extrae tantas entidades y "
+                "relaciones como sea posible. "
+                "Para las entidades, incluye la etiqueta de la entidad y el tipo (algunos ejemplos: PERSONA, ORGANIZACIÓN, UBICACIÓN, "
+                "CONCEPTO, etc.). Si el usuario ha dado ejemplos, úsalos, estos son solo sugerencias. "
+                "Para las relaciones, usa un formato simple con campos source, target y relationship. "
+                "Sé muy minucioso, hay muchas relaciones que no son obvias. "
+                "IMPORTANTE: Los campos source y target deben ser cadenas simples que representen "
+                "etiquetas de entidades. Por ejemplo: "
+                "si extraes las entidades 'Entidad A' y 'Entidad B', una relación tendría source: 'Entidad A', "
+                "target: 'Entidad B', relationship: 'se relaciona con'. "
+                "Responde directamente en formato json, sin texto adicional ni explicaciones. "
             ),
         }
 
@@ -798,14 +798,14 @@ class GraphService:
             user_message = {
                 "role": "user",
                 "content": (
-                    "Extract named entities and their relationships from the following text. "
-                    "For entities, include entity label and type (PERSON, ORGANIZATION, LOCATION, CONCEPT, etc.). "
-                    "For relationships, specify the source entity, target entity, and the relationship between them. "
-                    "The source and target must be simple strings matching the entity labels, not objects. "
+                    "Extrae entidades nombradas y sus relaciones del siguiente texto. "
+                    "Para las entidades, incluye la etiqueta de la entidad y el tipo (PERSONA, ORGANIZACIÓN, UBICACIÓN, CONCEPTO, etc.). "
+                    "Para las relaciones, especifica la entidad fuente, la entidad destino y la relación entre ellas. "
+                    "Los campos source y target deben ser cadenas simples que coincidan con las etiquetas de las entidades, no objetos. "
                     f"{examples_str}"
-                    'Sample relationship format: {"source": "Entity A", "target": "Entity B", '
-                    '"relationship": "works for"}\n\n'
-                    "Return your response as valid JSON:\n\n" + content_limited
+                    'Formato de ejemplo de relación: {"source": "Entidad A", "target": "Entidad B", '
+                    '"relationship": "trabaja para"}\n\n'
+                    "Devuelve tu respuesta como JSON válido:\n\n" + content_limited
                 ),
             }
 

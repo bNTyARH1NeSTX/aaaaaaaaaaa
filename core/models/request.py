@@ -4,6 +4,43 @@ from pydantic import BaseModel, Field
 
 from core.models.documents import Document
 from core.models.prompts import GraphPromptOverrides, QueryPromptOverrides
+from core.models.graph import Graph, Entity, Relationship
+
+
+# Frontend Graph Response Models
+class GraphNode(BaseModel):
+    """Node model for frontend graph visualization"""
+
+    id: str
+    label: str
+    data: Dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphEdge(BaseModel):
+    """Edge model for frontend graph visualization"""
+
+    id: str
+    source: str
+    target: str
+    label: str = ""
+    data: Dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphResponse(BaseModel):
+    """Response model for graph with frontend-compatible format"""
+
+    id: str
+    name: str
+    description: Optional[str] = None
+    type: Optional[str] = None
+    created_at: str
+    updated_at: str
+    nodes_count: int = 0
+    edges_count: int = 0
+    nodes: List[GraphNode] = Field(default_factory=list)
+    edges: List[GraphEdge] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    document_ids: List[str] = Field(default_factory=list)
 
 
 class RetrieveRequest(BaseModel):
@@ -143,3 +180,52 @@ class AgentQueryRequest(BaseModel):
     """Request model for agent queries"""
 
     query: str = Field(..., description="Natural language query for the Morphik agent")
+
+
+def transform_graph_to_frontend_format(graph: Graph) -> GraphResponse:
+    """Transform internal Graph model to frontend-compatible format"""
+
+    # Transform entities to nodes
+    nodes = []
+    for entity in graph.entities:
+        node = GraphNode(
+            id=entity.id,
+            label=entity.label,
+            data={
+                "type": entity.type,
+                "properties": entity.properties,
+                "document_ids": entity.document_ids,
+                "chunk_sources": entity.chunk_sources,
+            },
+        )
+        nodes.append(node)
+
+    # Transform relationships to edges
+    edges = []
+    for relationship in graph.relationships:
+        edge = GraphEdge(
+            id=relationship.id,
+            source=relationship.source_id,
+            target=relationship.target_id,
+            label=relationship.type,
+            data={
+                "document_ids": relationship.document_ids,
+                "chunk_sources": relationship.chunk_sources,
+            },
+        )
+        edges.append(edge)
+
+    return GraphResponse(
+        id=graph.id,
+        name=graph.name,
+        description=graph.metadata.get("description"),
+        type=graph.metadata.get("type"),
+        created_at=graph.created_at.isoformat(),
+        updated_at=graph.updated_at.isoformat(),
+        nodes_count=len(nodes),
+        edges_count=len(edges),
+        nodes=nodes,
+        edges=edges,
+        metadata=graph.metadata,
+        document_ids=graph.document_ids,
+    )
