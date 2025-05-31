@@ -1307,7 +1307,7 @@ class GraphService:
                         # Check for common chunks
                         common_chunks = self._find_common_chunks(entity_map[entity_id], target_entity, relationship)
 
-                        # Only include relationships where entities co-occur
+                        # Only include relationships where entities co-ocurr
                         if common_chunks:
                             visited.add(target_id)
                             # Create path with relationship info
@@ -1328,7 +1328,7 @@ class GraphService:
                         # Check for common chunks
                         common_chunks = self._find_common_chunks(entity_map[entity_id], source_entity, relationship)
 
-                        # Only include relationships where entities co-occur
+                        # Only include relationships where entities co-ocurr
                         if common_chunks:
                             visited.add(source_id)
                             # Create path with relationship info (note reverse direction)
@@ -1380,7 +1380,7 @@ class GraphService:
         temperature: Optional[float] = None,
         include_paths: bool = False,
         paths: Optional[List[List[str]]] = None,
-        auth: Optional[AuthContext] = None,
+        auth: Optional<AuthContext] = None,
         graph_name: Optional[str] = None,
         prompt_overrides: Optional[QueryPromptOverrides] = None,
         folder_name: Optional[Union[str, List[str]]] = None,
@@ -1462,3 +1462,83 @@ class GraphService:
             }
 
         return response
+
+    async def get_graph_visualization_data(
+        self,
+        graph_name: str,
+        auth: AuthContext,
+        system_filters: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Obtiene datos de visualización de gráficas para gráficas locales.
+
+        Args:
+            graph_name: Nombre de la gráfica a visualizar
+            auth: Contexto de autenticación
+            system_filters: Filtros opcionales del sistema para recuperación de gráfica
+
+        Returns:
+            Dict conteniendo nodos y enlaces para visualización
+        """
+        # Inicializar system_filters si es None
+        if system_filters is None:
+            system_filters = {}
+
+        graph = await self.db.get_graph(graph_name, auth, system_filters=system_filters)
+        if not graph:
+            logger.warning(f"Gráfica '{graph_name}' no encontrada o no accesible")
+            return {"nodes": [], "links": []}
+
+        # Transformar entidades al formato de nodos
+        nodes = []
+        for entity in graph.entities:
+            nodes.append(
+                {
+                    "id": entity.id,
+                    "label": entity.label,
+                    "type": entity.type,
+                    "properties": entity.properties,
+                    "color": self._get_node_color(entity.type),
+                }
+            )
+
+        # Transformar relaciones al formato de enlaces
+        links = []
+        entity_id_set = {entity.id for entity in graph.entities}
+        for relationship in graph.relationships:
+            # Solo incluir relaciones donde tanto el origen como el destino existan
+            if relationship.source_id in entity_id_set and relationship.target_id in entity_id_set:
+                links.append(
+                    {"source": relationship.source_id, "target": relationship.target_id, "type": relationship.type}
+                )
+
+        return {"nodes": nodes, "links": links}
+
+    def _get_node_color(self, node_type: str) -> str:
+        """Obtiene el color para un tipo de nodo para coincidir con el esquema de colores de la UI."""
+        color_map = {
+            "persona": "#4f46e5",  # Índigo
+            "person": "#4f46e5",  # Índigo (mantener inglés para compatibilidad)
+            "organización": "#06b6d4",  # Cian
+            "organization": "#06b6d4",  # Cian (mantener inglés para compatibilidad)
+            "ubicación": "#10b981",  # Esmeralda
+            "location": "#10b981",  # Esmeralda (mantener inglés para compatibilidad)
+            "fecha": "#f59e0b",  # Ámbar
+            "date": "#f59e0b",  # Ámbar (mantener inglés para compatibilidad)
+            "concepto": "#8b5cf6",  # Violeta
+            "concept": "#8b5cf6",  # Violeta (mantener inglés para compatibilidad)
+            "evento": "#ec4899",  # Rosa
+            "event": "#ec4899",  # Rosa (mantener inglés para compatibilidad)
+            "producto": "#ef4444",  # Rojo
+            "product": "#ef4444",  # Rojo (mantener inglés para compatibilidad)
+            "entidad": "#4f46e5",  # Índigo (para entidades genéricas)
+            "entity": "#4f46e5",  # Índigo (para entidades genéricas)
+            "atributo": "#f59e0b",  # Ámbar
+            "attribute": "#f59e0b",  # Ámbar (mantener inglés para compatibilidad)
+            "relación": "#ec4899",  # Rosa
+            "relationship": "#ec4899",  # Rosa (mantener inglés para compatibilidad)
+            "elemento_alto_nivel": "#10b981",  # Esmeralda
+            "high_level_element": "#10b981",  # Esmeralda (mantener inglés para compatibilidad)
+            "unidad_semántica": "#8b5cf6",  # Violeta
+            "semantic_unit": "#8b5cf6",  # Violeta (mantener inglés para compatibilidad)
+        }
+        return color_map.get(node_type.lower(), "#6b7280")  # Gris como predeterminado

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BarChart2, Network, Settings as SettingsIcon, Loader2, AlertCircle, Plus, Eye, Trash2, FileText, Filter, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { BarChart2, Network, Settings as SettingsIcon, Loader2, AlertCircle, Plus, Eye, Trash2, FileText, Filter, ChevronDown, ChevronUp, Search, X, GitBranch } from 'lucide-react';
 import ReactFlow, {
   Controls,
   Background,
@@ -19,6 +19,11 @@ import 'reactflow/dist/style.css';
 
 import { useGraphs } from '../../hooks/useApi';
 import * as api from '../../api/apiService'; // Import api service
+import { useWorkflowStatus } from '@/hooks/useWorkflowStatus';
+import WorkflowStatusMonitor from '@/components/graph/WorkflowStatusMonitor';
+import WorkflowStatusMonitorWrapper from '@/components/graph/WorkflowStatusMonitorWrapper';
+import GraphVisualization from '@/components/graph/GraphVisualization';
+import CreateGraphForm from '@/components/graph/CreateGraphForm';
 
 // Helper to transform API graph data to ReactFlow format
 const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: Edge[] } => {
@@ -127,6 +132,7 @@ const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: E
 export default function GraphsPage() {
   const { graphs, loading: loadingGraphs, error: graphsError, refresh: refreshGraphsList, createGraph, deleteGraph } = useGraphs();
   const [isCreating, setIsCreating] = useState(false);
+  const [isAsyncCreating, setIsAsyncCreating] = useState(false);
   const [newGraphName, setNewGraphName] = useState('');
   const [newGraphDescription, setNewGraphDescription] = useState('');
   const [selectedGraphType, setSelectedGraphType] = useState<'entity' | 'topic' | 'custom'>('entity');
@@ -154,6 +160,10 @@ export default function GraphsPage() {
   const [edges, setEdges] = useState<Edge[]>([]);
   const [loadingGraphDetails, setLoadingGraphDetails] = useState(false);
   const [graphDetailsError, setGraphDetailsError] = useState<string | null>(null);
+  
+  // Estado para el monitoreo de flujos de trabajo
+  const [monitoredWorkflow, setMonitoredWorkflow] = useState<string | null>(null);
+  const [workflowGraphName, setWorkflowGraphName] = useState<string | null>(null);
 
   // Load documents on component mount
   useEffect(() => {
@@ -318,31 +328,47 @@ export default function GraphsPage() {
   };
 
   const handleViewGraph = async (graphName: string) => {
-    console.log('handleViewGraph called with:', graphName, typeof graphName);
+    if (!graphName) return;
+    
     setLoadingGraphDetails(true);
     setGraphDetailsError(null);
     setSelectedGraph(null);
-    setNodes([]);
-    setEdges([]);
+    
     try {
+      console.log('Fetching graph details for:', graphName);
       const graphDetails = await api.getGraphDetails(graphName);
+      console.log('Received graph details:', graphDetails);
+      
       if (graphDetails) {
         setSelectedGraph(graphDetails);
+        // Transform API graph to ReactFlow format for visualization
         const { nodes: flowNodes, edges: flowEdges } = transformApiGraphToFlow(graphDetails);
         setNodes(flowNodes);
         setEdges(flowEdges);
-        if (flowNodes.length === 0 && flowEdges.length === 0) {
-          setGraphDetailsError('El grafo está vacío o aún no tiene nodos ni aristas.');
-        }
       } else {
-        setGraphDetailsError('No se pudieron cargar los detalles del grafo.');
+        setGraphDetailsError(`No se encontró el grafo "${graphName}"`);
       }
-    } catch (error: any) {
-      console.error('Error obteniendo detalles del grafo:', error);
-      setGraphDetailsError(`Error obteniendo detalles del grafo: ${error.message || 'Error desconocido'}`);
+    } catch (error) {
+      console.error('Error loading graph details:', error);
+      setGraphDetailsError('Error al cargar los detalles del grafo');
     } finally {
       setLoadingGraphDetails(false);
     }
+  };
+
+  // Función para verificar el estado de un flujo de trabajo de grafo
+  const handleCheckWorkflowStatus = async (graph: api.Graph) => {
+    // Obtener el ID del flujo de trabajo desde los metadatos del grafo
+    const workflowId = graph.system_metadata?.workflow_id;
+    
+    if (!workflowId) {
+      alert('Este grafo no tiene un ID de flujo de trabajo asociado.');
+      return;
+    }
+    
+    // Establecer el grafo y el ID del flujo de trabajo que estamos monitoreando
+    setMonitoredWorkflow(workflowId);
+    setWorkflowGraphName(graph.name);
   };
 
   const handleDeleteGraph = async (graphId: string, graphName: string) => {
@@ -651,11 +677,11 @@ export default function GraphsPage() {
             )}
           </div>
 
-          {/* Create Button */}
-          <div className="flex justify-end">
+          {/* Create Buttons */}
+          <div className="flex justify-end gap-3">
             <button
               onClick={handleCreateGraph}
-              disabled={!newGraphName.trim() || isCreating}
+              disabled={!newGraphName.trim() || isCreating || isAsyncCreating}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isCreating ? (
@@ -670,9 +696,91 @@ export default function GraphsPage() {
                 </>
               )}
             </button>
+            
+            <button
+              onClick={() => setIsAsyncCreating(true)}
+              disabled={isCreating || isAsyncCreating}
+              className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Crear grafo en modo asíncrono para grandes conjuntos de datos"
+            >
+              <GitBranch className="w-4 h-4" />
+              Crear Asíncrono
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Async Graph Creation */}
+      {isAsyncCreating && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Crear Grafo Asíncrono</h3>
+              <button 
+                onClick={() => setIsAsyncCreating(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <CreateGraphForm 
+                onGraphCreated={(graphName) => {
+                  setIsAsyncCreating(false);
+                  refreshGraphsList();
+                  // Seleccionar el nuevo grafo después de un breve retraso para permitir que la UI se actualice
+                  setTimeout(() => {
+                    const newGraph = graphs.find(g => g.name === graphName);
+                    if (newGraph) {
+                      setSelectedGraph(newGraph);
+                    }
+                  }, 1000);
+                }} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workflow Status Monitor */}
+      {monitoredWorkflow && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-xl w-full">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Estado del Flujo de Trabajo: {workflowGraphName}
+              </h3>
+              <button 
+                onClick={() => {
+                  setMonitoredWorkflow(null);
+                  setWorkflowGraphName(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              {monitoredWorkflow && (
+                <WorkflowStatusMonitorWrapper 
+                  workflowId={monitoredWorkflow}
+                  onComplete={(status) => {
+                    if (status.status === 'completed') {
+                      // Refrescar la lista de grafos para actualizar los estados
+                      refreshGraphsList();
+                      
+                      // Si estamos viendo el grafo actualmente, refrescar sus detalles
+                      if (selectedGraph?.name === workflowGraphName && workflowGraphName) {
+                        handleViewGraph(workflowGraphName);
+                      }
+                    }
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Existing Graphs List */}
       {loadingGraphs ? (
@@ -711,7 +819,7 @@ export default function GraphsPage() {
                   {graph.nodes_count || 0} nodos • {graph.edges_count || 0} aristas
                 </div>
                 
-                <div className="flex items-center justify-start space-x-2">
+                <div className="flex items-center justify-start space-x-2 flex-wrap gap-2">
                   <button 
                     onClick={() => {
                       console.log('Clicking View button for graph:', graph);
@@ -722,6 +830,16 @@ export default function GraphsPage() {
                     <Eye className="w-4 h-4" />
                     Ver
                   </button>
+                  {graph.system_metadata?.workflow_id && (
+                    <button 
+                      onClick={() => handleCheckWorkflowStatus(graph)}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-md hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors text-sm"
+                      title="Verificar estado del flujo de trabajo"
+                    >
+                      <GitBranch className="w-4 h-4" />
+                      Estado
+                    </button>
+                  )}
                   <button 
                     onClick={() => handleDeleteGraph(graph.id, graph.name)}
                     className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"

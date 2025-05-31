@@ -403,7 +403,7 @@ export const useRuleTemplates = () => {
 
   const createTemplate = async (name: string, description: string | null, rulesJson: string) => {
     try {
-      const newTemplate = await api.createRuleTemplate(name, description, rulesJson);
+      const newTemplate = await api.createRuleTemplate(name, description ?? undefined, rulesJson);
       if (newTemplate) {
         setTemplates(prev => [...prev, newTemplate]);
         return newTemplate;

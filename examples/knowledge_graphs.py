@@ -60,3 +60,11 @@ if response_with_paths.metadata and "graph" in response_with_paths.metadata:
     print("\nGraph paths found:")
     for path in response_with_paths.metadata["graph"]["paths"]:
         print(" -> ".join(path))
+
+# Nota: Para operaciones asíncronas de grafo, ver el ejemplo en async_graph_operations.py
+print("\nPara grafos complejos o grandes conjuntos de datos, considere usar las operaciones asíncronas")
+print("Consulte examples/async_graph_operations.py para ejemplos de:")
+print(" - Creación asíncrona de grafos")
+print(" - Actualización asíncrona de grafos")
+print(" - Verificación del estado del flujo de trabajo")
+print(" - Espera hasta la finalización de la construcción del grafo")

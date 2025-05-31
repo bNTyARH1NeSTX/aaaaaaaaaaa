@@ -1895,6 +1895,43 @@ async def list_graphs(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/graph/{name}/visualization", response_model=Dict[str, Any])
+@telemetry.track(operation_type="get_graph_visualization", metadata_resolver=telemetry.get_graph_metadata)
+async def get_graph_visualization(
+    name: str,
+    auth: AuthContext = Depends(verify_token),
+    folder_name: Optional[Union[str, List[str]]] = None,
+    end_user_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Obtener datos de visualización del grafo.
+
+    Este endpoint recupera los nodos y enlaces necesarios para la visualización del grafo.
+    Funciona tanto con servicios de grafo locales como basados en API.
+
+    Args:
+        name: Nombre del grafo a visualizar
+        auth: Contexto de autenticación
+        folder_name: Carpeta opcional para delimitar la operación
+        end_user_id: ID de usuario final opcional para delimitar la operación
+
+    Returns:
+        Dict: Datos de visualización que contienen arrays de nodos y enlaces
+    """
+    try:
+        return await document_service.get_graph_visualization_data(
+            name=name,
+            auth=auth,
+            folder_name=folder_name,
+            end_user_id=end_user_id,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error obteniendo datos de visualización del grafo: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/graph/{name}/update", response_model=Graph)
 @telemetry.track(operation_type="update_graph", metadata_resolver=telemetry.update_graph_metadata)
 async def update_graph(
@@ -1992,6 +2029,64 @@ async def delete_graph(
         raise
     except Exception as e:
         logger.error(f"Error deleting graph: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/graph/workflow/{workflow_id}/status", response_model=Dict[str, Any])
+@telemetry.track(operation_type="check_workflow_status", metadata_resolver=telemetry.get_graph_metadata)
+async def check_workflow_status(
+    workflow_id: str,
+    run_id: Optional[str] = None,
+    auth: AuthContext = Depends(verify_token),
+) -> Dict[str, Any]:
+    """
+    Verificar el estado de un flujo de trabajo de construcción/actualización de grafo.
+
+    Este endpoint consulta la API externa de grafos para verificar el estado de una operación asíncrona.
+
+    Args:
+        workflow_id: El ID del flujo de trabajo devuelto de operaciones de construcción/actualización
+        run_id: ID de ejecución opcional para la ejecución específica del flujo de trabajo
+        auth: Contexto de autenticación
+
+    Returns:
+        Dict que contiene estado ('running', 'completed', o 'failed') y resultado opcional
+    """
+    try:
+        # Obtener el servicio de grafos (ya sea local o basado en API)
+        graph_service = document_service.graph_service
+
+        # Verificar si es el servicio MorphikGraphService
+        from core.services.morphik_graph_service import MorphikGraphService
+
+        if isinstance(graph_service, MorphikGraphService):
+            # Usar el método check_workflow_status
+            result = await graph_service.check_workflow_status(workflow_id=workflow_id, run_id=run_id, auth=auth)
+
+            # Si el flujo de trabajo está completado, actualizar el estado del grafo correspondiente
+            if result.get("status") == "completed":
+                # Extraer graph_id del workflow_id (formato: "build-update-{graph_name}-...")
+                # Esta es una heurística simple, ajustar según el formato real del workflow_id
+                parts = workflow_id.split("-")
+                if len(parts) >= 3:
+                    graph_name = parts[2]
+                    try:
+                        # Buscar y actualizar el grafo
+                        graphs = await document_service.db.list_graphs(auth)
+                        for graph in graphs:
+                            if graph.name == graph_name or workflow_id in graph.system_metadata.get("workflow_id", ""):
+                                graph.system_metadata["status"] = "completed"
+                                await document_service.db.update_graph(graph, auth)
+                    except Exception as e:
+                        logger.warning(f"No se pudo actualizar el estado del grafo: {e}")
+
+            return result
+        else:
+            logger.warning("Tipo de servicio de grafo no compatible con verificación de flujo de trabajo")
+            return {"status": "not_supported", "message": "Este servicio de grafo no admite verificación de flujo de trabajo"}
+
+    except Exception as e:
+        logger.error(f"Error al verificar estado del flujo de trabajo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

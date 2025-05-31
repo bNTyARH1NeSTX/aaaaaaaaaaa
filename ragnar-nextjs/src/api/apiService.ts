@@ -92,29 +92,53 @@ export interface Graph {
   edges: ApiEdge[]; // Array of edges
   metadata?: { [key: string]: any };
   document_ids?: string[];
+  system_metadata?: {
+    workflow_id?: string;
+    status?: string;
+    [key: string]: any;
+  };
+}
+
+export interface GraphVisualizationData {
+  nodes: VisualizationNode[];
+  links: VisualizationLink[];
+}
+
+export interface VisualizationNode {
+  id: string;
+  label: string;
+  type: string;
+  color: string;
+  properties?: Record<string, any>;
+}
+
+export interface VisualizationLink {
+  source: string;
+  target: string;
+  type: string;
+}
+
+export interface WorkflowStatusResponse {
+  status: 'running' | 'completed' | 'failed' | 'not_supported';
+  progress?: number;
+  result?: any;
+  error?: string;
+  message?: string;
 }
 
 export interface ChunkResult {
   content: string;
-  score: number;
-  document_id: string;
-  chunk_number: number;
-  metadata: {
-    filename?: string;
-    page?: number;
-    is_image?: boolean;
-    [key: string]: any;
-  };
-  content_type: string;
-  filename?: string;
-  download_url?: string;
+  metadata: { [key: string]: any };
+  score?: number;
+  document_id?: string;
 }
 
 export interface UsageStats {
   total_documents: number;
-  total_chat_sessions: number;
-  searches_today: number;
-  manuals_generated: number;
+  total_queries: number;
+  total_graphs: number;
+  total_storage_size?: number;
+  [key: string]: any;
 }
 
 export interface BatchIngestResponse {
@@ -202,6 +226,31 @@ export interface ManualGenerationResponse {
   query: string;
 }
 
+// Additional interfaces for missing API functions
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ChatRequest {
+  query: string;
+  graph_name?: string;
+  conversation_id?: string;
+  k?: number;
+  temperature?: number;
+  max_tokens?: number;
+  folder_name?: string;
+  end_user_id?: string;
+}
+
+export interface ChatResponse {
+  response: string;
+  completion?: string; // Alternative response field
+  message?: string; // Alternative response field
+  conversation_id?: string;
+  metadata?: { [key: string]: any };
+}
+
 // Interceptor para manejo de errores
 api.interceptors.response.use(
   (response) => response,
@@ -220,6 +269,17 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// === API DE SALUD ===
+export const checkHealth = async (): Promise<boolean> => {
+  try {
+    const response: AxiosResponse<{ status: string; message: string }> = await api.get('/ping');
+    return response.status === 200 && response.data.status === 'ok';
+  } catch (error) {
+    console.error('Health check failed:', error);
+    return false;
+  }
+};
 
 // === API DE DOCUMENTOS ===
 export const getDocuments = async (skip: number = 0, limit: number = 100): Promise<Document[]> => {
@@ -415,79 +475,158 @@ export const createGraph = async (graphData: any): Promise<Graph | null> => {
   }
 };
 
+/**
+ * Verificar el estado de un flujo de trabajo de grafo.
+ * 
+ * @param workflowId ID del flujo de trabajo a verificar
+ * @param runId ID opcional de la ejecución específica del flujo de trabajo
+ * @returns Estado y resultado del flujo de trabajo
+ */
+export const checkWorkflowStatus = async (
+  workflowId: string, 
+  runId?: string
+): Promise<WorkflowStatusResponse> => {
+  try {
+    let url = `/graph/workflow/${workflowId}/status`;
+    if (runId) {
+      url += `?run_id=${runId}`;
+    }
+    
+    const response: AxiosResponse<WorkflowStatusResponse> = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error verificando estado del flujo de trabajo:', error);
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return {
+        status: 'failed',
+        error: 'Flujo de trabajo no encontrado'
+      };
+    }
+    return {
+      status: 'failed',
+      error: 'Error al verificar el estado del flujo de trabajo'
+    };
+  }
+};
+
+/**
+ * Obtiene datos de visualización para un grafo específico.
+ * 
+ * @param graphName Nombre del grafo a visualizar
+ * @returns Datos de visualización con nodos y enlaces
+ */
+export const getGraphVisualization = async (
+  graphName: string
+): Promise<GraphVisualizationData | null> => {
+  try {
+    const url = `/graph/${graphName}/visualization`;
+    const response: AxiosResponse<GraphVisualizationData> = await api.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo datos de visualización del grafo:', error);
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.warn(`Grafo no encontrado: ${graphName}`);
+      return null;
+    }
+    throw error; // Propagate other errors to be handled by the caller
+  }
+};
+
+/**
+ * Espera a que un flujo de trabajo de grafo se complete, haciendo polling periódico.
+ * 
+ * @param workflowId ID del flujo de trabajo a monitorear
+ * @param onStatusUpdate Callback opcional que se llama en cada actualización de estado
+ * @param maxAttempts Número máximo de intentos (por defecto 60)
+ * @param intervalMs Intervalo entre intentos en milisegundos (por defecto 5000ms)
+ * @returns Resultado final del flujo de trabajo
+ */
+export const waitForWorkflowCompletion = async (
+  workflowId: string,
+  onStatusUpdate?: (status: WorkflowStatusResponse) => void,
+  maxAttempts: number = 60,
+  intervalMs: number = 5000
+): Promise<WorkflowStatusResponse> => {
+  let attempts = 0;
+  
+  const poll = async (): Promise<WorkflowStatusResponse> => {
+    if (attempts >= maxAttempts) {
+      return {
+        status: 'failed',
+        error: `Tiempo de espera agotado después de ${maxAttempts} intentos`
+      };
+    }
+    
+    attempts++;
+    const status = await checkWorkflowStatus(workflowId);
+    
+    if (onStatusUpdate) {
+      onStatusUpdate(status);
+    }
+    
+    if (status.status === 'completed' || status.status === 'failed') {
+      return status;
+    }
+    
+    // Esperar y volver a intentar
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+    return poll();
+  };
+  
+  return poll();
+};
+
+/**
+ * Enviar una consulta de chat y obtener una respuesta.
+ * 
+ * @param request Datos de la consulta, incluyendo el gráfico y parámetros de generación
+ * @returns Respuesta del modelo y metadatos adicionales
+ */
+export const sendChatQuery = async (request: ChatRequest): Promise<ChatResponse> => {
+  try {
+    const response: AxiosResponse<ChatResponse> = await api.post('/chat/query', request);
+    return response.data;
+  } catch (error) {
+    console.error('Error en consulta de chat:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener el historial de una conversación específica.
+ * 
+ * @param conversationId ID de la conversación a recuperar
+ * @returns Mensajes de la conversación
+ */
+export const getConversationHistory = async (conversationId: string): Promise<ChatMessage[]> => {
+  try {
+    const response: AxiosResponse<ChatMessage[]> = await api.get(`/chat/conversation/${conversationId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error obteniendo historial de conversación:', error);
+    return [];
+  }
+};
+
+// === API DE GRAFOS - FUNCIONES ADICIONALES ===
 export const deleteGraph = async (graphName: string): Promise<boolean> => {
   try {
     const response = await api.delete(`/graph/${graphName}`);
-    // Assuming 200 or 204 No Content for successful deletion
-    return response.status === 200 || response.status === 204;
+    return response.status === 200;
   } catch (error) {
-    console.error(`Error eliminando grafo ${graphName}:`, error);
-    // Propagate the error so the hook or component can handle it
+    console.error('Error eliminando grafo:', error);
     throw error;
-  }
-};
-
-// === API DE BÚSQUEDA ===
-export const searchChunks = async (request: RetrieveRequest): Promise<ChunkResult[]> => {
-  try {
-    const response: AxiosResponse<ChunkResult[]> = await api.post('/retrieve/chunks', request);
-    return response.data;
-  } catch (error) {
-    console.error('Error buscando chunks:', error);
-    return [];
-  }
-};
-
-export const searchDocuments = async (request: RetrieveRequest): Promise<Document[]> => {
-  try {
-    const response: AxiosResponse<Document[]> = await api.post('/retrieve/docs', request);
-    return response.data;
-  } catch (error) {
-    console.error('Error buscando documentos:', error);
-    return [];
-  }
-};
-
-// === API DE CHAT/AGENTE ===
-export const sendChatMessage = async (request: AgentQueryRequest): Promise<any> => {
-  try {
-    const response: AxiosResponse<any> = await api.post('/agent', request);
-    return response.data;
-  } catch (error) {
-    console.error('Error enviando mensaje de chat:', error);
-    throw error;
-  }
-};
-
-export const sendQuery = async (request: CompletionQueryRequest): Promise<any> => {
-  try {
-    const response: AxiosResponse<any> = await api.post('/query', request);
-    return response.data;
-  } catch (error) {
-    console.error('Error enviando consulta:', error);
-    throw error;
-  }
-};
-
-// === API DE GENERACIÓN DE MANUALES ===
-export const generateManual = async (request: ManualGenerationRequest): Promise<ManualGenerationResponse | null> => {
-  try {
-    const response: AxiosResponse<ManualGenerationResponse> = await api.post('/manuals/generate_manual', request);
-    return response.data;
-  } catch (error) {
-    console.error('Error generando manual:', error);
-    return null;
   }
 };
 
 // === API DE ESTADÍSTICAS ===
-export const getUsageStats = async (): Promise<UsageStats | null> => {
+export const getUsageStats = async (): Promise<UsageStats> => {
   try {
     const response: AxiosResponse<UsageStats> = await api.get('/usage/stats');
     return response.data;
   } catch (error) {
-    console.error('Error obteniendo estadísticas:', error);
-    return null;
+    console.error('Error obteniendo estadísticas de uso:', error);
+    throw error;
   }
 };
 
@@ -501,61 +640,74 @@ export const getRecentUsage = async (): Promise<RecentActivity[]> => {
   }
 };
 
-// === API DE SALUD ===
-export const checkHealth = async (): Promise<boolean> => {
+// === API DE BÚSQUEDA ===
+export const searchChunks = async (request: RetrieveRequest): Promise<ChunkResult[]> => {
   try {
-    const response = await api.get('/ping');
-    return response.status === 200;
+    const response: AxiosResponse<ChunkResult[]> = await api.post('/retrieve/chunks', request);
+    return response.data;
   } catch (error) {
-    console.error('Error verificando salud del servidor:', error);
-    return false;
+    console.error('Error buscando chunks:', error);
+    throw error;
+  }
+};
+
+// === API DE CHAT ===
+export const sendChatMessage = async (request: ChatRequest): Promise<ChatResponse> => {
+  try {
+    const response: AxiosResponse<ChatResponse> = await api.post('/query', request);
+    return response.data;
+  } catch (error) {
+    console.error('Error enviando mensaje de chat:', error);
+    throw error;
   }
 };
 
 // === API DE PLANTILLAS DE REGLAS ===
-
 export const getRuleTemplates = async (): Promise<ApiRuleTemplate[]> => {
   try {
     const response: AxiosResponse<ApiRuleTemplate[]> = await api.get('/rule-templates');
     return response.data;
   } catch (error) {
     console.error('Error obteniendo plantillas de reglas:', error);
-    // Devuelve un array vacío en caso de error para que la UI no se rompa
-    // Idealmente, el hook que use esto manejaría el estado de error.
-    return []; 
+    return [];
   }
 };
 
-export const createRuleTemplate = async (name: string, description: string | null, rulesJson: string): Promise<ApiRuleTemplate | null> => {
+export const createRuleTemplate = async (
+  name: string, 
+  description: string | undefined, 
+  rulesJson: string
+): Promise<ApiRuleTemplate> => {
   try {
-    const payload: { name: string; description?: string; rules_json: string } = { name, rules_json: rulesJson };
-    if (description) {
-      payload.description = description;
-    }
-    const response: AxiosResponse<ApiRuleTemplate> = await api.post('/rule-templates', payload);
+    const response: AxiosResponse<ApiRuleTemplate> = await api.post('/rule-templates', {
+      name,
+      description,
+      rules_json: rulesJson
+    });
     return response.data;
   } catch (error) {
     console.error('Error creando plantilla de regla:', error);
-    // Lanza el error para que el componente que llama pueda manejarlo (ej. mostrar un toast)
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.detail || 'Error creando plantilla de regla');
-    }
-    throw new Error('Error desconocido creando plantilla de regla');
+    throw error;
   }
 };
 
 export const deleteRuleTemplate = async (templateId: string): Promise<boolean> => {
   try {
     const response = await api.delete(`/rule-templates/${templateId}`);
-    return response.status === 200 || response.status === 204; // 204 No Content también es éxito
+    return response.status === 200;
   } catch (error) {
     console.error('Error eliminando plantilla de regla:', error);
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response.data.detail || 'Error eliminando plantilla de regla');
-    }
-    throw new Error('Error desconocido eliminando plantilla de regla');
+    throw error;
   }
 };
 
-
-export default api;
+// === API DE GENERACIÓN DE MANUALES ===
+export const generateManual = async (request: ManualGenerationRequest): Promise<ManualGenerationResponse> => {
+  try {
+    const response: AxiosResponse<ManualGenerationResponse> = await api.post('/generate_manual', request);
+    return response.data;
+  } catch (error) {
+    console.error('Error generando manual:', error);
+    throw error;
+  }
+};

@@ -38,6 +38,7 @@ class MorphikGraphService:
         endpoint: str,
         auth: AuthContext,  # auth is passed for context, actual token extraction TBD
         json_data: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> Any:
         headers = {"Content-Type": "application/json", "Authorization": f"Bearer {self.graph_api_key}"}
 
@@ -45,8 +46,8 @@ class MorphikGraphService:
 
         async with httpx.AsyncClient() as client:
             try:
-                logger.debug(f"Making API request: {method} {url} Data: {json_data}")
-                response = await client.request(method, url, json=json_data, headers=headers)
+                logger.debug(f"Making API request: {method} {url} Data: {json_data} Params: {params}")
+                response = await client.request(method, url, json=json_data, headers=headers, params=params)
                 response.raise_for_status()  # Raise an exception for HTTP error codes (4xx or 5xx)
 
                 if response.status_code == 204:  # No Content
@@ -540,3 +541,41 @@ class MorphikGraphService:
         }
 
         return response
+
+    async def check_workflow_status(
+        self,
+        workflow_id: str,
+        run_id: Optional[str] = None,
+        auth: AuthContext = None,
+    ) -> Dict[str, Any]:
+        """Verificar el estado de un flujo de trabajo desde la API de grafos.
+
+        Args:
+            workflow_id: El ID del flujo de trabajo a verificar
+            run_id: ID de ejecución opcional para la ejecución específica del flujo de trabajo
+            auth: Contexto de autenticación
+
+        Returns:
+            Dict que contiene estado y resultado opcional
+        """
+        try:
+            # Construir parámetros de consulta
+            params = {}
+            if run_id:
+                params["run_id"] = run_id
+
+            api_response = await self._make_api_request(
+                method="GET",
+                endpoint=f"/status/{workflow_id}",
+                auth=auth,
+                json_data=None,  # Petición GET, sin cuerpo
+                params=params,
+            )
+
+            logger.info(f"Verificación de estado de flujo de trabajo para {workflow_id} exitosa. Respuesta: {api_response}")
+            return api_response
+
+        except Exception as e:
+            logger.error(f"Error al verificar el estado del flujo de trabajo para {workflow_id}: {e}")
+            # Devolver estado fallido en lugar de lanzar excepción
+            return {"status": "failed", "error": str(e)}
