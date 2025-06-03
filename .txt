@@ -26,13 +26,6 @@ make install
 
 su - postgres -c "createdb morphik"
 
-# If using Python 3.12+, you might need a specific version of unstructured
-pip install unstructured==0.16.10
-
-# Download required NLTK resources
-python -m nltk.downloader averaged_perceptron_tagger punkt
-
-pip install flash-attn --no-build-isolation
 
 su - postgres -c psql
 
@@ -52,6 +45,13 @@ CREATE DATABASE manual_db OWNER manual_user;
 -- Enable the vector extension
 CREATE EXTENSION IF NOT EXISTS vector;
 
+# If using Python 3.12+, you might need a specific version of unstructured
+pip install unstructured==0.16.10
+
+# Download required NLTK resources
+python -m nltk.downloader averaged_perceptron_tagger punkt
+
+pip install flash-attn --no-build-isolation
 apt update && apt install redis-server -y
 service redis-server start
 
@@ -63,8 +63,8 @@ ALTER USER postgres WITH PASSWORD 'postgres';
 pip install git+https://github.com/illuin-tech/colpali
 
 # Install via apt
-sudo apt-get update
-sudo apt-get install -y poppler-utils tesseract-ocr libmagic-dev
+ apt-get update
+ apt-get install -y poppler-utils tesseract-ocr libmagic-dev
 
 
 service postgresql start
@@ -88,3 +88,4 @@ nvm install --lts
 
 # Use the installed version
 nvm use --lts
+npm i

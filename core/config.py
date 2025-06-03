@@ -148,6 +148,9 @@ class Settings(BaseSettings):
     ASSEMBLYAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
+    
+    # Hugging Face settings
+    HUGGING_FACE_TOKEN: Optional[str] = None
 
 
 @lru_cache()
@@ -393,6 +396,11 @@ def get_settings() -> Settings:
         "MANUAL_GEN_DB_URI": os.getenv("MANUAL_GEN_DB_URI"),
     }
 
+    # Hugging Face configuration
+    huggingface_config = {
+        "HUGGING_FACE_TOKEN": os.getenv("HUGGING_FACE_TOKEN"),
+    }
+
     # Ensure HUGGING_FACE_TOKEN is loaded from environment if not already handled
     if "HUGGING_FACE_TOKEN" not in os.environ:
         raise ValueError("HUGGING_FACE_TOKEN environment variable is required.")
@@ -418,6 +426,7 @@ def get_settings() -> Settings:
         telemetry_config,
         manual_gen_config,
         manual_gen_db_config,
+        huggingface_config,
         openai_config
     )
 

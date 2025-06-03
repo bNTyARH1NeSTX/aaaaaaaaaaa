@@ -13,6 +13,7 @@ import jwt
 import tomli
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status, UploadFile, File, Form, Header, Query # Added Query
 from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
+from fastapi.responses import FileResponse
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, Field # Added BaseModel, Field
@@ -145,6 +146,12 @@ class ManualGenerationResponse(BaseModel):
     relevant_images_used: List[Dict[str, Any]] # e.g., [{"image_path": "...", "prompt": "...", "respuesta": "..."}]
     query: str
 
+class PowerPointGenerationRequest(BaseModel):
+    query: str = Field(..., description="The main query or task for generating the manual content.")
+    image_path: Optional[str] = Field(default=None, description="Optional path to a specific pre-selected image to use.")
+    image_prompt: Optional[str] = Field(default=None, description="The descriptive prompt associated with the pre-selected image.")
+    k_images: int = Field(default=3, ge=1, le=5, description="Number of relevant images to find and use if image_path is not specified.")
+
 # --- Pydantic Models for Rule Templates ---
 class RuleTemplateRequest(BaseModel):
     name: str = Field(..., description="Name of the rule template", min_length=1, max_length=100)
@@ -263,6 +270,96 @@ async def generate_manual_endpoint(
         query=request.query,
     )
 
+@manual_generation_router.post(
+    "/generate_powerpoint",
+    summary="Generate PowerPoint presentation from manual content"
+)
+@telemetry.track(operation_type="generate_powerpoint", metadata_resolver=None)
+async def generate_powerpoint_endpoint(
+    request: PowerPointGenerationRequest,
+    auth: AuthContext = Depends(verify_token),
+    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
+    generator_service: ManualGeneratorService = Depends(get_manual_generator_service),
+):
+    """
+    Generates a PowerPoint presentation based on manual content and relevant ERP images.
+    
+    - First generates manual text using the same logic as generate_manual
+    - Then creates a PowerPoint presentation with the content and images
+    - Returns the PowerPoint file for download
+    """
+    logger.info(f"Generating PowerPoint for query: '{request.query}'")
+    
+    # First, get the manual content using same logic as generate_manual_endpoint
+    relevant_images_metadata = []
+
+    if request.image_path:
+        if not request.image_prompt:
+            logger.warning("image_path provided without image_prompt for PowerPoint generation.")
+            raise HTTPException(status_code=400, detail="If image_path is provided, image_prompt must also be provided.")
+        logger.info(f"Using provided image: {request.image_path} for PowerPoint generation.")
+        relevant_images_metadata.append(
+            {"image_path": request.image_path, "prompt": request.image_prompt, "respuesta": ""}
+        )
+    else:
+        logger.info(f"Finding relevant images for query: '{request.query}' with k={request.k_images}")
+        try:
+            found_docs = await embedding_model.find_relevant_images(
+                query=request.query,
+                k=request.k_images,
+            )
+            if not found_docs:
+                logger.warning(f"No relevant images found for query: '{request.query}'")
+                raise HTTPException(status_code=404, detail="No relevant images found for the query.")
+
+            for doc in found_docs:
+                relevant_images_metadata.append(
+                    {"image_path": doc.image_path, "prompt": doc.prompt, "respuesta": doc.respuesta}
+                )
+            logger.info(f"Found {len(relevant_images_metadata)} relevant images.")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error finding relevant images: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"An error occurred while finding relevant images: {str(e)}")
+
+    if not relevant_images_metadata:
+        logger.error("No image metadata available to generate PowerPoint.")
+        raise HTTPException(status_code=404, detail="No image metadata available to generate PowerPoint.")
+
+    try:
+        # Generate manual text
+        logger.info(f"Generating manual text for PowerPoint: '{request.query}' using {len(relevant_images_metadata)} image(s).")
+        generated_text_result = await generator_service.generate_manual_text(
+            query=request.query,
+            images_metadata=relevant_images_metadata,
+        )
+        
+        # Generate PowerPoint
+        logger.info("Generating PowerPoint presentation...")
+        powerpoint_path = await generator_service.generate_powerpoint(
+            query=request.query,
+            manual_text=generated_text_result,
+            images_metadata=relevant_images_metadata
+        )
+        
+        logger.info(f"Successfully generated PowerPoint for query: '{request.query}'")
+        
+        # Return file for download
+        import os
+        filename = os.path.basename(powerpoint_path)
+        return FileResponse(
+            path=powerpoint_path,
+            filename=filename,
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating PowerPoint: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An error occurred during PowerPoint generation: {str(e)}")
+
 # --- Additional Models for ERP Processing ---
 class ERPImageProcessingRequest(BaseModel):
     image_path: str = Field(..., description="Path to the ERP image to process")
@@ -332,7 +429,7 @@ async def process_erp_image_endpoint(
             }
         )
         
-        # Initialize the ERP metadata extraction rule
+        # Initialise the ERP metadata extraction rule
         erp_rule = ERPMetadataExtractionRule()
         
         # Apply the rule to extract metadata
@@ -957,7 +1054,7 @@ async def ingest_file(
         # Update document with storage info
         doc.storage_info = {"bucket": bucket, "key": stored_key}
 
-        # Initialize storage_files array with the first file
+        # Initialise storage_files array with the first file
         from datetime import UTC, datetime
 
         from core.models.documents import StorageFileInfo
@@ -2000,6 +2097,7 @@ async def create_graph(
 ) -> Graph:
     """
     Create a graph from documents **asynchronously**.
+
 
     Instead of blocking on the potentially slow entity/relationship extraction, we immediately
     create a placeholder graph with `status = "processing"`. A background task then fills in

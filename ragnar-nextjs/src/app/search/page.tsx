@@ -221,7 +221,7 @@ export default function SearchPage() {
                     {result.metadata.is_image ? (
                       <div className="w-16 h-16 flex-shrink-0 mt-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                         <img 
-                          src={result.content.startsWith('data:') ? result.content : `data:${result.content_type};base64,${result.content}`}
+                          src={result.content.startsWith('data:') ? result.content : `data:${result.metadata.content_type || 'image/png'};base64,${result.content}`}
                           alt="Vista previa"
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -236,7 +236,7 @@ export default function SearchPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                          {result.metadata.filename || result.filename || 'Sin nombre'}
+                          {result.metadata.filename || 'Sin nombre'}
                         </h3>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">

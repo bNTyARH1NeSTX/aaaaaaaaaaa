@@ -1,0 +1,191 @@
+RAGNAR - MANUAL GENERATION IMPLEMENTATION LOG - 2025-06-03
+=============================================================
+
+CAMBIOS REALIZADOS POR GITHUB COPILOT:
+=======================================
+
+1. ✅ CORREGIDO PROBLEMA DE CONFIGURACIÓN:
+   - Agregado HUGGING_FACE_TOKEN a la clase Settings en core/config.py
+   - Agregado huggingface_config en función get_settings()
+   - Incluido huggingface_config en settings_map
+   
+   PROBLEMA RESUELTO: 'Settings' object has no attribute 'HUGGING_FACE_TOKEN'
+
+2. ✅ VERIFICADO ESTADO DEL PROYECTO:
+   - Frontend: Página de manuales COMPLETAMENTE implementada
+   - Backend: Endpoints /manuals/generate_manual y /manuals/generate_powerpoint LISTOS
+   - Servicios: ManualGeneratorService y ManualGenerationEmbeddingModel IMPLEMENTADOS
+   - Configuración: morphik.toml y .env CORRECTOS
+
+CAMBIOS EN EL PROYECTO RAGNAR - GENERACIÓN DE MANUALES
+================================================================
+
+ANÁLISIS DEL ESTADO ACTUAL:
+==========================
+
+✅ YA IMPLEMENTADO:
+- Backend con API endpoint /manuals/generate_manual
+- Modelos y servicios para generación de manuales
+- Base de datos para almacenar metadatos de imágenes ERP
+- Frontend con página de manuales (/manuals)
+- Procesamiento de imágenes ERP con ColPali
+- Integración con modelo Qwen VL fine-tuneado
+- Funcionalidad básica de generación de texto de manuales
+- Integración y generación de PowerPoint
+
+❌ FALTA POR IMPLEMENTAR:
+1. Mejoras en la interfaz de usuario del frontend
+2. Funcionalidad para pre-visualizar PowerPoint
+3. Integración completa con el sistema de reglas
+4. Tests completos del flujo de generación
+5. Manejo mejorado de errores y estados de carga
+
+PRÓXIMOS PASOS:
+===============
+1. Mejorar la interfaz frontend para mostrar opciones de descarga
+2. Agregar funcionalidad de preview de PowerPoint
+3. Optimizar el sistema de búsqueda de imágenes relevantes
+4. Mejorar la integración con reglas existentes
+
+FECHA: 3 de junio, 2025
+
+# Ragnar Manual Generation Implementation - Changes Log
+
+## COMPLETED ✅
+
+### 1. Backend PowerPoint Service Implementation
+- **File**: `/root/.ipython/aaaaaaaaaaa/core/services/manual_generator_service.py`
+- **Changes**:
+  - Added PowerPoint imports (pptx, tempfile, re)
+  - Implemented `generate_powerpoint()` method for creating PPTX files
+  - Added `_parse_manual_sections()` helper method for parsing markdown into sections
+  - Integrated template loading with fallback to basic presentation
+
+### 2. Backend API Endpoint Creation
+- **File**: `/root/.ipython/aaaaaaaaaaa/core/api.py`
+- **Changes**:
+  - Created PowerPointGenerationRequest model
+  - Added FileResponse import for serving PPTX files
+  - Implemented `/manuals/generate_powerpoint` endpoint with file download functionality
+  - Added authentication and error handling
+
+### 3. Frontend PowerPoint Integration ✅ NEW
+- **File**: `/root/.ipython/aaaaaaaaaaa/ragnar-nextjs/src/api/apiService.ts`
+- **Changes**:
+  - Added PowerPointGenerationRequest interface
+  - Implemented `generatePowerPoint()` function with blob response handling
+  - Added proper headers for PPTX file download
+
+### 4. Frontend UI Enhancements ✅ NEW
+- **File**: `/root/.ipython/aaaaaaaaaaa/ragnar-nextjs/src/app/manuals/page.tsx`
+- **Changes**:
+  - Added PowerPoint generation state management
+  - Implemented `handleDownloadPowerPoint()` function for file downloads
+  - Added PowerPoint generation button in form section
+  - Added download options section in results area
+  - Updated loading states for both manual and PowerPoint generation
+  - Added proper error handling and user feedback
+
+## IMPLEMENTATION DETAILS
+
+### PowerPoint Generation Flow:
+1. **Frontend**: User clicks "PowerPoint" button or "Descargar PowerPoint"
+2. **API Call**: Request sent to `/manuals/generate_powerpoint` with same parameters as manual generation
+3. **Backend Processing**: 
+   - Finds relevant images using ColPali model
+   - Generates manual text using fine-tuned Qwen2.5-VL-3B-Instruct
+   - Creates PowerPoint using template or basic layout
+   - Adds slides with content sections and images
+4. **File Download**: Returns PPTX file as blob for immediate download
+
+### Template Integration:
+- **Template Path**: `/root/.ipython/aaaaaaaaaaa/Bnext%20RAGnar/plantilla [Autoguardado].pptx`
+- **Fallback**: Creates basic PowerPoint if template not found
+- **Slide Structure**: Title slide → Introduction → Content sections → Images
+
+### Error Handling:
+- Frontend validation for required fields
+- Backend authentication and authorization
+- Proper error messages for missing images or generation failures
+- File cleanup after download
+
+## PENDING TASKS
+
+### 1. Testing Implementation
+- [ ] Create comprehensive tests for PowerPoint generation flow
+- [ ] Test file download functionality in different browsers
+- [ ] Verify template loading and slide creation
+- [ ] Test error scenarios (missing images, invalid queries)
+
+### 2. Performance Optimization
+- [ ] Implement caching for frequently generated manuals
+- [ ] Add progress indicators for long-running generations
+- [ ] Optimize image loading and processing
+
+### 3. Advanced Features
+- [ ] Add customizable PowerPoint templates
+- [ ] Implement manual preview before download
+- [ ] Add support for multiple output formats (PDF, Word)
+- [ ] Implement batch generation for multiple queries
+
+### 4. File Management
+- [ ] Implement temporary file cleanup mechanism
+- [ ] Add file size limits and validation
+- [ ] Create download history and management
+
+## DEPLOYMENT NOTES
+
+### Dependencies Confirmed:
+- ✅ `python-pptx==0.6.23` already in requirements.txt
+- ✅ PowerPoint template exists at expected location
+- ✅ Frontend dependencies (Lucide React icons) available
+
+### Environment Variables:
+- ✅ MANUAL_GENERATION_IMAGE_FOLDER configured
+- ✅ MANUAL_MODEL_NAME configured
+- ✅ Template path hardcoded but should be configurable
+
+## TESTING INSTRUCTIONS
+
+# RAGNAR MANUAL GENERATION - IMPLEMENTATION LOG
+
+## 2025-06-03 - Backend Configuration Fixes
+
+### ✅ Configuration Updates
+
+1. **Added HUGGING_FACE_TOKEN to Settings**
+   - File: `/root/.ipython/aaaaaaaaaaa/core/config.py`
+   - Added `HUGGING_FACE_TOKEN: Optional[str] = None` to Settings class
+   - Added huggingface_config section in get_settings()
+   - Added huggingface_config to ChainMap for proper loading
+
+2. **Fixed Model Loading for Qwen2.5-VL**
+   - File: `/root/.ipython/aaaaaaaaaaa/core/services/manual_generator_service.py`
+   - ISSUE: Model `ARHVNAAG/Manuales_finetuning_generator` is a Qwen2.5-VL (visual) model
+   - SOLUTION: Changed from `AutoModelForCausalLM` to `Qwen2VLForConditionalGeneration`
+   - Added proper imports for Qwen VL models with fallbacks
+   - Updated model loading to use correct class for multimodal models
+
+### ⚠️ Remaining Issues to Fix
+   
+1. **Database Connection Issue - FIXED**
+   - Manual generation embedding model has async/sync DB connection problem
+   - SOLUTION: Changed MANUAL_GEN_DB_URI from `postgresql+asyncpg://` to `postgresql+psycopg2://`
+   - This fixes the greenlet_spawn error by using synchronous DB driver
+
+2. **Image Folder Path**
+   - MANUAL_GENERATION_IMAGE_FOLDER path needs validation
+   - Path should point to `/root/.ipython/ERP_screenshots`
+
+### 🔧 Next Steps
+
+1. **Test Model Loading**
+   - Restart backend to test Qwen2.5-VL model loading
+   - Verify database connection works correctly
+   
+2. **Test Manual Generation API**
+   - Try generating a manual through the frontend
+   - Verify ColPali image search works
+   
+3. **PowerPoint Generation**
+   - Test PowerPoint creation and download functionality

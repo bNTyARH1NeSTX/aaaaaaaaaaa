@@ -4,11 +4,28 @@
 import os
 from typing import List, Dict, Any, Tuple, Optional
 import logging
+import tempfile
+import re
 
 import torch
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None # Allow loading large images
-from transformers import AutoModelForCausalLM, AutoProcessor
+from transformers import AutoProcessor
+
+# Import Qwen VL specific class for multimodal models
+try:
+    from transformers import Qwen2VLForConditionalGeneration
+except ImportError:
+    try:
+        from transformers import Qwen2_5_VLForConditionalGeneration as Qwen2VLForConditionalGeneration
+    except ImportError:
+        logger.error("Could not import Qwen2VLForConditionalGeneration or Qwen2_5_VLForConditionalGeneration")
+        Qwen2VLForConditionalGeneration = None
+
+# Add PowerPoint imports
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.enum.text import PP_ALIGN
 
 from core.config import Settings
 # from core.models.manual_generation_document import ManualGenDocument # If passing ORM objects
@@ -33,11 +50,16 @@ class ManualGeneratorService:
         if not self.model_name:
             logger.error("MANUAL_MODEL_NAME is not set in settings. Cannot load model.")
             raise ValueError("MANUAL_MODEL_NAME is not configured.")
+        
+        if Qwen2VLForConditionalGeneration is None:
+            logger.error("Qwen2VLForConditionalGeneration is not available. Please install a compatible version of transformers.")
+            raise ImportError("Qwen2VLForConditionalGeneration is not available.")
             
         try:
-            self.model = AutoModelForCausalLM.from_pretrained(
+            # Use Qwen2VLForConditionalGeneration for visual models
+            self.model = Qwen2VLForConditionalGeneration.from_pretrained(
                 self.model_name,
-                torch_dtype="auto",
+                torch_dtype=torch.bfloat16,
                 device_map="auto",
                 trust_remote_code=True,
                 token=self.hf_token
@@ -207,6 +229,157 @@ Información adicional de las imágenes:
 
         usage_analysis = self._analyze_model_usage(generated_text, loaded_image_paths)
         return {"manual_text": generated_text, "analysis": usage_analysis}
+    
+    async def generate_powerpoint(
+        self, 
+        query: str, 
+        manual_text: str, 
+        images_metadata: List[Dict[str, Any]]
+    ) -> str:
+        """
+        Generate a PowerPoint presentation from manual text and images.
+        
+        Args:
+            query: Original query for the manual
+            manual_text: Generated manual text in markdown format
+            images_metadata: List of image metadata dictionaries
+            
+        Returns:
+            Path to the generated PowerPoint file
+        """
+        logger.info(f"Generating PowerPoint presentation for query: '{query}'")
+        
+        # Create temporary file for the PowerPoint
+        temp_dir = tempfile.mkdtemp()
+        clean_query = re.sub(r'[^\w\s-]', '', query).strip()
+        clean_query = re.sub(r'[-\s]+', '_', clean_query)[:30]
+        pptx_filename = f"manual_{clean_query}.pptx"
+        output_path = os.path.join(temp_dir, pptx_filename)
+        
+        try:
+            # Try to load template
+            template_path = "/root/.ipython/aaaaaaaaaaa/Bnext%20RAGnar/plantilla [Autoguardado].pptx"
+            if os.path.exists(template_path):
+                prs = Presentation(template_path)
+                logger.info("Using PowerPoint template")
+            else:
+                prs = Presentation()
+                logger.info("Creating new PowerPoint without template")
+            
+            # Slide 1: Title
+            if len(prs.slides) == 0 or len(prs.slide_layouts) == 0:
+                # Create basic slide if no layouts available
+                slide = prs.slides.add_slide(prs.slide_layouts[0] if prs.slide_layouts else None)
+            else:
+                slide_layout = prs.slide_layouts[0]  # Title layout
+                slide = prs.slides.add_slide(slide_layout)
+            
+            if hasattr(slide.shapes, 'title') and slide.shapes.title:
+                slide.shapes.title.text = query.replace('?', '').replace('¿', '')
+            
+            if len(slide.placeholders) > 1:
+                slide.placeholders[1].text = "Manual de Usuario - Sistema ERP"
+            
+            # Slide 2: Introduction
+            if len(prs.slide_layouts) > 1:
+                content_layout = prs.slide_layouts[1]  # Content layout
+            else:
+                content_layout = prs.slide_layouts[0] if prs.slide_layouts else None
+                
+            intro_slide = prs.slides.add_slide(content_layout)
+            if hasattr(intro_slide.shapes, 'title') and intro_slide.shapes.title:
+                intro_slide.shapes.title.text = "Introducción"
+            
+            # Split manual text into sections
+            sections = self._parse_manual_sections(manual_text)
+            
+            # Add content slides
+            for section_title, section_content in sections.items():
+                content_slide = prs.slides.add_slide(content_layout)
+                if hasattr(content_slide.shapes, 'title') and content_slide.shapes.title:
+                    content_slide.shapes.title.text = section_title
+                
+                # Add text content
+                if len(content_slide.placeholders) > 1:
+                    content_placeholder = content_slide.placeholders[1]
+                    content_placeholder.text = section_content[:500]  # Limit text length
+            
+            # Add images slide
+            if images_metadata:
+                images_slide = prs.slides.add_slide(content_layout)
+                if hasattr(images_slide.shapes, 'title') and images_slide.shapes.title:
+                    images_slide.shapes.title.text = "Imágenes de Referencia"
+                
+                # Add up to 4 images per slide
+                for i, img_meta in enumerate(images_metadata[:4]):
+                    if "image_path" in img_meta:
+                        img_path = img_meta["image_path"]
+                        full_img_path = os.path.join(self.image_folder, img_path) if not os.path.isabs(img_path) else img_path
+                        
+                        if os.path.exists(full_img_path):
+                            try:
+                                # Calculate position (2x2 grid)
+                                left = Inches(1 + (i % 2) * 4.5)
+                                top = Inches(2 + (i // 2) * 3)
+                                width = Inches(4)
+                                height = Inches(2.5)
+                                
+                                images_slide.shapes.add_picture(
+                                    full_img_path, left, top, width, height
+                                )
+                            except Exception as e:
+                                logger.warning(f"Could not add image {full_img_path} to PowerPoint: {e}")
+            
+            # Save PowerPoint
+            prs.save(output_path)
+            logger.info(f"PowerPoint saved to: {output_path}")
+            return output_path
+            
+        except Exception as e:
+            logger.error(f"Error generating PowerPoint: {e}", exc_info=True)
+            raise
+    
+    def _parse_manual_sections(self, manual_text: str) -> Dict[str, str]:
+        """
+        Parse manual text into sections based on markdown headers.
+        
+        Args:
+            manual_text: Manual text in markdown format
+            
+        Returns:
+            Dictionary with section titles as keys and content as values
+        """
+        sections = {}
+        current_section = "Contenido Principal"
+        current_content = []
+        
+        lines = manual_text.split('\n')
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith('#'):
+                # Save previous section
+                if current_content:
+                    sections[current_section] = '\n'.join(current_content)
+                    current_content = []
+                
+                # Start new section
+                current_section = line.lstrip('#').strip()
+                if not current_section:
+                    current_section = "Sección"
+            else:
+                if line:  # Skip empty lines
+                    current_content.append(line)
+        
+        # Save last section
+        if current_content:
+            sections[current_section] = '\n'.join(current_content)
+        
+        # If no sections found, use entire text
+        if not sections:
+            sections["Contenido Principal"] = manual_text
+        
+        return sections
 
     def _analyze_model_usage(self, manual_text: str, image_paths: List[str]) -> str:
         analysis = "\\n\\n## Análisis de uso de información por el modelo (Backend)\\n\\n"

@@ -704,10 +704,26 @@ export const deleteRuleTemplate = async (templateId: string): Promise<boolean> =
 // === API DE GENERACIÓN DE MANUALES ===
 export const generateManual = async (request: ManualGenerationRequest): Promise<ManualGenerationResponse> => {
   try {
-    const response: AxiosResponse<ManualGenerationResponse> = await api.post('/generate_manual', request);
+    const response: AxiosResponse<ManualGenerationResponse> = await api.post('/manuals/generate_manual', request);
     return response.data;
   } catch (error) {
     console.error('Error generando manual:', error);
+    throw error;
+  }
+};
+
+// === API DE GENERACIÓN DE POWERPOINT ===
+export const generatePowerPoint = async (request: PowerPointGenerationRequest): Promise<Blob> => {
+  try {
+    const response: AxiosResponse<Blob> = await api.post('/manuals/generate_powerpoint', request, {
+      responseType: 'blob', // Important for file downloads
+      headers: {
+        'Accept': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error generando PowerPoint:', error);
     throw error;
   }
 };
@@ -757,4 +773,12 @@ export interface CreateGraphRequest {
   prompt_overrides?: GraphPromptOverrides;
   folder_name?: string | string[];
   end_user_id?: string;
+}
+
+// Additional interfaces for manual generation
+export interface PowerPointGenerationRequest {
+  query: string;
+  image_path?: string;
+  image_prompt?: string;
+  k_images?: number;
 }
