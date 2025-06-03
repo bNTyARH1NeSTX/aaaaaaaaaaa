@@ -711,3 +711,50 @@ export const generateManual = async (request: ManualGenerationRequest): Promise<
     throw error;
   }
 };
+
+// Request interfaces
+export interface IngestTextRequest {
+  content: string;
+  filename?: string;
+  metadata?: { [key: string]: any };
+  folder_name?: string;
+  end_user_id?: string;
+}
+
+export interface RetrieveRequest {
+  query: string;
+  k?: number;
+  folder_name?: string;
+  end_user_id?: string;
+  use_colpali?: boolean;
+}
+
+export interface CompletionQueryRequest {
+  query: string;
+  k?: number;
+  temperature?: number;
+  max_tokens?: number;
+  folder_name?: string;
+  end_user_id?: string;
+}
+
+// Graph-related interfaces
+export interface GraphPromptTemplate {
+  prompt_template: string;
+  examples?: Array<{ label: string; type: string }>;
+}
+
+export interface GraphPromptOverrides {
+  entity_extraction?: GraphPromptTemplate;
+  relationship_extraction?: GraphPromptTemplate;
+}
+
+export interface CreateGraphRequest {
+  name: string;
+  description?: string;
+  filters?: { [key: string]: any };
+  documents?: string[];
+  prompt_overrides?: GraphPromptOverrides;
+  folder_name?: string | string[];
+  end_user_id?: string;
+}

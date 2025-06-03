@@ -30,7 +30,7 @@ export default function CreateGraphForm({ onGraphCreated }: CreateGraphFormProps
     autoStart: !!workflowId,
     onComplete: async (result) => {
       console.log('Grafo creado con éxito:', result);
-      // Cargar los datos de visualización cuando el grafo esté listo
+      // Cargar los datos de visualización cuando el grafo esté listo aa
       if (graphName) {
         await loadVisualizationData(graphName);
       }

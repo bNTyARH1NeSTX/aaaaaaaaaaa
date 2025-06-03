@@ -3,7 +3,9 @@ import base64
 import json
 import logging
 import uuid
+import os
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import arq
@@ -47,6 +49,7 @@ from core.services_init import document_service, storage
 # Import new services and models for manual generation
 from core.embedding.manual_generation_embedding_model import ManualGenerationEmbeddingModel
 from core.services.manual_generator_service import ManualGeneratorService
+from core.models.manual_generation_document import ManualGenDocument
 
 
 # Initialize FastAPI app
@@ -259,6 +262,521 @@ async def generate_manual_endpoint(
         relevant_images_used=relevant_images_metadata,
         query=request.query,
     )
+
+# --- Additional Models for ERP Processing ---
+class ERPImageProcessingRequest(BaseModel):
+    image_path: str = Field(..., description="Path to the ERP image to process")
+    force_reprocess: bool = Field(default=False, description="Force reprocessing even if metadata exists")
+
+class ERPImageProcessingResponse(BaseModel):
+    image_path: str
+    extracted_metadata: Dict[str, Any]
+    processing_status: str
+    error_message: Optional[str] = None
+
+@manual_generation_router.post(
+    "/process_erp_image",
+    response_model=ERPImageProcessingResponse,
+    summary="Process ERP image to extract structural and visual metadata"
+)
+@telemetry.track(operation_type="process_erp_image", metadata_resolver=None)
+async def process_erp_image_endpoint(
+    request: ERPImageProcessingRequest,
+    auth: AuthContext = Depends(verify_token),
+    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
+):
+    """
+    Process an ERP image to extract both structural metadata (from path) and visual metadata (using AI).
+    
+    This endpoint uses the ERPMetadataExtractionRule to:
+    1. Extract structural metadata from the image path (module, section, navigation path, etc.)
+    2. Analyze the image content using the fine-tuned Qwen model to detect functions, buttons, screen type
+    3. Store the combined metadata in the manual generation database
+    
+    Args:
+        request: ERPImageProcessingRequest containing image path and processing options
+        auth: Authentication context
+        embedding_model: Manual generation embedding model instance
+        
+    Returns:
+        ERPImageProcessingResponse with extracted metadata and processing status
+    """
+    import os
+    from pathlib import Path
+    from core.rules.erp_metadata_extraction_rule import ERPMetadataExtractionRule
+    from core.models.chunk import Chunk
+    
+    try:
+        # Validate image path
+        if not os.path.exists(request.image_path):
+            raise HTTPException(status_code=404, detail=f"Image file not found: {request.image_path}")
+        
+        if not request.image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            raise HTTPException(status_code=400, detail="File must be a valid image format (PNG, JPG, JPEG)")
+        
+        # Verify it's an ERP screenshot
+        if "/ERP_screenshots/" not in request.image_path:
+            raise HTTPException(status_code=400, detail="Image must be in the ERP_screenshots directory")
+        
+        logger.info(f"Processing ERP image: {request.image_path}")
+        
+        # Create a chunk object to simulate the processing workflow
+        chunk = Chunk(
+            id=str(uuid.uuid4()),
+            content=f"ERP Image: {Path(request.image_path).name}",
+            metadata={
+                "is_image": True,
+                "source_path": request.image_path,
+                "file_type": "image",
+                "processed_by_erp_rule": False
+            }
+        )
+        
+        # Initialize the ERP metadata extraction rule
+        erp_rule = ERPMetadataExtractionRule()
+        
+        # Apply the rule to extract metadata
+        logger.info("Applying ERP metadata extraction rule...")
+        extracted_metadata, modified_content = await erp_rule.apply(
+            content=chunk.content,
+            existing_metadata=chunk.metadata
+        )
+        
+        # Check if we already have this image in the database
+        existing_doc = None
+        if not request.force_reprocess:
+            existing_docs = await embedding_model.find_by_image_path(request.image_path)
+            if existing_docs:
+                existing_doc = existing_docs[0]
+                logger.info(f"Found existing document for image: {request.image_path}")
+        
+        if existing_doc and not request.force_reprocess:
+            logger.info("Using existing metadata, skipping reprocessing")
+            return ERPImageProcessingResponse(
+                image_path=request.image_path,
+                extracted_metadata=existing_doc.metadata,
+                processing_status="already_processed",
+                error_message=None
+            )
+        
+        # Create or update document with extracted metadata
+        try:
+            # Create document data
+            doc_data = {
+                "image_path": request.image_path,
+                "prompt": extracted_metadata.get("ai_analysis", {}).get("descripcion_general", ""),
+                "respuesta": json.dumps(extracted_metadata.get("ai_analysis", {})),
+                "metadata": extracted_metadata
+            }
+            
+            if existing_doc:
+                # Update existing document
+                logger.info(f"Updating existing document: {existing_doc.id}")
+                await embedding_model.update_document(existing_doc.id, doc_data)
+                processing_status = "reprocessed"
+            else:
+                # Create new document
+                logger.info("Creating new document in database")
+                await embedding_model.add_document(doc_data)
+                processing_status = "newly_processed"
+            
+            logger.info(f"Successfully processed ERP image: {request.image_path}")
+            
+            return ERPImageProcessingResponse(
+                image_path=request.image_path,
+                extracted_metadata=extracted_metadata,
+                processing_status=processing_status,
+                error_message=None
+            )
+            
+        except Exception as db_error:
+            logger.error(f"Database error while storing metadata: {str(db_error)}", exc_info=True)
+            return ERPImageProcessingResponse(
+                image_path=request.image_path,
+                extracted_metadata=extracted_metadata,
+                processing_status="processed_but_not_stored",
+                error_message=f"Metadata extracted but database storage failed: {str(db_error)}"
+            )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing ERP image {request.image_path}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"An error occurred while processing the ERP image: {str(e)}"
+        )
+
+
+class ERPBatchProcessingRequest(BaseModel):
+    directory_path: str = Field(..., description="Path to directory containing ERP images")
+    recursive: bool = Field(default=True, description="Process subdirectories recursively")
+    force_reprocess: bool = Field(default=False, description="Force reprocessing of existing images")
+    file_extensions: List[str] = Field(default=[".png", ".jpg", ".jpeg"], description="File extensions to process")
+
+class ERPBatchProcessingResponse(BaseModel):
+    total_images_found: int
+    successfully_processed: int
+    already_processed: int
+    failed_processing: int
+    processing_details: List[Dict[str, Any]]
+    directory_path: str
+
+@manual_generation_router.post(
+    "/process_erp_batch",
+    response_model=ERPBatchProcessingResponse,
+    summary="Batch process all ERP images in a directory"
+)
+@telemetry.track(operation_type="process_erp_batch", metadata_resolver=None)
+async def process_erp_batch_endpoint(
+    request: ERPBatchProcessingRequest,
+    auth: AuthContext = Depends(verify_token),
+    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
+):
+    """
+    Batch process all ERP images in a directory to extract metadata and populate the database.
+    
+    This endpoint will:
+    1. Scan the specified directory for image files
+    2. Process each image using the ERPMetadataExtractionRule
+    3. Store the extracted metadata in the manual generation database
+    4. Provide detailed processing statistics
+    
+    Args:
+        request: ERPBatchProcessingRequest with directory path and processing options
+        auth: Authentication context
+        embedding_model: Manual generation embedding model instance
+        
+    Returns:
+        ERPBatchProcessingResponse with processing statistics and details
+    """
+    import os
+    from pathlib import Path
+    
+    try:
+        # Validate directory path
+        if not os.path.exists(request.directory_path):
+            raise HTTPException(status_code=404, detail=f"Directory not found: {request.directory_path}")
+        
+        if not os.path.isdir(request.directory_path):
+            raise HTTPException(status_code=400, detail=f"Path is not a directory: {request.directory_path}")
+        
+        logger.info(f"Starting batch processing of ERP images in: {request.directory_path}")
+        
+        # Find all image files
+        image_files = []
+        directory = Path(request.directory_path)
+        
+        if request.recursive:
+            for ext in request.file_extensions:
+                image_files.extend(directory.rglob(f"*{ext}"))
+        else:
+            for ext in request.file_extensions:
+                image_files.extend(directory.glob(f"*{ext}"))
+        
+        image_files = [str(img) for img in image_files]
+        total_images = len(image_files)
+        
+        if total_images == 0:
+            logger.warning(f"No image files found in {request.directory_path}")
+            return ERPBatchProcessingResponse(
+                total_images_found=0,
+                successfully_processed=0,
+                already_processed=0,
+                failed_processing=0,
+                processing_details=[],
+                directory_path=request.directory_path
+            )
+        
+        logger.info(f"Found {total_images} image files to process")
+        
+        # Process each image
+        successfully_processed = 0
+        already_processed = 0
+        failed_processing = 0
+        processing_details = []
+        
+        for i, image_path in enumerate(image_files, 1):
+            try:
+                logger.info(f"Processing image {i}/{total_images}: {image_path}")
+                
+                # Create individual processing request
+                individual_request = ERPImageProcessingRequest(
+                    image_path=image_path,
+                    force_reprocess=request.force_reprocess
+                )
+                
+                # Process the image
+                response = await process_erp_image_endpoint(
+                    request=individual_request,
+                    auth=auth,
+                    embedding_model=embedding_model
+                )
+                
+                # Update counters based on processing status
+                if response.processing_status == "already_processed":
+                    already_processed += 1
+                elif response.processing_status in ["newly_processed", "reprocessed"]:
+                    successfully_processed += 1
+                else:
+                    failed_processing += 1
+                
+                processing_details.append({
+                    "image_path": image_path,
+                    "status": response.processing_status,
+                    "error": response.error_message,
+                    "metadata_keys": list(response.extracted_metadata.keys()) if response.extracted_metadata else []
+                })
+                
+            except Exception as e:
+                failed_processing += 1
+                error_msg = f"Failed to process {image_path}: {str(e)}"
+                logger.error(error_msg)
+                processing_details.append({
+                    "image_path": image_path,
+                    "status": "failed",
+                    "error": error_msg,
+                    "metadata_keys": []
+                })
+        
+        logger.info(f"Batch processing completed. Processed: {successfully_processed}, "
+                   f"Already processed: {already_processed}, Failed: {failed_processing}")
+        
+        return ERPBatchProcessingResponse(
+            total_images_found=total_images,
+            successfully_processed=successfully_processed,
+            already_processed=already_processed,
+            failed_processing=failed_processing,
+            processing_details=processing_details,
+            directory_path=request.directory_path
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in batch processing: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred during batch processing: {str(e)}"
+        )
+        
+        # Store metadata in the manual generation database if extraction was successful
+        if extracted_metadata.get("erp_processed", False):
+            logger.info("Storing ERP metadata in database...")
+            
+            # Prepare data for storage
+            prompt = extracted_metadata.get("erp_manual_prompt", f"ERP Image: {Path(request.image_path).name}")
+            keywords = extracted_metadata.get("erp_all_keywords", [])
+            
+            # Store in manual generation database
+            success = await embedding_model.store_image_metadata(
+                image_path=request.image_path,
+                prompt=prompt,
+                respuesta=extracted_metadata.get("erp_screen_type", ""),
+                embedding_text=prompt,  # Generate embedding from the prompt
+                module=extracted_metadata.get("erp_module"),
+                section=extracted_metadata.get("erp_section"),
+                subsection=extracted_metadata.get("erp_subsection"),
+                function_detected=extracted_metadata.get("erp_function"),
+                hierarchy_level=extracted_metadata.get("erp_hierarchy_level"),
+                keywords=keywords,
+                additional_metadata={
+                    "visual_analysis": {
+                        "detected_functions": extracted_metadata.get("erp_detected_functions", []),
+                        "visible_buttons": extracted_metadata.get("erp_visible_buttons", []),
+                        "navigation_elements": extracted_metadata.get("erp_navigation_elements", []),
+                        "form_fields": extracted_metadata.get("erp_form_fields", []),
+                        "main_actions": extracted_metadata.get("erp_main_actions", [])
+                    },
+                    "structural_analysis": {
+                        "navigation_path": extracted_metadata.get("erp_navigation_path", []),
+                        "analysis_model": extracted_metadata.get("erp_analysis_model")
+                    }
+                },
+                overwrite=request.force_reprocess
+            )
+            
+            if success:
+                logger.info(f"Successfully stored metadata for {request.image_path}")
+                processing_status = "success"
+            else:
+                logger.warning(f"Failed to store metadata for {request.image_path}")
+                processing_status = "metadata_extracted_but_storage_failed"
+        else:
+            processing_status = "extraction_failed"
+            logger.error(f"Failed to extract metadata for {request.image_path}")
+        
+        return ERPImageProcessingResponse(
+            image_path=request.image_path,
+            extracted_metadata=extracted_metadata,
+            processing_status=processing_status,
+            error_message=extracted_metadata.get("erp_error") if extracted_metadata.get("erp_error") else None
+        )
+        
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
+    except Exception as e:
+        logger.error(f"Error processing ERP image {request.image_path}: {str(e)}", exc_info=True)
+        return ERPImageProcessingResponse(
+            image_path=request.image_path,
+            extracted_metadata={},
+            processing_status="error",
+            error_message=str(e)
+        )
+
+@manual_generation_router.post(
+    "/process_all_erp_images",
+    summary="Process all ERP images in the screenshots directory"
+)
+@telemetry.track(operation_type="process_all_erp_images", metadata_resolver=None)
+async def process_all_erp_images_endpoint(
+    force_reprocess: bool = Query(default=False, description="Force reprocessing of all images"),
+    auth: AuthContext = Depends(verify_token),
+    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
+):
+    """
+    Process all ERP images in the screenshots directory to extract metadata.
+    
+    This endpoint will:
+    1. Scan the ERP_screenshots directory for all image files
+    2. Process each image using the ERPMetadataExtractionRule
+    3. Store the extracted metadata in the manual generation database
+    
+    Args:
+        force_reprocess: Whether to reprocess images that already have metadata
+        auth: Authentication context
+        embedding_model: Manual generation embedding model instance
+        
+    Returns:
+        Summary of processing results
+    """
+    import os
+    from pathlib import Path
+    
+    try:
+        erp_screenshots_dir = "/root/.ipython/ERP_screenshots"
+        
+        if not os.path.exists(erp_screenshots_dir):
+            raise HTTPException(status_code=404, detail="ERP_screenshots directory not found")
+        
+        # Find all image files
+        image_files = []
+        for root, dirs, files in os.walk(erp_screenshots_dir):
+            for file in files:
+                if file.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    image_files.append(os.path.join(root, file))
+        
+        if not image_files:
+            raise HTTPException(status_code=404, detail="No image files found in ERP_screenshots directory")
+        
+        logger.info(f"Found {len(image_files)} ERP images to process")
+        
+        # Process images in batches to avoid overwhelming the system
+        processed_count = 0
+        failed_count = 0
+        skipped_count = 0
+        results = []
+        
+        from core.rules.erp_metadata_extraction_rule import ERPMetadataExtractionRule
+        from core.models.chunk import Chunk
+        
+        erp_rule = ERPMetadataExtractionRule()
+        
+        for image_path in image_files:
+            try:
+                logger.info(f"Processing {processed_count + 1}/{len(image_files)}: {Path(image_path).name}")
+                
+                # Create chunk for this image
+                chunk = Chunk(
+                    id=str(uuid.uuid4()),
+                    content=f"ERP Image: {Path(image_path).name}",
+                    metadata={
+                        "is_image": True,
+                        "source_path": image_path,
+                        "file_type": "image"
+                    }
+                )
+                
+                # Apply ERP rule
+                extracted_metadata, _ = await erp_rule.apply(
+                    content=chunk.content,
+                    existing_metadata=chunk.metadata
+                )
+                
+                if extracted_metadata.get("erp_processed", False):
+                    # Store metadata
+                    prompt = extracted_metadata.get("erp_manual_prompt", f"ERP Image: {Path(image_path).name}")
+                    keywords = extracted_metadata.get("erp_all_keywords", [])
+                    
+                    success = await embedding_model.store_image_metadata(
+                        image_path=image_path,
+                        prompt=prompt,
+                        respuesta=extracted_metadata.get("erp_screen_type", ""),
+                        embedding_text=prompt,
+                        module=extracted_metadata.get("erp_module"),
+                        section=extracted_metadata.get("erp_section"),
+                        subsection=extracted_metadata.get("erp_subsection"),
+                        function_detected=extracted_metadata.get("erp_function"),
+                        hierarchy_level=extracted_metadata.get("erp_hierarchy_level"),
+                        keywords=keywords,
+                        additional_metadata={
+                            "visual_analysis": {
+                                "detected_functions": extracted_metadata.get("erp_detected_functions", []),
+                                "visible_buttons": extracted_metadata.get("erp_visible_buttons", []),
+                                "navigation_elements": extracted_metadata.get("erp_navigation_elements", []),
+                                "form_fields": extracted_metadata.get("erp_form_fields", []),
+                                "main_actions": extracted_metadata.get("erp_main_actions", [])
+                            }
+                        },
+                        overwrite=force_reprocess
+                    )
+                    
+                    if success:
+                        processed_count += 1
+                        results.append({
+                            "image_path": image_path,
+                            "status": "success",
+                            "metadata_keys": list(extracted_metadata.keys())
+                        })
+                    else:
+                        failed_count += 1
+                        results.append({
+                            "image_path": image_path,
+                            "status": "storage_failed",
+                            "error": "Failed to store in database"
+                        })
+                else:
+                    failed_count += 1
+                    results.append({
+                        "image_path": image_path,
+                        "status": "extraction_failed",
+                        "error": extracted_metadata.get("erp_error", "Unknown extraction error")
+                    })
+                    
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"Error processing {image_path}: {str(e)}")
+                results.append({
+                    "image_path": image_path,
+                    "status": "error",
+                    "error": str(e)
+                })
+        
+        return {
+            "summary": {
+                "total_images": len(image_files),
+                "processed_successfully": processed_count,
+                "failed": failed_count,
+                "skipped": skipped_count
+            },
+            "results": results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in batch ERP processing: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error processing ERP images: {str(e)}")
 
 # Include the manual generation router in the main FastAPI app
 app.include_router(manual_generation_router)

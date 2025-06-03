@@ -61,7 +61,7 @@ export const GraphVisualization = ({
           color: node.color,
           properties: node.properties
         },
-        position: { x: 0, y: 0 }, // Se posicionará automáticamente con el layout
+        position: { x: 0, y: 0 }, // Se posicionará automáticamente con el layout aa a
       }));
 
       const flowEdges = visualizationData.links.map((link, index) => ({

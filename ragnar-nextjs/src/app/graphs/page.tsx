@@ -25,7 +25,107 @@ import WorkflowStatusMonitorWrapper from '@/components/graph/WorkflowStatusMonit
 import GraphVisualization from '@/components/graph/GraphVisualization';
 import CreateGraphForm from '@/components/graph/CreateGraphForm';
 
-// Helper to transform API graph data to ReactFlow format
+// Helper to transform visualization data to ReactFlow format
+const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizationData): { nodes: Node[], edges: Edge[] } => {
+  const nodeCount = visualizationData.nodes?.length || 0;
+  
+  // Calculate grid layout for better spacing
+  const gridSize = Math.ceil(Math.sqrt(nodeCount));
+  const nodeSpacing = 280; // Increased spacing between nodes
+  const startX = -((gridSize - 1) * nodeSpacing) / 2; // Center the grid
+  const startY = -((gridSize - 1) * nodeSpacing) / 2;
+  
+  const nodes: Node[] = (visualizationData.nodes || []).map((node, index) => {
+    const row = Math.floor(index / gridSize);
+    const col = index % gridSize;
+    const position = {
+      x: startX + col * nodeSpacing + (Math.random() - 0.5) * 50, // Add small random offset
+      y: startY + row * nodeSpacing + (Math.random() - 0.5) * 50
+    };
+    
+    return {
+      id: node.id,
+      data: { 
+        label: node.label,
+        type: node.type,
+        properties: node.properties || {},
+        color: node.color
+      },
+      position,
+      type: 'default',
+      style: {
+        background: node.color || '#f3f4f6',
+        border: '2px solid #1a73e8',
+        borderRadius: '8px',
+        padding: '12px',
+        fontSize: '12px',
+        fontWeight: '600',
+        color: '#1f2937',
+        minWidth: '140px',
+        minHeight: '50px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        textAlign: 'center',
+      },
+    };
+  });
+
+  const edges: Edge[] = (visualizationData.links || []).map((link, index) => {
+    // Generate colors based on relationship type
+    const getEdgeColor = (type: string) => {
+      const colors: { [key: string]: string } = {
+        'RELATED_TO': '#3b82f6',
+        'CONTAINS': '#10b981',
+        'PART_OF': '#8b5cf6',
+        'REFERENCES': '#f59e0b',
+        'DEPENDS_ON': '#ef4444',
+        'SIMILAR_TO': '#06b6d4',
+        'CONNECTED_TO': '#6b7280',
+        'DEFAULT': '#6b7280'
+      };
+      return colors[type.toUpperCase()] || colors['DEFAULT'];
+    };
+
+    const edgeColor = getEdgeColor(link.type);
+
+    return {
+      id: `edge-${index}`,
+      source: link.source,
+      target: link.target,
+      label: link.type,
+      type: 'smoothstep',
+      style: {
+        stroke: edgeColor,
+        strokeWidth: 2.5,
+        strokeDasharray: link.type.toLowerCase().includes('similar') ? '5,5' : undefined,
+      },
+      labelStyle: {
+        fontSize: '11px',
+        fontWeight: '600',
+        fill: '#1f2937',
+        textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
+      },
+      labelBgStyle: {
+        fill: '#ffffff',
+        stroke: edgeColor,
+        strokeWidth: 1,
+        fillOpacity: 0.95,
+        rx: 4,
+        ry: 4,
+      },
+      data: {
+        type: link.type,
+        color: edgeColor
+      }
+    };
+  });
+
+  return { nodes, edges };
+};
+
+// Helper to transform API graph data to ReactFlow format (fallback)
 const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: Edge[] } => {
   const nodeCount = apiGraph.nodes?.length || 0;
   
@@ -327,6 +427,106 @@ export default function GraphsPage() {
     }
   };
 
+  // Función para crear un grafo asíncrono (simplificada)
+  const handleCreateAsyncGraph = async () => {
+    if (!newGraphName.trim()) return;
+    
+    // Validate that at least some documents are selected or filters are applied
+    if (selectedDocuments.size === 0 && !folderFilter && !contentTypeFilter && Object.keys(metadataFilters).length === 0) {
+      alert('Debe seleccionar al menos un documento o aplicar filtros para crear el grafo.');
+      return;
+    }
+    
+    setIsAsyncCreating(true);
+    
+    try {
+      const requestData: api.CreateGraphRequest = {
+        name: newGraphName.trim(),
+        description: newGraphDescription.trim() || undefined,
+      };
+
+      // Add document IDs if any are selected
+      if (selectedDocuments.size > 0) {
+        requestData.documents = Array.from(selectedDocuments);
+      }
+
+      // Add filters
+      const filters: Record<string, any> = {};
+      
+      if (contentTypeFilter) {
+        filters.content_type = contentTypeFilter;
+      }
+      
+      // Add metadata filters
+      Object.keys(metadataFilters).forEach(key => {
+        if (metadataFilters[key]) {
+          filters[key] = metadataFilters[key];
+        }
+      });
+
+      if (Object.keys(filters).length > 0) {
+        requestData.filters = filters;
+      }
+
+      // Add folder filter
+      if (folderFilter) {
+        requestData.folder_name = folderFilter;
+      }
+
+      // Add custom prompts if configured
+      if (customPrompts.entityExtraction || customPrompts.relationshipExtraction) {
+        const promptOverrides: any = {};
+        if (customPrompts.entityExtraction) {
+          promptOverrides.entity_extraction = {
+            prompt_template: customPrompts.entityExtraction
+          };
+        }
+        if (customPrompts.relationshipExtraction) {
+          promptOverrides.relationship_extraction = {
+            prompt_template: customPrompts.relationshipExtraction
+          };
+        }
+        requestData.prompt_overrides = promptOverrides;
+      }
+
+      console.log('Creando grafo asíncrono con datos:', requestData);
+      const created = await createGraph(requestData);
+      
+      if (created) {
+        const workflowId = created.system_metadata?.workflow_id;
+        
+        if (workflowId) {
+          alert(`Grafo "${created.name}" iniciado en modo asíncrono. Se procesará en segundo plano.`);
+          // Iniciar monitoreo del workflow
+          setMonitoredWorkflow(workflowId);
+          setWorkflowGraphName(created.name);
+        } else {
+          alert(`Grafo "${created.name}" creado con éxito (modo síncrono).`);
+        }
+        
+        // Limpiar formulario
+        setNewGraphName('');
+        setNewGraphDescription('');
+        setSelectedDocuments(new Set());
+        setFolderFilter('');
+        setContentTypeFilter('');
+        setMetadataFilters({});
+        setCustomPrompts({
+          entityExtraction: '',
+          relationshipExtraction: ''
+        });
+        await refreshGraphsList();
+      } else {
+        alert('No se pudo crear el grafo.');
+      }
+    } catch (error: any) {
+      console.error('Error creando grafo asíncrono:', error);
+      alert(`Error creando grafo: ${error.message || 'Error desconocido'}`);
+    } finally {
+      setIsAsyncCreating(false);
+    }
+  };
+
   const handleViewGraph = async (graphName: string) => {
     if (!graphName) return;
     
@@ -335,18 +535,69 @@ export default function GraphsPage() {
     setSelectedGraph(null);
     
     try {
-      console.log('Fetching graph details for:', graphName);
-      const graphDetails = await api.getGraphDetails(graphName);
-      console.log('Received graph details:', graphDetails);
+      console.log('Fetching graph visualization data for:', graphName);
       
-      if (graphDetails) {
-        setSelectedGraph(graphDetails);
-        // Transform API graph to ReactFlow format for visualization
-        const { nodes: flowNodes, edges: flowEdges } = transformApiGraphToFlow(graphDetails);
+      // Try to get visualization data first (preferred method)
+      let visualizationData = null;
+      try {
+        visualizationData = await api.getGraphVisualization(graphName);
+        console.log('Received graph visualization data:', visualizationData);
+      } catch (vizError) {
+        console.warn('Failed to fetch visualization data, falling back to graph details:', vizError);
+      }
+      
+      if (visualizationData) {
+        // Use visualization-specific data transformation
+        const { nodes: flowNodes, edges: flowEdges } = transformVisualizationDataToFlow(visualizationData);
         setNodes(flowNodes);
         setEdges(flowEdges);
+        
+        // Create a simplified graph object for selectedGraph state
+        // Convert visualization data to match Graph interface
+        const convertedNodes: api.ApiNode[] = (visualizationData.nodes || []).map(node => ({
+          id: node.id,
+          label: node.label,
+          data: {
+            type: node.type,
+            color: node.color,
+            properties: node.properties
+          }
+        }));
+        
+        const convertedEdges: api.ApiEdge[] = (visualizationData.links || []).map((link, index) => ({
+          id: `edge-${index}`,
+          source: link.source,
+          target: link.target,
+          label: link.type,
+          data: { type: link.type }
+        }));
+        
+        setSelectedGraph({
+          id: graphName,
+          name: graphName,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          nodes_count: convertedNodes.length,
+          edges_count: convertedEdges.length,
+          nodes: convertedNodes,
+          edges: convertedEdges,
+          system_metadata: {},
+        });
       } else {
-        setGraphDetailsError(`No se encontró el grafo "${graphName}"`);
+        // Fallback to original method if visualization endpoint fails
+        console.log('Falling back to graph details for:', graphName);
+        const graphDetails = await api.getGraphDetails(graphName);
+        console.log('Received graph details:', graphDetails);
+        
+        if (graphDetails) {
+          setSelectedGraph(graphDetails);
+          // Transform API graph to ReactFlow format for visualization
+          const { nodes: flowNodes, edges: flowEdges } = transformApiGraphToFlow(graphDetails);
+          setNodes(flowNodes);
+          setEdges(flowEdges);
+        } else {
+          setGraphDetailsError(`No se encontró el grafo "${graphName}"`);
+        }
       }
     } catch (error) {
       console.error('Error loading graph details:', error);
@@ -698,13 +949,22 @@ export default function GraphsPage() {
             </button>
             
             <button
-              onClick={() => setIsAsyncCreating(true)}
-              disabled={isCreating || isAsyncCreating}
+              onClick={handleCreateAsyncGraph}
+              disabled={!newGraphName.trim() || isCreating || isAsyncCreating}
               className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               title="Crear grafo en modo asíncrono para grandes conjuntos de datos"
             >
-              <GitBranch className="w-4 h-4" />
-              Crear Asíncrono
+              {isAsyncCreating ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creando Asíncrono...
+                </>
+              ) : (
+                <>
+                  <GitBranch className="w-4 h-4" />
+                  Crear Asíncrono
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -899,44 +1159,175 @@ export default function GraphsPage() {
             </div>
           </div>
         ) : selectedGraph && nodes.length > 0 ? (
-          <div style={{ height: '700px', border: '1px solid #eee', borderRadius: '8px' }} className="dark:border-gray-600">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              fitView
-              fitViewOptions={{
-                padding: 50,
-                includeHiddenNodes: false,
-                minZoom: 0.1,
-                maxZoom: 1.5
-              }}
-              minZoom={0.1}
-              maxZoom={2}
-              defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-              attributionPosition="bottom-right"
-              className="bg-gray-50 dark:bg-gray-700/30"
-              proOptions={{ hideAttribution: true }}
-            >
-              <Controls showZoom={true} showFitView={true} showInteractive={true} />
-              <MiniMap 
-                nodeStrokeWidth={3} 
-                zoomable 
-                pannable 
-                style={{
-                  height: 120,
-                  width: 200,
-                }}
-                position="top-right"
-              />
-              <Background 
-                color={document.documentElement.classList.contains('dark') ? "#404040" : "#ddd"} 
-                gap={20} 
-                size={1}
-              />
-            </ReactFlow>
+          <div className="flex gap-4">
+            {/* Graph Visualization */}
+            <div className="flex-1">
+              <div style={{ height: '700px', border: '1px solid #eee', borderRadius: '8px' }} className="dark:border-gray-600">
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  fitView
+                  fitViewOptions={{
+                    padding: 50,
+                    includeHiddenNodes: false,
+                    minZoom: 0.1,
+                    maxZoom: 1.5
+                  }}
+                  minZoom={0.1}
+                  maxZoom={2}
+                  defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+                  attributionPosition="bottom-right"
+                  className="bg-gray-50 dark:bg-gray-700/30"
+                  proOptions={{ hideAttribution: true }}
+                >
+                  <Controls showZoom={true} showFitView={true} showInteractive={true} />
+                  <MiniMap 
+                    nodeStrokeWidth={3} 
+                    zoomable 
+                    pannable 
+                    style={{
+                      height: 120,
+                      width: 200,
+                    }}
+                    position="top-right"
+                  />
+                  <Background 
+                    color={document.documentElement.classList.contains('dark') ? "#404040" : "#ddd"} 
+                    gap={20} 
+                    size={1}
+                  />
+                </ReactFlow>
+              </div>
+            </div>
+            
+            {/* Entity Legend and Info Panel */}
+            <div className="w-80 space-y-4">
+              {/* Graph Info */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                  <Network className="w-5 h-5 mr-2" />
+                  Graph Information
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{selectedGraph.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Nodes:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{nodes.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Edges:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{edges.length}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Entity Types Legend */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Entity Types
+                </h3>
+                <div className="space-y-2">
+                  {(() => {
+                    // Extract unique entity types from nodes
+                    const entityTypes = new Map();
+                    nodes.forEach(node => {
+                      const type = node.data?.type || 'Unknown';
+                      const color = node.style?.background || node.style?.backgroundColor || '#6b7280';
+                      if (!entityTypes.has(type)) {
+                        entityTypes.set(type, { color, count: 0 });
+                      }
+                      entityTypes.set(type, { 
+                        ...entityTypes.get(type), 
+                        count: entityTypes.get(type).count + 1 
+                      });
+                    });
+
+                    return Array.from(entityTypes.entries()).map(([type, info]) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-4 h-4 rounded-full mr-2 flex-shrink-0 border-2" 
+                            style={{ 
+                              backgroundColor: info.color,
+                              borderColor: info.color
+                            }}
+                          ></div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                            {type}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          {info.count}
+                        </span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Relationship Types */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Relationships ({edges.length})
+                </h3>
+                <div className="space-y-2">
+                  {(() => {
+                    // Extract unique relationship types from edges with their colors
+                    const relationshipTypes = new Map();
+                    edges.forEach(edge => {
+                      const type = edge.label || edge.data?.type || 'Connected';
+                      const color = edge.data?.color || edge.style?.stroke || '#6b7280';
+                      const isDashed = edge.style?.strokeDasharray ? true : false;
+                      
+                      if (!relationshipTypes.has(type)) {
+                        relationshipTypes.set(type, { count: 0, color, isDashed });
+                      }
+                      relationshipTypes.set(type, { 
+                        ...relationshipTypes.get(type), 
+                        count: relationshipTypes.get(type).count + 1 
+                      });
+                    });
+
+                    if (relationshipTypes.size === 0) {
+                      return (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                          No relationships found
+                        </div>
+                      );
+                    }
+
+                    return Array.from(relationshipTypes.entries()).map(([type, info]) => (
+                      <div key={type} className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-6 h-0.5 mr-2 rounded-sm flex-shrink-0" 
+                            style={{ 
+                              backgroundColor: info.isDashed ? 'transparent' : info.color,
+                              borderStyle: info.isDashed ? 'dashed' : 'solid',
+                              borderWidth: info.isDashed ? '1px' : '0',
+                              borderColor: info.color,
+                              minHeight: '2px'
+                            }}
+                          ></div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                            {type.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          {info.count}
+                        </span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="h-96 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-center">

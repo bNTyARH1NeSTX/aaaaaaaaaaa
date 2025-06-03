@@ -21,7 +21,7 @@ export default function WorkflowStatusMonitorWrapper({
     autoStart: true,
     onComplete,
     onError
-  });
+  }); 
 
   return <WorkflowStatusMonitor status={status} onComplete={onComplete} onError={onError} />;
 }

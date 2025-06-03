@@ -1965,6 +1965,38 @@ class DocumentService:
             is_initial_build=is_initial_build,  # Pass through
         )
 
+    async def get_graph_visualization_data(
+        self,
+        name: str,
+        auth: AuthContext,
+        folder_name: Optional[Union[str, List[str]]] = None,
+        end_user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Get visualization data for a graph.
+
+        Args:
+            name: Name of the graph to visualize
+            auth: Authentication context
+            folder_name: Optional folder name for scoping the operation
+            end_user_id: Optional end user ID for scoping the operation
+
+        Returns:
+            Dict containing nodes and links for visualization
+        """
+        # Build system filters from individual parameters
+        system_filters = {}
+        if folder_name:
+            system_filters["folder_name"] = folder_name
+        if end_user_id:
+            system_filters["end_user_id"] = end_user_id
+
+        # Delegate to the GraphService
+        return await self.graph_service.get_graph_visualization_data(
+            graph_name=name,
+            auth=auth,
+            system_filters=system_filters,
+        )
+
     async def delete_document(self, document_id: str, auth: AuthContext) -> bool:
         """
         Delete a document and all its associated data.

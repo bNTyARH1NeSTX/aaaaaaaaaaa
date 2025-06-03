@@ -39,6 +39,10 @@ ollama_llama_vision_docker_docker = { model_name = "ollama_chat/llama3.2-vision"
 # Embedding models
 openai_embedding = { model_name = "text-embedding-3-small" }
 openai_embedding_large = { model_name = "text-embedding-3-large" }
+
+# Qwen fine-tuned models for manual generation
+qwen_manual_generator = { model_name = "ARHVNAAG/Manuales_finetuning_generator", vision = true }
+qwen_base = { model_name = "Qwen/Qwen2.5-VL-3B-Instruct", vision = true }
 azure_embedding = { model_name = "text-embedding-ada-002", api_base = "YOUR_AZURE_URL_HERE", api_version = "2023-05-15", deployment_id = "embedding-ada-002" }
 ollama_embedding = { model_name = "ollama/nomic-embed-text", api_base = "http://localhost:11434" }
 # If you are running on docker, but running ollama locally use the following
@@ -144,7 +148,7 @@ otlp_max_queue_size = 2048
 [manual_generation]
 colpali_model_name = "ARHVNAAG/Bnext"
 manual_model_name = "ARHVNAAG/Manuales_finetuning_generator"
-manual_generation_image_folder = "/path/to/your/manual_gen_images"
+image_folder = "/root/.ipython/ERP_screenshots"
 max_new_tokens = 1500 
 temperature = 0.3
 do_sample = true

@@ -1380,7 +1380,7 @@ class GraphService:
         temperature: Optional[float] = None,
         include_paths: bool = False,
         paths: Optional[List[List[str]]] = None,
-        auth: Optional<AuthContext] = None,
+        auth: Optional[AuthContext] = None,
         graph_name: Optional[str] = None,
         prompt_overrides: Optional[QueryPromptOverrides] = None,
         folder_name: Optional[Union[str, List[str]]] = None,

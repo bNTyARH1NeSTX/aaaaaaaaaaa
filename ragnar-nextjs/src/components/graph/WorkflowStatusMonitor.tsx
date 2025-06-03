@@ -26,7 +26,7 @@ export const WorkflowStatusMonitor = ({
   // Determinar el porcentaje de progreso
   const progressPercentage = status.progress || (status.status === 'completed' ? 100 : status.status === 'running' ? 50 : 0);
 
-  // Determinar el mensaje de estado
+  // Determinar el mensaje de estado  aa
   const getStatusMessage = () => {
     switch (status.status) {
       case 'completed':

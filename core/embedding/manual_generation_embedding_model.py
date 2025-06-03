@@ -3,9 +3,9 @@ import io
 import logging
 import time
 import os
-import json # For CSV loading
-import csv # For CSV loading
-import datetime # For updated_at timestamp
+import json  # For CSV loading
+import csv  # For CSV loading
+import datetime  # For updated_at timestamp
 from typing import List, Tuple, Union, Optional
 
 import numpy as np
@@ -19,9 +19,16 @@ from sqlalchemy.exc import IntegrityError
 from core.config import get_settings, Settings
 from core.embedding.base_embedding_model import BaseEmbeddingModel
 from core.models.chunk import Chunk 
-from core.models.manual_generation_document import ManualGenDocument, EMBEDDING_DIMENSION, Base as ManualGenBase # Import the new ORM model and its Base
+from core.models.manual_generation_document import ManualGenDocument, EMBEDDING_DIMENSION, Base as ManualGenBase
 
-
+# Import ColPali for manual generation
+try:
+    from colpali_engine.models import ColPali, ColPaliProcessor
+    COLPALI_AVAILABLE = True
+except ImportError:
+    logger = logging.getLogger(__name__)
+    logger.warning("colpali_engine not available. Manual generation embedding model will not work properly.")
+    COLPALI_AVAILABLE = False
 
 # Placeholder for DEVICE - this should be determined as in ColpaliEmbeddingModel
 DEVICE = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
@@ -38,44 +45,53 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
 
         self.manual_gen_db_engine = None
         self.ManualGenSessionLocal: Optional[sessionmaker[SQLAlchemySession]] = None
-        if self.settings.MANUAL_GEN_DB_URL:
+        if self.settings.MANUAL_GEN_DB_URI:
             try:
-                self.manual_gen_db_engine = create_engine(self.settings.MANUAL_GEN_DB_URL, pool_pre_ping=True)
+                self.manual_gen_db_engine = create_engine(self.settings.MANUAL_GEN_DB_URI, pool_pre_ping=True)
                 self.ManualGenSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.manual_gen_db_engine)
-                logger.info(f"Successfully connected to manual generation database: {self.settings.MANUAL_GEN_DB_URL.split('@')[-1]}") 
+                logger.info(f"Successfully connected to manual generation database: {self.settings.MANUAL_GEN_DB_URI.split('@')[-1]}") 
                 # Create tables if they don't exist (idempotent)
                 ManualGenBase.metadata.create_all(bind=self.manual_gen_db_engine) # Use the Base from manual_generation_document.py
                 logger.info(f"Ensured table '{ManualGenDocument.__tablename__}' exists in manual gen DB.")
             except Exception as e:
-                logger.error(f"Failed to connect to manual generation database ({self.settings.MANUAL_GEN_DB_URL.split('@')[-1]}) or ensure table: {e}")
+                logger.error(f"Failed to connect to manual generation database ({self.settings.MANUAL_GEN_DB_URI.split('@')[-1]}) or ensure table: {e}")
                 self.manual_gen_db_engine = None
                 self.ManualGenSessionLocal = None
         else:
-            logger.warning("Manual generation database URL not configured. Database operations will not be available.")
+            logger.warning("Manual generation database URI not configured. Database operations will not be available.")
 
         device = DEVICE 
         logger.info(f"Initializing ManualGenerationEmbeddingModel with device: {device}")
         logger.info(f"Loading ColPali model for manual generation: {self.settings.COLPALI_MODEL_NAME}")
         start_time = time.time()
 
-        # Use the COLPALI_MODEL_NAME from settings for this specific model
-        self.model = ColQwen2_5.from_pretrained(
-            self.settings.COLPALI_MODEL_NAME, # Loaded from settings
-            torch_dtype=torch.bfloat16, # Or other appropriate dtype
-            device_map=device,
-            attn_implementation="flash_attention_2" if device == "cuda" else "eager",
-            token=self.settings.HUGGING_FACE_TOKEN if self.settings.HUGGING_FACE_TOKEN else None,
-        ).eval()
-        self.processor: ColQwen2_5_Processor = ColQwen2_5_Processor.from_pretrained(
-            self.settings.COLPALI_MODEL_NAME, # Loaded from settings
-            token=self.settings.HUGGING_FACE_TOKEN if self.settings.HUGGING_FACE_TOKEN else None,
-        )
-        
-        # self.mode = self.settings.MODE # If mode specific logic is needed
-        # self.batch_size = 8 if self.mode == "cloud" else 1 # If batching is needed
-        
-        total_init_time = time.time() - start_time
-        logger.info(f"ManualGeneration ColPali model initialization time: {total_init_time:.2f} seconds")
+        self.colpali_model = None
+        self.colpali_processor = None
+        self.device = device
+
+        if COLPALI_AVAILABLE:
+            try:
+                # Load ColPali model and processor
+                self.colpali_model = ColPali.from_pretrained(
+                    self.settings.COLPALI_MODEL_NAME,
+                    torch_dtype=torch.bfloat16,
+                    device_map=device,
+                    token=self.settings.HUGGING_FACE_TOKEN if self.settings.HUGGING_FACE_TOKEN else None,
+                ).eval()
+                
+                self.colpali_processor = ColPaliProcessor.from_pretrained(
+                    self.settings.COLPALI_MODEL_NAME,
+                    token=self.settings.HUGGING_FACE_TOKEN if self.settings.HUGGING_FACE_TOKEN else None,
+                )
+                
+                total_init_time = time.time() - start_time
+                logger.info(f"ManualGeneration ColPali model initialization time: {total_init_time:.2f} seconds")
+            except Exception as e:
+                logger.error(f"Failed to load ColPali model: {e}")
+                self.colpali_model = None
+                self.colpali_processor = None
+        else:
+            logger.error("ColPali not available. Manual generation will not work properly.")
 
     async def embed_for_ingestion(self, chunks: Union[str, List[str], Chunk, List[Chunk]]) -> List[np.ndarray]:
         """
@@ -104,33 +120,36 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
 
         logger.info(f"Generating embeddings for {len(texts_to_embed)} items for manual_gen ingestion.")
         
-        # Assuming self.processor.process_queries is suitable for generating embeddings from descriptive text.
-        # If your ColPali model has a different method for text-to-embedding (e.g., for RAG sources),
-        # you might need to use that (e.g., self.processor.process_documents or similar).
-        # For now, we align with embed_for_query's usage of process_queries.
+        # Use the ColPali processor to process queries for embedding generation
+        if not self.colpali_processor or not self.colpali_model:
+            logger.error("ColPali model or processor not loaded. Cannot generate embeddings.")
+            return [np.array([]) for _ in texts_to_embed]
+            
         try:
-            inputs = self.processor.process_queries(texts_to_embed).to(DEVICE)
+            inputs = self.colpali_processor.process_queries(texts_to_embed).to(self.device)
         except Exception as e:
-            logger.error(f"Error during processor.process_queries in embed_for_ingestion: {e}")
+            logger.error(f"Error during colpali_processor.process_queries in embed_for_ingestion: {e}")
             return [np.array([]) for _ in texts_to_embed]
 
         with torch.no_grad():
             try:
-                output = self.model(**inputs)
-                # The exact way to get embeddings from 'output' depends on your ColQwen2_5 model.
-                # Common ways: output.last_hidden_state.mean(dim=1) or output.pooler_output
-                # For now, assuming 'output' itself is the [batch_size, embedding_dim] tensor or can be directly used.
-                # This needs verification against the model's actual output structure.
-                embeddings_tensor = output # Placeholder, adjust based on actual model output
+                output = self.colpali_model(**inputs)
+                # For ColPali, the output is typically the embedding tensor
+                # Convert to the expected format
+                embeddings_tensor = output
                 
-                # If the output is, for example, a tuple or a more complex object:
-                # if hasattr(output, 'last_hidden_state'):
-                #     embeddings_tensor = output.last_hidden_state.mean(dim=1) # Example for some models
-                # elif hasattr(output, 'pooler_output'):
-                #     embeddings_tensor = output.pooler_output # Example for BERT-like models
-                # else:
-                #     logger.error("Cannot determine embedding tensor from model output.")
-                #     return [np.array([]) for _ in texts_to_embed]
+                if hasattr(output, 'last_hidden_state'):
+                    # If it's a transformer output with last_hidden_state, use mean pooling
+                    embeddings_tensor = output.last_hidden_state.mean(dim=1)
+                elif hasattr(output, 'pooler_output'):
+                    # If it has pooler_output, use that
+                    embeddings_tensor = output.pooler_output
+                elif torch.is_tensor(output):
+                    # If output is already a tensor, use it directly
+                    embeddings_tensor = output
+                else:
+                    logger.error("Cannot determine embedding tensor from ColPali model output.")
+                    return [np.array([]) for _ in texts_to_embed]
 
                 embeddings = embeddings_tensor.to(torch.float32).cpu().numpy()
             except Exception as e:
@@ -147,18 +166,38 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
         return [emb for emb in embeddings]
 
     async def embed_for_query(self, text: str) -> np.ndarray:
-        # This method might be used by find_relevant_images to get the query vector.
+        """Generate query embedding for similarity search."""
+        if not self.colpali_processor or not self.colpali_model:
+            logger.error("ColPali model or processor not loaded. Cannot generate query embedding.")
+            return np.array([])
+            
         logger.info(f"Generating query embedding for: {text[:50]}...")
-        inputs = self.processor.process_queries([text]).to(DEVICE)
-        with torch.no_grad():
-            output = self.model(**inputs)
-            query_vector = output.to(torch.float32).cpu().numpy()
+        try:
+            inputs = self.colpali_processor.process_queries([text]).to(self.device)
+            with torch.no_grad():
+                output = self.colpali_model(**inputs)
+                
+                # Handle different output formats from ColPali
+                if hasattr(output, 'last_hidden_state'):
+                    query_vector = output.last_hidden_state.mean(dim=1).squeeze()
+                elif hasattr(output, 'pooler_output'):
+                    query_vector = output.pooler_output.squeeze()
+                elif torch.is_tensor(output):
+                    query_vector = output.squeeze()
+                else:
+                    logger.error("Cannot determine embedding tensor from ColPali model output for query.")
+                    return np.array([])
+                    
+                query_vector = query_vector.to(torch.float32).cpu().numpy()
 
-        if query_vector.ndim == 2 and query_vector.shape[0] == 1:
-            return query_vector[0]
-        elif query_vector.ndim == 3: # Should not happen for single query
-            return query_vector.mean(axis=1).squeeze()
-        return query_vector # Should be 1D array
+            if query_vector.ndim == 2 and query_vector.shape[0] == 1:
+                return query_vector[0]
+            elif query_vector.ndim == 3: # Should not happen for single query
+                return query_vector.mean(axis=1).squeeze()
+            return query_vector # Should be 1D array
+        except Exception as e:
+            logger.error(f"Error generating query embedding: {e}")
+            return np.array([])
 
 
     # Your helper functions, adapted as methods or static methods:
@@ -198,11 +237,27 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             return []
         
         try:
-            # Generar vector de consulta using the class's model and processor
-            inputs = self.processor.process_queries([query]).to(DEVICE)
+            # Generate query vector using the class's ColPali model and processor
+            if not self.colpali_processor or not self.colpali_model:
+                logger.error("ColPali model or processor not loaded. Cannot find relevant images.")
+                return []
+                
+            inputs = self.colpali_processor.process_queries([query]).to(self.device)
             with torch.no_grad():
-                output = self.model(**inputs) # Use self.model
-                query_vector = output.to(torch.float32).cpu().numpy()
+                output = self.colpali_model(**inputs)
+                
+                # Handle different output formats from ColPali
+                if hasattr(output, 'last_hidden_state'):
+                    query_vector = output.last_hidden_state.mean(dim=1).squeeze()
+                elif hasattr(output, 'pooler_output'):
+                    query_vector = output.pooler_output.squeeze()
+                elif torch.is_tensor(output):
+                    query_vector = output.squeeze()
+                else:
+                    logger.error("Cannot determine embedding tensor from ColPali model output.")
+                    return []
+                    
+                query_vector = query_vector.to(torch.float32).cpu().numpy()
 
                 if query_vector.ndim == 2 and query_vector.shape[0] == 1:
                     query_vector = query_vector[0]
@@ -547,6 +602,103 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             analysis += "\n**Conclusión**: El modelo parece no estar utilizando la información proporcionada con efectividad.\n"
             
         return analysis
+
+    async def find_by_image_path(self, image_path: str) -> List[ManualGenDocument]:
+        """Find documents by image path."""
+        db_session = self.get_manual_gen_db_session()
+        if not db_session:
+            logger.error("Cannot find by image path: Manual generation database session not available.")
+            return []
+        
+        try:
+            docs = db_session.query(ManualGenDocument).filter_by(image_path=image_path).all()
+            return docs
+        except Exception as e:
+            logger.error(f"Error finding documents by image path '{image_path}': {e}")
+            return []
+        finally:
+            db_session.close()
+
+    async def add_document(self, doc_data: dict) -> Optional[str]:
+        """Add a new document to the database."""
+        db_session = self.get_manual_gen_db_session()
+        if not db_session:
+            logger.error("Cannot add document: Manual generation database session not available.")
+            return None
+        
+        try:
+            # Create new document
+            new_doc = ManualGenDocument(
+                id=str(uuid.uuid4()),
+                image_path=doc_data.get("image_path"),
+                prompt=doc_data.get("prompt"),
+                respuesta=doc_data.get("respuesta"),
+                embedding=None,  # Will be generated if needed
+                module=doc_data.get("metadata", {}).get("structural", {}).get("module"),
+                section=doc_data.get("metadata", {}).get("structural", {}).get("section"),
+                subsection=doc_data.get("metadata", {}).get("structural", {}).get("subsection"),
+                function_detected=doc_data.get("metadata", {}).get("ai_analysis", {}).get("funciones_detectadas"),
+                hierarchy_level=doc_data.get("metadata", {}).get("structural", {}).get("hierarchy_level"),
+                keywords=doc_data.get("metadata", {}).get("ai_analysis", {}).get("elementos_interfaz", []),
+                metadata=doc_data.get("metadata", {})
+            )
+            
+            db_session.add(new_doc)
+            db_session.commit()
+            logger.info(f"Successfully added document for image: {doc_data.get('image_path')}")
+            return new_doc.id
+            
+        except Exception as e:
+            logger.error(f"Error adding document: {e}")
+            db_session.rollback()
+            return None
+        finally:
+            db_session.close()
+
+    async def update_document(self, doc_id: str, doc_data: dict) -> bool:
+        """Update an existing document in the database."""
+        db_session = self.get_manual_gen_db_session()
+        if not db_session:
+            logger.error("Cannot update document: Manual generation database session not available.")
+            return False
+        
+        try:
+            # Find existing document
+            doc = db_session.query(ManualGenDocument).filter_by(id=doc_id).first()
+            if not doc:
+                logger.error(f"Document with ID {doc_id} not found")
+                return False
+            
+            # Update fields
+            if "prompt" in doc_data:
+                doc.prompt = doc_data["prompt"]
+            if "respuesta" in doc_data:
+                doc.respuesta = doc_data["respuesta"]
+            if "metadata" in doc_data:
+                doc.metadata = doc_data["metadata"]
+                # Update extracted fields from metadata
+                metadata = doc_data["metadata"]
+                if "structural" in metadata:
+                    structural = metadata["structural"]
+                    doc.module = structural.get("module")
+                    doc.section = structural.get("section")
+                    doc.subsection = structural.get("subsection")
+                    doc.hierarchy_level = structural.get("hierarchy_level")
+                if "ai_analysis" in metadata:
+                    ai_analysis = metadata["ai_analysis"]
+                    doc.function_detected = ai_analysis.get("funciones_detectadas")
+                    doc.keywords = ai_analysis.get("elementos_interfaz", [])
+            
+            db_session.commit()
+            logger.info(f"Successfully updated document: {doc_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating document {doc_id}: {e}")
+            db_session.rollback()
+            return False
+        finally:
+            db_session.close()
 
 # Example of how you might get settings and instantiate:
 # settings = get_settings()
