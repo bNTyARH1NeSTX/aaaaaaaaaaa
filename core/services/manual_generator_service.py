@@ -12,15 +12,30 @@ from PIL import Image
 Image.MAX_IMAGE_PIXELS = None # Allow loading large images
 from transformers import AutoProcessor
 
-# Import Qwen VL specific class for multimodal models
+logger = logging.getLogger(__name__)
+
+# Import Qwen VL specific class for multimodal models - based on original implementation
 try:
-    from transformers import Qwen2VLForConditionalGeneration
+    from transformers import Qwen2_5_VLForConditionalGeneration
+    qwen_vl_class = Qwen2_5_VLForConditionalGeneration
+    logger.info("Using Qwen2_5_VLForConditionalGeneration for manual generation")
 except ImportError:
     try:
-        from transformers import Qwen2_5_VLForConditionalGeneration as Qwen2VLForConditionalGeneration
+        from transformers import Qwen2VLForConditionalGeneration  
+        qwen_vl_class = Qwen2VLForConditionalGeneration
+        logger.info("Using Qwen2VLForConditionalGeneration as fallback")
     except ImportError:
-        logger.error("Could not import Qwen2VLForConditionalGeneration or Qwen2_5_VLForConditionalGeneration")
-        Qwen2VLForConditionalGeneration = None
+        logger.error("Could not import Qwen VL classes")
+        qwen_vl_class = None
+
+# Try to import PEFT for fine-tuned model support
+try:
+    from peft import PeftModel, PeftConfig
+    PEFT_AVAILABLE = True
+    logger.info("PEFT library available for fine-tuned model support")
+except ImportError:
+    PEFT_AVAILABLE = False
+    logger.warning("PEFT library not available - fine-tuned models won't work")
 
 # Add PowerPoint imports
 from pptx import Presentation
@@ -40,6 +55,7 @@ class ManualGeneratorService:
         self.model_name = self.settings.MANUAL_MODEL_NAME
         self.hf_token = self.settings.HUGGING_FACE_TOKEN
         self.image_folder = self.settings.MANUAL_GENERATION_IMAGE_FOLDER
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         self.model = None
         self.processor = None
@@ -51,47 +67,130 @@ class ManualGeneratorService:
             logger.error("MANUAL_MODEL_NAME is not set in settings. Cannot load model.")
             raise ValueError("MANUAL_MODEL_NAME is not configured.")
         
-        if Qwen2VLForConditionalGeneration is None:
-            logger.error("Qwen2VLForConditionalGeneration is not available. Please install a compatible version of transformers.")
-            raise ImportError("Qwen2VLForConditionalGeneration is not available.")
+        if qwen_vl_class is None:
+            logger.error("Qwen VL classes are not available. Please install a compatible version of transformers.")
+            raise ImportError("Qwen VL classes are not available.")
             
+        # Base model for fallback
+        base_model_name = "Qwen/Qwen2.5-VL-3B-Instruct"
+        model_loaded = False
+        
+        # Skip fine-tuned model if it's the problematic one and go straight to base model
+        if self.model_name == "ARHVNAAG/Manuales_finetuning_generator":
+            logger.info("Known problematic model detected, using base model directly")
+            self._load_base_model(base_model_name)
+            model_loaded = True
+        else:
+            # Try loading custom model first
+            try:
+                logger.info(f"Attempting to load model directly from: {self.model_name}")
+                self.processor = AutoProcessor.from_pretrained(
+                    self.model_name,
+                    trust_remote_code=True,
+                    token=self.hf_token
+                )
+                self.model = qwen_vl_class.from_pretrained(
+                    self.model_name,
+                    torch_dtype=torch.bfloat16,
+                    device_map="auto",
+                    trust_remote_code=True,
+                    token=self.hf_token
+                )
+                logger.info("✅ Model loaded directly from fine-tuned version")
+                model_loaded = True
+                
+            except Exception as e:
+                logger.warning(f"Could not load directly from {self.model_name}: {e}")
+                logger.info(f"Attempting to load as PEFT model with base: {base_model_name}")
+                
+                try:
+                    # Import PEFT for adapter loading
+                    from peft import PeftModel
+                    
+                    # Load processor from base model
+                    self.processor = AutoProcessor.from_pretrained(
+                        base_model_name,
+                        trust_remote_code=True,
+                        token=self.hf_token
+                    )
+                    
+                    # Load base model first
+                    base_model = qwen_vl_class.from_pretrained(
+                        base_model_name,
+                        torch_dtype=torch.bfloat16,
+                        device_map="auto",  
+                        trust_remote_code=True,
+                        token=self.hf_token
+                    )
+                    
+                    # Apply PEFT adapters
+                    self.model = PeftModel.from_pretrained(base_model, self.model_name, token=self.hf_token)
+                    logger.info("✅ Base model loaded and PEFT adapters applied")
+                    model_loaded = True
+                    
+                except Exception as e2:
+                    logger.error(f"Failed to load as PEFT model: {e2}")
+                    logger.warning("Falling back to base model only")
+                    self._load_base_model(base_model_name)
+                    model_loaded = True
+        
+        # Configure tokenizer for any loaded model
+        self._configure_tokenizer()
+        logger.info(f"Manual generator model loaded successfully.")
+
+    def _load_base_model(self, base_model_name: str):
+        """Load the base Qwen2.5-VL model as fallback"""
+        logger.info(f"Loading base model: {base_model_name}")
         try:
-            # Use Qwen2VLForConditionalGeneration for visual models
-            self.model = Qwen2VLForConditionalGeneration.from_pretrained(
-                self.model_name,
+            self.processor = AutoProcessor.from_pretrained(
+                base_model_name,
+                trust_remote_code=True,
+                token=self.hf_token
+            )
+            self.model = qwen_vl_class.from_pretrained(
+                base_model_name,
                 torch_dtype=torch.bfloat16,
                 device_map="auto",
                 trust_remote_code=True,
                 token=self.hf_token
             )
-            self.processor = AutoProcessor.from_pretrained(
-                self.model_name,
-                trust_remote_code=True,
-                token=self.hf_token
-            )
-            
-            # Handle padding token for models like Qwen-VL
-            if "qwen" in self.model_name.lower():
-                if self.processor.tokenizer.pad_token_id is None:
-                    if self.processor.tokenizer.eos_token_id is not None:
-                        self.processor.tokenizer.pad_token_id = self.processor.tokenizer.eos_token_id
-                        logger.info(f"Set pad_token_id to eos_token_id for {self.model_name}")
-                    else:
-                        # Fallback: add a new pad token if none exists (less common for pretrained)
-                        # self.processor.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
-                        # self.model.resize_token_embeddings(len(self.processor.tokenizer))
-                        # self.processor.tokenizer.pad_token_id = self.processor.tokenizer.convert_tokens_to_ids('[PAD]')
-                        logger.warning(f"pad_token_id is None and eos_token_id is None for {self.model_name}. This might cause issues.")
-                
-                if hasattr(self.processor.tokenizer, 'padding_side'):
-                    self.processor.tokenizer.padding_side = "left" # Qwen prefers left padding for generation
-                    logger.info(f"Set processor.tokenizer.padding_side to 'left' for {self.model_name}")
-
-            logger.info(f"Manual generator model {self.model_name} loaded successfully.")
-
+            logger.info("✅ Base model loaded successfully")
         except Exception as e:
-            logger.error(f"Error loading manual generator model {self.model_name}: {e}", exc_info=True)
-            raise
+            logger.error(f"Failed to load base model {base_model_name}: {e}")
+            raise RuntimeError(f"Cannot load any model - both custom and base model failed: {e}")
+
+    def _configure_tokenizer(self):
+        """Configure tokenizer settings for generation"""
+        if not self.processor:
+            return
+            
+        # Configure tokenizer padding (from original implementation)
+        if self.processor.tokenizer.pad_token_id is None:
+            if self.processor.tokenizer.eos_token_id is not None:
+                self.processor.tokenizer.pad_token_id = self.processor.tokenizer.eos_token_id
+                logger.info(f"Set pad_token_id to eos_token_id ({self.processor.tokenizer.eos_token_id})")
+            else:
+                logger.warning("Both pad_token_id and eos_token_id are None - this might cause issues")
+        
+        # Qwen models prefer left padding for generation
+        if hasattr(self.processor.tokenizer, 'padding_side'):
+            self.processor.tokenizer.padding_side = "left"
+            logger.info("Set tokenizer padding_side to 'left' for generation")
+
+    def _process_vision_info_simple(self, messages):
+        """
+        Simplified processing for extracting images and text from multimodal messages.
+        Based on original implementation.
+        """
+        images = []
+        for msg in messages:
+            if "content" in msg:
+                for content in msg["content"]:
+                    if isinstance(content, dict) and content.get("type") == "image":
+                        if "image" in content:
+                            # Assume content["image"] is a PIL.Image object
+                            images.append(content["image"])
+        return images, None
 
     async def generate_manual_text(
         self, 
@@ -171,27 +270,57 @@ Información adicional de las imágenes:
                  messages_for_template[0]["content"].append({"type": "image", "image": img})
             messages_for_template[0]["content"].append({"type": "text", "text": user_text_prompt})
 
+            # Apply chat template first (following original implementation)
             chat_text_for_model = self.processor.apply_chat_template(
                 messages_for_template, tokenize=False, add_generation_prompt=True
             )
             
-            inputs = self.processor(
-                text=[chat_text_for_model], images=pil_images, return_tensors="pt", padding=True
-            ).to(self.model.device)
+            try:
+                # Method 1: Using process_vision_info_simple (original approach)
+                image_inputs, _ = self._process_vision_info_simple(messages_for_template)
+                inputs = self.processor(
+                    text=[chat_text_for_model], 
+                    images=image_inputs, 
+                    return_tensors="pt", 
+                    padding=True
+                ).to(self.model.device)
+                
+                with torch.no_grad():
+                    generated_ids = self.model.generate(
+                        **inputs,
+                        max_new_tokens=self.settings.MANUAL_GENERATION_MAX_NEW_TOKENS,
+                        do_sample=self.settings.MANUAL_GENERATION_DO_SAMPLE,
+                        temperature=self.settings.MANUAL_GENERATION_TEMPERATURE,
+                        top_p=self.settings.MANUAL_GENERATION_TOP_P
+                    )
+                
+                # Trim input tokens to get only the response
+                trimmed_ids = [out[len(inp):] for inp, out in zip(inputs.input_ids, generated_ids)]
+                generated_text = self.processor.batch_decode(trimmed_ids, skip_special_tokens=True)[0]
+                logger.info("Original method with process_vision_info_simple successful.")
+                
+            except Exception as e_vision:
+                logger.warning(f"Method with process_vision_info_simple failed: {e_vision}")
+                logger.info("Trying direct method...")
+                
+                # Method 2: Direct approach (fallback)
+                inputs = self.processor(
+                    text=[chat_text_for_model], images=pil_images, return_tensors="pt", padding=True
+                ).to(self.model.device)
 
-            with torch.no_grad():
-                output_ids = self.model.generate(
-                    **inputs,
-                    max_new_tokens=self.settings.MANUAL_GENERATION_MAX_NEW_TOKENS,
-                    do_sample=self.settings.MANUAL_GENERATION_DO_SAMPLE,
-                    temperature=self.settings.MANUAL_GENERATION_TEMPERATURE,
-                    top_p=self.settings.MANUAL_GENERATION_TOP_P
-                )
-            
-            input_token_len = inputs.input_ids.shape[1]
-            generated_ids_only = output_ids[:, input_token_len:]
-            generated_text = self.processor.batch_decode(generated_ids_only, skip_special_tokens=True)[0]
-            logger.info("Main generation method successful.")
+                with torch.no_grad():
+                    output_ids = self.model.generate(
+                        **inputs,
+                        max_new_tokens=self.settings.MANUAL_GENERATION_MAX_NEW_TOKENS,
+                        do_sample=self.settings.MANUAL_GENERATION_DO_SAMPLE,
+                        temperature=self.settings.MANUAL_GENERATION_TEMPERATURE,
+                        top_p=self.settings.MANUAL_GENERATION_TOP_P
+                    )
+                
+                input_token_len = inputs.input_ids.shape[1]
+                generated_ids_only = output_ids[:, input_token_len:]
+                generated_text = self.processor.batch_decode(generated_ids_only, skip_special_tokens=True)[0]
+                logger.info("Direct method successful.")
 
         except Exception as e_main:
             logger.error(f"Error with main generation method (padding_side: {current_padding_side}): {e_main}", exc_info=True)
@@ -234,7 +363,7 @@ Información adicional de las imágenes:
         self, 
         query: str, 
         manual_text: str, 
-        images_metadata: List[Dict[str, Any]]
+        image_metadata_list: List[Dict[str, Any]]
     ) -> str:
         """
         Generate a PowerPoint presentation from manual text and images.
@@ -305,13 +434,13 @@ Información adicional de las imágenes:
                     content_placeholder.text = section_content[:500]  # Limit text length
             
             # Add images slide
-            if images_metadata:
+            if image_metadata_list:
                 images_slide = prs.slides.add_slide(content_layout)
                 if hasattr(images_slide.shapes, 'title') and images_slide.shapes.title:
                     images_slide.shapes.title.text = "Imágenes de Referencia"
                 
                 # Add up to 4 images per slide
-                for i, img_meta in enumerate(images_metadata[:4]):
+                for i, img_meta in enumerate(image_metadata_list[:4]):
                     if "image_path" in img_meta:
                         img_path = img_meta["image_path"]
                         full_img_path = os.path.join(self.image_folder, img_path) if not os.path.isabs(img_path) else img_path

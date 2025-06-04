@@ -44,21 +44,19 @@ class ManualGenDocument(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    # It's highly recommended to create an index on the 'embedding' column for performance
-    # with similarity search operations (like <->). The type of index (HNSW, IVFFlat)
-    # and its parameters depend on your dataset size, query patterns, and pgvector version.
-    # Example for HNSW (often a good default for high accuracy):
-    __table_args__ = (
-        Index(
-            'idx_manual_gen_embedding_hnsw', # Index name
-            embedding,                       # Column to index
-            postgresql_using='hnsw',         # Index type
-            postgresql_with={                # Index parameters
-                'm': 16,                     # Max connections per node
-                'ef_construction': 64        # Size of dynamic candidate list for construction
-            }
-        ),
-    )
+    # Index will be created separately to handle potential operator class issues
+    # __table_args__ = (
+    #     Index(
+    #         'idx_manual_gen_embedding_hnsw', # Index name
+    #         embedding,                       # Column to index
+    #         postgresql_using='hnsw',         # Index type
+    #         postgresql_ops={'embedding': 'vector_cosine_ops'},  # Specify operator class
+    #         postgresql_with={                # Index parameters
+    #             'm': 16,                     # Max connections per node
+    #             'ef_construction': 64        # Size of dynamic candidate list for construction
+    #         }
+    #     ),
+    # )
     # Example for IVFFlat (can be faster for very large datasets, may need tuning):
     # __table_args__ = (
     #     Index(

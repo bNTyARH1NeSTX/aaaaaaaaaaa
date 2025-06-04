@@ -321,6 +321,105 @@ def get_settings() -> Settings:
         raise ValueError("'model' is required in the rules configuration")
     rules_config["RULES_MODEL"] = config["rules"]["model"]
 
+    # load document analysis config
+    document_analysis_config = {}
+    if "document_analysis" in config and "model" in config["document_analysis"]:
+        document_analysis_config["DOCUMENT_ANALYSIS_MODEL"] = config["document_analysis"]["model"]
+
+    # load parser config
+    parser_config = {
+        "CHUNK_SIZE": config["parser"]["chunk_size"],
+        "CHUNK_OVERLAP": config["parser"]["chunk_overlap"],
+        "USE_UNSTRUCTURED_API": config["parser"]["use_unstructured_api"],
+        "USE_CONTEXTUAL_CHUNKING": config["parser"]["use_contextual_chunking"],
+    }
+
+    # load reranker config
+    reranker_config = {}
+    if "reranker" in config:
+        reranker_config = {
+            "USE_RERANKING": config["reranker"].get("use_reranker", False),
+            "RERANKER_PROVIDER": config["reranker"].get("provider"),
+            "RERANKER_MODEL": config["reranker"].get("model_name"),
+            "RERANKER_QUERY_MAX_LENGTH": config["reranker"].get("query_max_length"),
+            "RERANKER_PASSAGE_MAX_LENGTH": config["reranker"].get("passage_max_length"),
+            "RERANKER_USE_FP16": config["reranker"].get("use_fp16"),
+            "RERANKER_DEVICE": config["reranker"].get("device"),
+        }
+
+    # load graph config
+    graph_config = {}
+    if "graph" in config:
+        graph_config = {
+            "GRAPH_PROVIDER": "litellm",
+            "ENABLE_ENTITY_RESOLUTION": config["graph"].get("enable_entity_resolution", True),
+        }
+        if "model" in config["graph"]:
+            graph_config["GRAPH_MODEL"] = config["graph"]["model"]
+
+    # load morphik config
+    morphik_config = {
+        "ENABLE_COLPALI": config["morphik"]["enable_colpali"],
+        "COLPALI_MODE": config["morphik"]["colpali_mode"],
+        "MODE": config["morphik"]["mode"],
+        "MORPHIK_EMBEDDING_API_DOMAIN": config["morphik"]["morphik_embedding_api_domain"],
+    }
+
+    # load redis config
+    redis_config = {
+        "REDIS_HOST": config["redis"]["host"],
+        "REDIS_PORT": config["redis"]["port"],
+        "REDIS_DB": 0,
+    }
+
+    # load telemetry config
+    telemetry_config = {}
+    if "telemetry" in config:
+        telemetry_config = {
+            "TELEMETRY_ENABLED": config["telemetry"].get("enabled", True),
+            "HONEYCOMB_ENABLED": config["telemetry"].get("honeycomb_enabled", True),
+            "HONEYCOMB_ENDPOINT": config["telemetry"].get("honeycomb_endpoint", "https://api.honeycomb.io"),
+            "HONEYCOMB_PROXY_ENDPOINT": config["telemetry"].get("honeycomb_proxy_endpoint"),
+            "SERVICE_NAME": config["telemetry"].get("service_name", "morphik-core"),
+            "OTLP_TIMEOUT": config["telemetry"].get("otlp_timeout", 10),
+            "OTLP_MAX_RETRIES": config["telemetry"].get("otlp_max_retries", 3),
+            "OTLP_RETRY_DELAY": config["telemetry"].get("otlp_retry_delay", 1),
+            "OTLP_MAX_EXPORT_BATCH_SIZE": config["telemetry"].get("otlp_max_export_batch_size", 512),
+            "OTLP_SCHEDULE_DELAY_MILLIS": config["telemetry"].get("otlp_schedule_delay_millis", 5000),
+            "OTLP_MAX_QUEUE_SIZE": config["telemetry"].get("otlp_max_queue_size", 2048),
+        }
+
+    # load manual generation config
+    manual_gen_config = {}
+    if "manual_generation" in config:
+        manual_gen_config = {
+            "COLPALI_MODEL_NAME": config["manual_generation"].get("colpali_model_name"),
+            "MANUAL_MODEL_NAME": config["manual_generation"].get("manual_model_name"),
+            "MANUAL_GENERATION_IMAGE_FOLDER": config["manual_generation"].get("image_folder"),
+            "MANUAL_GENERATION_MAX_NEW_TOKENS": config["manual_generation"].get("max_new_tokens", 1024),
+            "MANUAL_GENERATION_TEMPERATURE": config["manual_generation"].get("temperature", 0.7),
+            "MANUAL_GENERATION_DO_SAMPLE": config["manual_generation"].get("do_sample", True),
+            "MANUAL_GENERATION_TOP_P": config["manual_generation"].get("top_p", 0.9),
+        }
+
+    # load manual generation database config from environment
+    manual_gen_db_config = {}
+    if "MANUAL_GEN_DB_URI" in os.environ:
+        manual_gen_db_config["MANUAL_GEN_DB_URI"] = os.environ["MANUAL_GEN_DB_URI"]
+
+    # load huggingface config
+    huggingface_config = {
+        "HUGGING_FACE_TOKEN": os.getenv("HUGGING_FACE_TOKEN"),
+    }
+
+    # load openai config
+    openai_config = {
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+        "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
+        "ASSEMBLYAI_API_KEY": os.getenv("ASSEMBLYAI_API_KEY"),
+    }
+    rules_config["RULES_MODEL"] = config["rules"]["model"]
+
     # load morphik config
     morphik_config = {
         "ENABLE_COLPALI": config["morphik"]["enable_colpali"],

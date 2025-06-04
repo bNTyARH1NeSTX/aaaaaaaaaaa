@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 // API Configurationa
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://lqkq229rvwe6oi-8000.proxy.runpod.net';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://op10na1qhzsc5m-8000.proxy.runpod.net';
 
 // Axios instance with default configuration
 const api = axios.create({

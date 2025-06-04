@@ -148,7 +148,7 @@ otlp_max_queue_size = 2048
 [manual_generation]
 colpali_model_name = "ARHVNAAG/Bnext"
 manual_model_name = "ARHVNAAG/Manuales_finetuning_generator"
-image_folder = "/root/.ipython/ERP_screenshots"
+image_folder = "/root/.ipython/aaaaaaaaaaa/ERP_screenshots"
 max_new_tokens = 1500 
 temperature = 0.3
 do_sample = true

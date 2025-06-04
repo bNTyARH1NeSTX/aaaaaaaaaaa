@@ -344,3 +344,4 @@ litellm==1.65.4.post1
 instructor==1.7.9
 pi_heif
 psycopg_pool
+huggingface_hub

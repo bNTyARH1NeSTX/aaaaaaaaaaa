@@ -50,9 +50,8 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
                 self.manual_gen_db_engine = create_engine(self.settings.MANUAL_GEN_DB_URI, pool_pre_ping=True)
                 self.ManualGenSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.manual_gen_db_engine)
                 logger.info(f"Successfully connected to manual generation database: {self.settings.MANUAL_GEN_DB_URI.split('@')[-1]}") 
-                # Create tables if they don't exist (idempotent)
-                ManualGenBase.metadata.create_all(bind=self.manual_gen_db_engine) # Use the Base from manual_generation_document.py
-                logger.info(f"Ensured table '{ManualGenDocument.__tablename__}' exists in manual gen DB.")
+                # Create tables if they don't exist (idempotent) - do this in a separate method
+                self._ensure_tables()
             except Exception as e:
                 logger.error(f"Failed to connect to manual generation database ({self.settings.MANUAL_GEN_DB_URI.split('@')[-1]}) or ensure table: {e}")
                 self.manual_gen_db_engine = None
@@ -92,6 +91,58 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
                 self.colpali_processor = None
         else:
             logger.error("ColPali not available. Manual generation will not work properly.")
+
+    def _ensure_tables(self):
+        """Ensure database tables exist - separate method to avoid async issues"""
+        try:
+            if self.manual_gen_db_engine:
+                ManualGenBase.metadata.create_all(bind=self.manual_gen_db_engine)
+                logger.info(f"Ensured table '{ManualGenDocument.__tablename__}' exists in manual gen DB.")
+                
+                # Create vector index separately
+                self._create_vector_index()
+        except Exception as e:
+            logger.error(f"Failed to create tables: {e}")
+
+    def _create_vector_index(self):
+        """Create vector index separately to handle operator class issues"""
+        try:
+            if self.manual_gen_db_engine:
+                with self.manual_gen_db_engine.connect() as conn:
+                    # Check if index already exists
+                    result = conn.execute(text("""
+                        SELECT 1 FROM pg_indexes 
+                        WHERE tablename = 'manual_gen_documents' 
+                        AND indexname = 'idx_manual_gen_embedding_hnsw'
+                    """))
+                    
+                    if not result.fetchone():
+                        # Create the HNSW index with proper operator class
+                        conn.execute(text("""
+                            CREATE INDEX idx_manual_gen_embedding_hnsw 
+                            ON manual_gen_documents 
+                            USING hnsw (embedding vector_cosine_ops) 
+                            WITH (m = 16, ef_construction = 64)
+                        """))
+                        conn.commit()
+                        logger.info("Created HNSW index for manual_gen_documents.embedding")
+                    else:
+                        logger.info("HNSW index already exists for manual_gen_documents.embedding")
+        except Exception as e:
+            logger.warning(f"Could not create vector index (table still functional): {e}")
+            # Try creating a simpler index
+            try:
+                if self.manual_gen_db_engine:
+                    with self.manual_gen_db_engine.connect() as conn:
+                        conn.execute(text("""
+                            CREATE INDEX IF NOT EXISTS idx_manual_gen_embedding_simple 
+                            ON manual_gen_documents 
+                            USING btree (id)
+                        """))
+                        conn.commit()
+                        logger.info("Created simple index as fallback")
+            except Exception as e2:
+                logger.warning(f"Could not create fallback index: {e2}")
 
     async def embed_for_ingestion(self, chunks: Union[str, List[str], Chunk, List[Chunk]]) -> List[np.ndarray]:
         """
@@ -217,17 +268,16 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
         # finally:
             # db.close() # If not yielded, close here or ensure caller closes
 
-    def find_relevant_images(self, query: str, top_k: int = 3) -> List[Tuple[str, str, str]]:
+    async def find_relevant_images(self, query: str, k: int = 3) -> List[ManualGenDocument]:
         """
         Busca imágenes relevantes en la base de datos usando ColPali.
         
         Args:
             query: String con la consulta del usuario
-            # session: Database session object - REMOVED, will use self.get_manual_gen_db_session()
-            top_k: Número máximo de resultados a devolver
+            k: Número máximo de resultados a devolver (compatible con API)
             
         Returns:
-            Lista de tuplas (image_path, prompt, respuesta)
+            Lista de ManualGenDocument objects
         """
         logger.info(f"🔎 Buscando imágenes relevantes para: {query}")
 
@@ -276,19 +326,26 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
                     ORDER BY embedding <-> CAST(:query_vec AS vector)
                     LIMIT :limit
                 '''),
-                {"query_vec": query_vector.tolist(), "limit": top_k}
+                {"query_vec": query_vector.tolist(), "limit": k}
             ).fetchall()
             
             if not results:
                 logger.info("❌ No se encontraron imágenes relevantes.")
                 return []
                 
-            relevant_images = []
+            relevant_docs = []
             for result in results:
                 logger.info(f"🎯 Imagen encontrada: {result.image_path}")
-                relevant_images.append((result.image_path, result.prompt, result.respuesta))
+                # Create ManualGenDocument objects from query results
+                doc = ManualGenDocument(
+                    id=result.id,
+                    image_path=result.image_path,
+                    prompt=result.prompt,
+                    respuesta=result.respuesta
+                )
+                relevant_docs.append(doc)
                 
-            return relevant_images
+            return relevant_docs
         except Exception as e:
             logger.error(f"Error during find_relevant_images: {e}")
             return []
