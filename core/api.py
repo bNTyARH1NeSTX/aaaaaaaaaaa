@@ -52,6 +52,19 @@ from core.embedding.manual_generation_embedding_model import ManualGenerationEmb
 from core.services.manual_generator_service import ManualGeneratorService
 from core.models.manual_generation_document import ManualGenDocument
 
+# Import API routers from refactored modules
+from core.api.batch import router as batch_router
+from core.api.cache import router as cache_router
+from core.api.documents import router as documents_router
+from core.api.folders import router as folders_router
+from core.api.graphs import router as graphs_router
+from core.api.health import router as health_router
+from core.api.ingest import router as ingest_router
+from core.api.manual_generation_router import manual_generation_router
+from core.api.query import router as query_router
+from core.api.retrieval import router as retrieval_router
+from core.api.rule_templates import router as rule_templates_router
+from core.api.usage import router as usage_router
 
 # Initialize FastAPI app
 logger = logging.getLogger(__name__)
@@ -120,18 +133,7 @@ logger.info("Document service initialized and stored on app.state")
 # Single MorphikAgent instance (tool definitions cached)
 morphik_agent = MorphikAgent(document_service=document_service)
 
-# Enterprise-only routes (optional)
-# try:
-#     from ee.routers import init_app as _init_ee_app  # type: ignore  # noqa: E402
-#
-#     _init_ee_app(app)  # noqa: SLF001 – runtime extension
-# except ModuleNotFoundError as exc:
-#     logger.debug("Enterprise package not found – running in community mode.")
-#     logger.error("ModuleNotFoundError: %s", exc, exc_info=True)
-# except ImportError as exc:
-#     logger.error("Failed to import init_app from ee.routers: %s", exc, exc_info=True)
-# except Exception as exc:  # noqa: BLE001
-#     logger.error("An unexpected error occurred during EE app initialization: %s", exc, exc_info=True)
+
 logger.info("Enterprise edition (ee) module is not used in this setup.")
 
 # --- Pydantic Models for Manual Generation ---
@@ -166,6 +168,14 @@ class RuleTemplateResponse(BaseModel):
     created_at: str
     updated_at: str
 
+# --- Pydantic Models for API Requests ---
+class ListDocumentsRequest(BaseModel):
+    skip: int = 0
+    limit: int = 10000
+    filters: Optional[Dict[str, Any]] = None
+    folder_name: Optional[Union[str, List[str]]] = None
+    end_user_id: Optional[str] = None
+
 # --- Dependency Providers for Manual Generation ---
 _manual_gen_embedding_model_instance: Optional[ManualGenerationEmbeddingModel] = None
 _manual_generator_service_instance: Optional[ManualGeneratorService] = None
@@ -183,92 +193,6 @@ def get_manual_generator_service() -> ManualGeneratorService:
         logger.info("Initializing ManualGeneratorService instance.")
         _manual_generator_service_instance = ManualGeneratorService(settings=settings)
     return _manual_generator_service_instance
-
-# --- Manual Generation Router ---
-manual_generation_router = APIRouter(
-    prefix="/manuals",
-    tags=["Manual Generation"],
-    responses={404: {"description": "Not found"}},
-)
-
-@manual_generation_router.post(
-    "/generate_manual",
-    response_model=ManualGenerationResponse,
-    summary="Generate manual text based on a query and relevant ERP images."
-)
-@telemetry.track(operation_type="generate_manual", metadata_resolver=None) # TODO: Implement resolve_manual_generation_metadata on TelemetryService
-async def generate_manual_endpoint(
-    request: ManualGenerationRequest,
-    auth: AuthContext = Depends(verify_token),
-    embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
-    generator_service: ManualGeneratorService = Depends(get_manual_generator_service),
-):
-    """
-    Generates textual content for a manual.
-
-    - If **image_path** and **image_prompt** are provided, the specified image and its description are used.
-    - Otherwise, relevant images are found based on the **query** using the ColPali model.
-    - The **query** is then used with the selected image(s) and their descriptive prompts to generate
-      manual content using a fine-tuned Vision Language Model (VLM).
-    """
-    # Example permission check (adjust as needed)
-    # if "generate_manual" not in auth.permissions:
-    #     raise HTTPException(status_code=403, detail="User does not have permission to generate manuals.")
-
-    relevant_images_metadata = []
-
-    if request.image_path:
-        if not request.image_prompt:
-            logger.warning("image_path provided without image_prompt for manual generation.")
-            raise HTTPException(status_code=400, detail="If image_path is provided, image_prompt (description of the image content) must also be provided.")
-        logger.info(f"Using provided image: {request.image_path} for manual generation.")
-        relevant_images_metadata.append(
-            {"image_path": request.image_path, "prompt": request.image_prompt, "respuesta": ""} # 'respuesta' might be unknown or not applicable here
-        )
-    else:
-        logger.info(f"Finding relevant images for query: '{request.query}' with k={request.k_images}")
-        try:
-            found_docs = await embedding_model.find_relevant_images(
-                query=request.query,
-                k=request.k_images,
-            )
-            if not found_docs:
-                logger.warning(f"No relevant images found for query: '{request.query}'")
-                raise HTTPException(status_code=404, detail="No relevant images found for the query.")
-
-            for doc in found_docs:
-                relevant_images_metadata.append(
-                    {"image_path": doc.image_path, "prompt": doc.prompt, "respuesta": doc.respuesta}
-                )
-            logger.info(f"Found {len(relevant_images_metadata)} relevant images.")
-        except HTTPException:
-            raise # Re-raise HTTPException directly
-        except Exception as e:
-            logger.error(f"Error finding relevant images: {str(e)}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"An error occurred while finding relevant images: {str(e)}")
-
-    if not relevant_images_metadata:
-        logger.error("No image metadata available to generate manual after processing request.") # Should have been caught earlier
-        raise HTTPException(status_code=404, detail="No image metadata available to generate manual. Please check your query or provided image path.")
-
-    try:
-        logger.info(f"Generating manual text for query: '{request.query}' using {len(relevant_images_metadata)} image(s).")
-        generated_text_result = await generator_service.generate_manual_text(
-            query=request.query, # This is the user's task/question for the manual
-            image_metadata_list=relevant_images_metadata, # This contains image_path and their descriptive prompts
-        )
-        logger.info(f"Successfully generated manual text for query: '{request.query}'.")
-    except HTTPException:
-        raise # Re-raise HTTPException directly
-    except Exception as e:
-        logger.error(f"Error generating manual text: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"An error occurred during manual text generation: {str(e)}")
-
-    return ManualGenerationResponse(
-        generated_text=generated_text_result,
-        relevant_images_used=relevant_images_metadata,
-        query=request.query,
-    )
 
 @manual_generation_router.post(
     "/generate_powerpoint",
@@ -1211,37 +1135,34 @@ async def get_images_status_endpoint(
 @app.post("/documents", response_model=List[Document])
 @telemetry.track(operation_type="list_documents", metadata_resolver=None)
 async def list_documents(
+    request: ListDocumentsRequest,
     auth: AuthContext = Depends(verify_token),
-    skip: int = 0,
-    limit: int = 10000,
-    filters: Optional[Dict[str, Any]] = None,
-    folder_name: Optional[Union[str, List[str]]] = None,
-    end_user_id: Optional[str] = None,
 ):
     """
     List accessible documents.
 
     Args:
+        request: Request body containing:
+            - skip: Number of documents to skip
+            - limit: Maximum number of documents to return  
+            - filters: Optional metadata filters
+            - folder_name: Optional folder to scope the operation to
+            - end_user_id: Optional end-user ID to scope the operation to
         auth: Authentication context
-        skip: Number of documents to skip
-        limit: Maximum number of documents to return
-        filters: Optional metadata filters
-        folder_name: Optional folder to scope the operation to
-        end_user_id: Optional end-user ID to scope the operation to
 
     Returns:
         List[Document]: List of accessible documents
     """
     # Create system filters for folder and user scoping
     system_filters = {}
-    if folder_name:
-        system_filters["folder_name"] = folder_name
-    if end_user_id:
-        system_filters["end_user_id"] = end_user_id
+    if request.folder_name:
+        system_filters["folder_name"] = request.folder_name
+    if request.end_user_id:
+        system_filters["end_user_id"] = request.end_user_id
     if auth.app_id:
         system_filters["app_id"] = auth.app_id
 
-    return await document_service.db.get_documents(auth, skip, limit, filters, system_filters)
+    return await document_service.db.get_documents(auth, request.skip, request.limit, request.filters, system_filters)
 
 
 @app.get("/documents/{document_id}", response_model=Document)
@@ -1274,6 +1195,136 @@ async def get_document_by_filename(filename: str, auth: AuthContext = Depends(ve
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
+
+
+@app.post("/documents/{document_id}/update_text", response_model=Document)
+@telemetry.track(operation_type="update_document_text", metadata_resolver=telemetry.document_update_text_metadata)
+async def update_document_text(
+    document_id: str,
+    request: IngestTextRequest,
+    update_strategy: str = "add",
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Update a document with new text content using the specified strategy.
+
+    Args:
+        document_id: ID of the document to update
+        request: Text content and metadata for the update
+        update_strategy: Strategy for updating the document (default: 'add')
+
+    Returns:
+        Document: Updated document metadata
+    """
+    try:
+        doc = await document_service.update_document(
+            document_id=document_id,
+            auth=auth,
+            content=request.content,
+            file=None,
+            filename=request.filename,
+            metadata=request.metadata,
+            rules=request.rules,
+            update_strategy=update_strategy,
+            use_colpali=request.use_colpali,
+        )
+
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found or update failed")
+
+        return doc
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@app.post("/documents/{document_id}/update_file", response_model=Document)
+@telemetry.track(operation_type="update_document_file", metadata_resolver=telemetry.document_update_file_metadata)
+async def update_document_file(
+    document_id: str,
+    file: UploadFile,
+    metadata: str = Form("{}"),
+    rules: str = Form("[]"),
+    update_strategy: str = Form("add"),
+    use_colpali: Optional[bool] = Form(None),
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Update a document with content from a file using the specified strategy.
+
+    Args:
+        document_id: ID of the document to update
+        file: File to add to the document
+        metadata: JSON string of metadata to merge with existing metadata
+        rules: JSON string of rules to apply to the content
+        update_strategy: Strategy for updating the document (default: 'add')
+        use_colpali: Whether to use multi-vector embedding
+
+    Returns:
+        Document: Updated document metadata
+    """
+    try:
+        metadata_dict = json.loads(metadata)
+        rules_list = json.loads(rules)
+
+        doc = await document_service.update_document(
+            document_id=document_id,
+            auth=auth,
+            content=None,
+            file=file,
+            filename=file.filename,
+            metadata=metadata_dict,
+            rules=rules_list,
+            update_strategy=update_strategy,
+            use_colpali=use_colpali,
+        )
+
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found or update failed")
+
+        return doc
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@app.post("/documents/{document_id}/update_metadata", response_model=Document)
+@telemetry.track(
+    operation_type="update_document_metadata",
+    metadata_resolver=telemetry.document_update_metadata_resolver,
+)
+async def update_document_metadata(
+    document_id: str, metadata: Dict[str, Any], auth: AuthContext = Depends(verify_token)
+):
+    """
+    Update only a document's metadata.
+
+    Args:
+        document_id: ID of the document to update
+        metadata: New metadata to merge with existing metadata
+
+    Returns:
+        Document: Updated document metadata
+    """
+    try:
+        doc = await document_service.update_document(
+            document_id=document_id,
+            auth=auth,
+            content=None,
+            file=None,
+            filename=None,
+            metadata=metadata,
+            rules=[],
+            update_strategy="add",
+            use_colpali=None,
+        )
+
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found or update failed")
+
+        return doc
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
 
 
 # ---------------------------------------------------------------------------
@@ -1396,13 +1447,689 @@ async def list_graphs(
         if auth.app_id:
             system_filters["app_id"] = auth.app_id
 
-        graphs = await document_service.db.get_graphs(auth, system_filters=system_filters)
+        graphs = await document_service.db.list_graphs(auth, system_filters=system_filters)
         return [transform_graph_to_frontend_format(graph) for graph in graphs]
     except Exception as e:
         logger.error(f"Error listing graphs: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 # ---------------------------------------------------------------------------
-# Include the manual generation router in the main FastAPI app
+# Ingest endpoints
 # ---------------------------------------------------------------------------
+
+@app.post("/ingest/text", response_model=Document)
+@telemetry.track(operation_type="ingest_text", metadata_resolver=telemetry.ingest_text_metadata)
+async def ingest_text(
+    request: IngestTextRequest,
+    auth: AuthContext = Depends(verify_token),
+) -> Document:
+    """
+    Ingest a text document.
+
+    Args:
+        request: IngestTextRequest containing:
+            - content: Text content to ingest
+            - filename: Optional filename to help determine content type
+            - metadata: Optional metadata dictionary
+            - rules: Optional list of rules. Each rule should be either:
+                   - MetadataExtractionRule: {"type": "metadata_extraction", "schema": {...}}
+                   - NaturalLanguageRule: {"type": "natural_language", "prompt": "..."}
+            - folder_name: Optional folder to scope the document to
+            - end_user_id: Optional end-user ID to scope the document to
+        auth: Authentication context
+
+    Returns:
+        Document: Metadata of ingested document
+    """
+    try:
+        # Verify limits before processing - this will call the function from limits_utils
+        if settings.MODE == "cloud" and auth.user_id:
+            num_pages_estimated = estimate_pages_by_chars(len(request.content))
+            await check_and_increment_limits(
+                auth,
+                "ingest",
+                num_pages_estimated,
+                verify_only=True,  # This initial check in API remains verify_only=True
+                # Final recording will be done in DocumentService.ingest_text
+            )
+
+        return await document_service.ingest_text(
+            content=request.content,
+            filename=request.filename,
+            metadata=request.metadata,
+            rules=request.rules,
+            use_colpali=request.use_colpali,
+            auth=auth,
+            folder_name=request.folder_name,
+            end_user_id=request.end_user_id,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@app.post("/ingest/file", response_model=Document)
+@telemetry.track(operation_type="queue_ingest_file", metadata_resolver=telemetry.ingest_file_metadata)
+async def ingest_file(
+    file: UploadFile,
+    metadata: str = Form("{}"),
+    rules: str = Form("[]"),
+    auth: AuthContext = Depends(verify_token),
+    use_colpali: Optional[bool] = Form(None),
+    folder_name: Optional[str] = Form(None),
+    end_user_id: Optional[str] = Form(None),
+    redis: arq.ArqRedis = Depends(get_redis_pool),
+) -> Document:
+    """
+    Ingest a file document asynchronously.
+
+    Args:
+        file: File to ingest
+        metadata: JSON string of metadata
+        rules: JSON string of rules list. Each rule should be either:
+               - MetadataExtractionRule: {"type": "metadata_extraction", "schema": {...}}
+               - NaturalLanguageRule: {"type": "natural_language", "prompt": "..."}
+        auth: Authentication context
+        use_colpali: Whether to use ColPali embedding model
+        folder_name: Optional folder to scope the document to
+        end_user_id: Optional end-user ID to scope the document to
+        redis: Redis connection pool for background tasks
+
+    Returns:
+        Document with processing status that can be used to check progress
+    """
+    try:
+        # Parse metadata and rules
+        metadata_dict = json.loads(metadata)
+        rules_list = json.loads(rules)
+
+        # Fix bool conversion: ensure string "false" is properly converted to False
+        def str2bool(v):
+            return v if isinstance(v, bool) else str(v).lower() in {"true", "1", "yes"}
+
+        use_colpali_bool = str2bool(use_colpali)  # Renamed to avoid conflict
+
+        # Ensure user has write permission
+        if "write" not in auth.permissions:
+            raise PermissionError("User does not have write permission")
+
+        logger.debug(f"API: Queueing file ingestion with use_colpali: {use_colpali_bool}")
+
+        # Create a document with processing status
+        doc = Document(
+            content_type=file.content_type,
+            filename=file.filename,
+            metadata=metadata_dict,
+            owner={"type": auth.entity_type.value, "id": auth.entity_id},
+            access_control={
+                "readers": [auth.entity_id],
+                "writers": [auth.entity_id],
+                "admins": [auth.entity_id],
+                "user_id": [auth.user_id if auth.user_id else []],
+                "app_access": ([auth.app_id] if auth.app_id else []),
+            },
+            system_metadata={"status": "processing"},
+        )
+
+        # Add folder_name and end_user_id to system_metadata if provided
+        if folder_name:
+            doc.system_metadata["folder_name"] = folder_name
+        if end_user_id:
+            doc.system_metadata["end_user_id"] = end_user_id
+        if auth.app_id:
+            doc.system_metadata["app_id"] = auth.app_id
+
+        # Set processing status
+        doc.system_metadata["status"] = "processing"
+
+        # Store the document in the *per-app* database that verify_token has
+        # already routed to (document_service.db).  Using the global
+        # *database* here would put the row into the control-plane DB and the
+        # ingestion worker – which connects to the per-app DB – would never
+        # find it.
+        app_db = document_service.db
+
+        success = await app_db.store_document(doc)
+        if not success:
+            raise Exception("Failed to store document metadata")
+
+        # If folder_name is provided, ensure the folder exists and add document to it
+        if folder_name:
+            try:
+                await document_service._ensure_folder_exists(folder_name, doc.external_id, auth)
+                logger.debug(f"Ensured folder '{folder_name}' exists and contains document {doc.external_id}")
+            except Exception as e:
+                # Log error but don't raise - we want document ingestion to continue even if folder operation fails
+                logger.error(f"Error ensuring folder exists: {e}")
+
+        # Read file content
+        file_content = await file.read()
+
+        # --------------------------------------------
+        # Enforce storage limits (file & size) early
+        # This check remains verify_only=True here, final recording in worker.
+        # --------------------------------------------
+        if settings.MODE == "cloud" and auth.user_id:
+            await check_and_increment_limits(auth, "storage_file", 1, verify_only=True)
+            await check_and_increment_limits(auth, "storage_size", len(file_content), verify_only=True)
+            # Ingest limit pre-check will be done in the worker after parsing.
+
+        # Generate a unique key for the file
+        file_key = f"ingest_uploads/{uuid.uuid4()}/{file.filename}"
+
+        # Store the file in the dedicated bucket for this app (if any)
+        file_content_base64 = base64.b64encode(file_content).decode()
+
+        bucket_override = await document_service._get_bucket_for_app(auth.app_id)
+
+        bucket, stored_key = await storage.upload_from_base64(
+            file_content_base64,
+            file_key,
+            file.content_type,
+            bucket=bucket_override or "",
+        )
+        logger.debug(f"Stored file in bucket {bucket} with key {stored_key}")
+
+        # Update document with storage info
+        doc.storage_info = {"bucket": bucket, "key": stored_key}
+
+        # Initialise storage_files array with the first file
+        from datetime import UTC, datetime
+
+        from core.models.documents import StorageFileInfo
+
+        # Create a StorageFileInfo for the initial file
+        initial_file_info = StorageFileInfo(
+            bucket=bucket,
+            key=stored_key,
+            version=1,
+            filename=file.filename,
+            content_type=file.content_type,
+            timestamp=datetime.now(UTC),
+        )
+        doc.storage_files = [initial_file_info]
+
+        # Log storage files
+        logger.debug(f"Initial storage_files for {doc.external_id}: {doc.storage_files}")
+
+        # Update both storage_info and storage_files
+        await app_db.update_document(
+            document_id=doc.external_id,
+            updates={"storage_info": doc.storage_info, "storage_files": doc.storage_files},
+            auth=auth,
+        )
+
+        # ------------------------------------------------------------------
+        # Record storage usage now that the upload succeeded (cloud mode)
+        # ------------------------------------------------------------------
+        if settings.MODE == "cloud" and auth.user_id:
+            try:
+                await check_and_increment_limits(auth, "storage_file", 1)
+                await check_and_increment_limits(auth, "storage_size", len(file_content))
+            except Exception as rec_exc:  # noqa: BLE001
+                logger.error("Failed to record storage usage in ingest_file: %s", rec_exc)
+
+        # Convert auth context to a dictionary for serialization
+        auth_dict = {
+            "entity_type": auth.entity_type.value,
+            "entity_id": auth.entity_id,
+            "app_id": auth.app_id,
+            "permissions": list(auth.permissions),
+            "user_id": auth.user_id,
+        }
+
+        # Enqueue the background job
+        job = await redis.enqueue_job(
+            "process_ingestion_job",
+            document_id=doc.external_id,
+            file_key=stored_key,
+            bucket=bucket,
+            original_filename=file.filename,
+            content_type=file.content_type,
+            metadata_json=metadata,
+            auth_dict=auth_dict,
+            rules_list=rules_list,
+            use_colpali=use_colpali_bool,  # Pass the boolean
+            folder_name=folder_name,
+            end_user_id=end_user_id,
+        )
+
+        logger.info(f"File ingestion job queued with ID: {job.job_id} for document: {doc.external_id}")
+
+        return doc
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error during file ingestion: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during file ingestion: {str(e)}")
+
+
+@app.post("/ingest/files", response_model=BatchIngestResponse)
+@telemetry.track(operation_type="queue_batch_ingest", metadata_resolver=telemetry.batch_ingest_metadata)
+async def batch_ingest_files(
+    metadata: str = Form("{}"),
+    rules: str = Form("[]"),
+    use_colpali: Optional[bool] = Form(None),  # Keep Optional[bool] for Form
+    parallel: Optional[bool] = Form(True),
+    folder_name: Optional[str] = Form(None),
+    end_user_id: Optional[str] = Form(None),
+    files: List[UploadFile] = File(...), # Moved files to be after other Form fields
+    auth: AuthContext = Depends(verify_token),
+    redis: arq.ArqRedis = Depends(get_redis_pool),
+) -> BatchIngestResponse:
+    """
+    Batch ingest multiple files using the task queue.
+
+    Args:
+        metadata: JSON string of metadata (either a single dict or list of dicts)
+        rules: JSON string of rules list. Can be either:
+               - A single list of rules to apply to all files
+               - A list of rule lists, one per file
+        use_colpali: Whether to use ColPali-style embedding
+        parallel: Whether to run ingestion jobs in parallel (not fully implemented for true parallelism yet)
+        folder_name: Optional folder to scope the documents to
+        end_user_id: Optional end-user ID to scope the documents to
+        files: List of files to ingest
+        auth: Authentication context
+        redis: Redis connection pool for background tasks
+
+    Returns:
+        BatchIngestResponse containing:
+            - documents: List of created documents with processing status
+            - errors: List of errors that occurred during the batch operation
+    """
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided for batch ingestion")
+
+    try:
+        metadata_value = json.loads(metadata)
+        rules_list = json.loads(rules)
+
+        # Fix bool conversion: ensure string "false" is properly converted to False
+        def str2bool(v):
+            return str(v).lower() in {"true", "1", "yes"}
+
+        use_colpali_bool = str2bool(use_colpali)  # Renamed for clarity
+
+        # Ensure user has write permission
+        if "write" not in auth.permissions:
+            raise PermissionError("User does not have write permission")
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {str(e)}")
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+    # Validate metadata if it's a list
+    if isinstance(metadata_value, list) and len(metadata_value) != len(files):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Number of metadata items ({len(metadata_value)}) must match number of files ({len(files)})",
+        )
+
+    # Validate rules if it's a list of lists
+    if isinstance(rules_list, list) and rules_list and isinstance(rules_list[0], list):
+        if len(rules_list) != len(files):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Number of rule lists ({len(rules_list)}) must match number of files ({len(files)})",
+            )
+
+    # Convert auth context to a dictionary for serialization
+    auth_dict = {
+        "entity_type": auth.entity_type.value,
+        "entity_id": auth.entity_id,
+        "app_id": auth.app_id,
+        "permissions": list(auth.permissions),
+        "user_id": auth.user_id,
+    }
+
+    created_documents = []
+
+    try:
+        for i, file in enumerate(files):
+            # Get the metadata and rules for this file
+            metadata_item = metadata_value[i] if isinstance(metadata_value, list) else metadata_value
+            file_rules = (
+                rules_list[i]
+                if isinstance(rules_list, list) and rules_list and isinstance(rules_list[0], list)
+                else rules_list
+            )
+
+            # Create a document with processing status
+            doc = Document(
+                content_type=file.content_type,
+                filename=file.filename,
+                metadata=metadata_item,
+                owner={"type": auth.entity_type.value, "id": auth.entity_id},
+                access_control={
+                    "readers": [auth.entity_id],
+                    "writers": [auth.entity_id],
+                    "admins": [auth.entity_id],
+                    "user_id": [auth.user_id] if auth.user_id else [],
+                    "app_access": ([auth.app_id] if auth.app_id else []),
+                },
+            )
+
+            # Add folder_name and end_user_id to system_metadata if provided
+            if folder_name:
+                doc.system_metadata["folder_name"] = folder_name
+            if end_user_id:
+                doc.system_metadata["end_user_id"] = end_user_id
+            if auth.app_id:
+                doc.system_metadata["app_id"] = auth.app_id
+
+            # Set processing status
+            doc.system_metadata["status"] = "processing"
+
+            # Store the document in the *per-app* database that verify_token has
+            # already routed to (document_service.db).  Using the global
+            # *database* here would put the row into the control-plane DB and the
+            # ingestion worker – which connects to the per-app DB – would never
+            # find it.
+            app_db = document_service.db
+
+            success = await app_db.store_document(doc)
+            if not success:
+                raise Exception(f"Failed to store document metadata for {file.filename}")
+
+            # If folder_name is provided, ensure the folder exists and add document to it
+            if folder_name:
+                try:
+                    await document_service._ensure_folder_exists(folder_name, doc.external_id, auth)
+                    logger.debug(f"Ensured folder '{folder_name}' exists and contains document {doc.external_id}")
+                except Exception as e:
+                    # Log error but don't raise - we want document ingestion to continue even if folder operation fails
+                    logger.error(f"Error ensuring folder exists: {e}")
+
+            # Read file content
+            file_content = await file.read()
+
+            # --------------------------------------------
+            # Enforce storage limits (file & size) early
+            # This check remains verify_only=True here.
+            # --------------------------------------------
+            if settings.MODE == "cloud" and auth.user_id:
+                await check_and_increment_limits(auth, "storage_file", 1, verify_only=True)
+                await check_and_increment_limits(auth, "storage_size", len(file_content), verify_only=True)
+                # Ingest limit pre-check will be done in the worker after parsing for each file.
+
+            # Generate a unique key for the file
+            file_key = f"ingest_uploads/{uuid.uuid4()}/{file.filename}"
+
+            # Store the file in the dedicated bucket for this app (if any)
+            file_content_base64 = base64.b64encode(file_content).decode()
+
+            bucket_override = await document_service._get_bucket_for_app(auth.app_id)
+
+            bucket, stored_key = await storage.upload_from_base64(
+                file_content_base64,
+                file_key,
+                file.content_type,
+                bucket=bucket_override or "",
+            )
+            logger.debug(f"Stored file in bucket {bucket} with key {stored_key}")
+
+            # Update document with storage info
+            doc.storage_info = {"bucket": bucket, "key": stored_key}
+            await app_db.update_document(
+                document_id=doc.external_id, updates={"storage_info": doc.storage_info}, auth=auth
+            )
+
+            # ------------------------------------------------------------------
+            # Record storage usage now that the upload succeeded (cloud mode)
+            # ------------------------------------------------------------------
+            if settings.MODE == "cloud" and auth.user_id:
+                try:
+                    await check_and_increment_limits(auth, "storage_file", 1)
+                    await check_and_increment_limits(auth, "storage_size", len(file_content))
+                except Exception as rec_exc:  # noqa: BLE001
+                    logger.error("Failed to record storage usage in ingest_file: %s", rec_exc)
+
+            # Convert metadata to JSON string for job
+            metadata_json = json.dumps(metadata_item)
+
+            # Enqueue the background job
+            job = await redis.enqueue_job(
+                "process_ingestion_job",
+                document_id=doc.external_id,
+                file_key=stored_key,
+                bucket=bucket,
+                original_filename=file.filename,
+                content_type=file.content_type,
+                metadata_json=metadata_json,
+                auth_dict=auth_dict,
+                rules_list=file_rules,
+                use_colpali=use_colpali_bool,  # Pass the boolean
+                folder_name=folder_name,
+                end_user_id=end_user_id,
+            )
+
+            logger.info(f"File ingestion job queued with ID: {job.job_id} for document: {doc.external_id}")
+
+            # Add document to the list
+            created_documents.append(doc)
+
+        # Return information about created documents
+        return BatchIngestResponse(documents=created_documents, errors=[])
+
+    except Exception as e:
+        logger.error(f"Error queueing batch file ingestion: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error queueing batch file ingestion: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# Missing Core Endpoints - Query and Agent
+# ---------------------------------------------------------------------------
+
+@app.post("/query", response_model=CompletionResponse)
+@telemetry.track(operation_type="query", metadata_resolver=telemetry.query_metadata)
+async def query_completion(request: CompletionQueryRequest, auth: AuthContext = Depends(verify_token)):
+    """
+    Generate completion using relevant chunks as context.
+
+    When graph_name is provided, the query will leverage the knowledge graph
+    to enhance retrieval by finding relevant entities and their connected documents.
+
+    Args:
+        request: CompletionQueryRequest containing:
+            - query: Query text
+            - filters: Optional metadata filters
+            - k: Number of chunks to use as context (default: 4)
+            - min_score: Minimum similarity threshold (default: 0.0)
+            - max_tokens: Maximum tokens in completion
+            - temperature: Model temperature
+            - use_reranking: Whether to use reranking
+            - use_colpali: Whether to use ColPali-style embedding model
+            - graph_name: Optional name of the graph to use for knowledge graph-enhanced retrieval
+            - hop_depth: Number of relationship hops to traverse in the graph (1-3)
+            - include_paths: Whether to include relationship paths in the response
+            - prompt_overrides: Optional customizations for entity extraction, resolution, and query prompts
+            - folder_name: Optional folder to scope the operation to
+            - end_user_id: Optional end-user ID to scope the operation to
+            - schema: Optional schema for structured output
+        auth: Authentication context
+
+    Returns:
+        CompletionResponse: Generated text completion or structured output
+    """
+    try:
+        # Validate prompt overrides before proceeding
+        if request.prompt_overrides:
+            validate_prompt_overrides_with_http_exception(request.prompt_overrides, operation_type="query")
+
+        # Check query limits if in cloud mode
+        if settings.MODE == "cloud" and auth.user_id:
+            # Check limits before proceeding
+            await check_and_increment_limits(auth, "query", 1)
+
+        return await document_service.query(
+            request.query,
+            auth,
+            request.filters,
+            request.k,
+            request.min_score,
+            request.max_tokens,
+            request.temperature,
+            request.use_reranking,
+            request.use_colpali,
+            request.graph_name,
+            request.hop_depth,
+            request.include_paths,
+            request.prompt_overrides,
+            request.folder_name,
+            request.end_user_id,
+            request.schema,
+        )
+    except ValueError as e:
+        validate_prompt_overrides_with_http_exception(operation_type="query", error=e)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@app.post("/agent", response_model=Dict[str, Any])
+@telemetry.track(operation_type="agent_query")
+async def agent_query(request: AgentQueryRequest, auth: AuthContext = Depends(verify_token)):
+    """
+    Process a natural language query using the MorphikAgent and return the response.
+    """
+    # Check free-tier agent call limits in cloud mode
+    if settings.MODE == "cloud" and auth.user_id:
+        await check_and_increment_limits(auth, "agent", 1)
+    # Use the shared MorphikAgent instance; per-run state is now isolated internally
+    response = await morphik_agent.run(request.query, auth)
+    # Return the complete response dictionary
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Missing Batch Endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/batch/documents", response_model=List[Document])
+async def batch_documents(
+    request: List[str],
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Retrieve multiple documents by their IDs.
+    
+    Args:
+        request: List of document IDs
+        auth: Authentication context
+        
+    Returns:
+        List[Document]: List of documents
+    """
+    documents = []
+    for doc_id in request:
+        try:
+            doc = await document_service.db.get_document(doc_id, auth)
+            if doc:
+                documents.append(doc)
+        except Exception as e:
+            logger.warning(f"Failed to retrieve document {doc_id}: {str(e)}")
+            continue
+    return documents
+
+
+@app.post("/batch/chunks", response_model=List[ChunkResult])
+async def batch_chunks(
+    request: List[RetrieveRequest],
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Retrieve chunks for multiple queries.
+    
+       
+    
+    Args:
+        request: List of RetrieveRequest objects
+        auth: Authentication context
+        
+    Returns:
+        List[ChunkResult]: List of chunk results
+    """
+    all_chunks = []
+    for retrieve_req in request:
+        try:
+            chunks = await document_service.retrieve(
+                retrieve_req.query,
+                auth,
+                retrieve_req.filters,
+                retrieve_req.k,
+                retrieve_req.min_score,
+                retrieve_req.use_reranking,
+                retrieve_req.use_colpali,
+                retrieve_req.folder_name,
+                retrieve_req.end_user_id,
+            )
+            all_chunks.extend(chunks)
+        except Exception as e:
+            logger.warning(f"Failed to retrieve chunks for query '{retrieve_req.query}': {str(e)}")
+            continue
+    return all_chunks
+
+
+# ---------------------------------------------------------------------------
+# NOTE: All endpoints below have been moved to modular routers
+# Previous duplicate endpoints have been removed to prevent conflicts
+# ---------------------------------------------------------------------------
+
+@app.get("/graphs", response_model=List[GraphResponse])
+@telemetry.track(operation_type="list_graphs", metadata_resolver=None)
+async def list_graphs(
+    auth: AuthContext = Depends(verify_token),
+    folder_name: Optional[Union[str, List[str]]] = None,
+    end_user_id: Optional[str] = None,
+) -> List[GraphResponse]:
+    """
+    List all graphs the user has access to.
+
+    This endpoint retrieves all graphs the user has access to
+    and transforms them to frontend-compatible format.
+
+    Args:
+        auth: Authentication context
+        folder_name: Optional folder to scope the operation to
+        end_user_id: Optional end-user ID to scope the operation to
+
+    Returns:
+        List[GraphResponse]: List of graph objects in frontend format
+    """
+    try:
+        # Create system filters for folder and user scoping
+        system_filters = {}
+        if folder_name:
+            system_filters["folder_name"] = folder_name
+        if end_user_id:
+            system_filters["end_user_id"] = end_user_id
+        if auth.app_id:
+            system_filters["app_id"] = auth.app_id
+
+        graphs = await document_service.db.list_graphs(auth, system_filters=system_filters)
+        return [transform_graph_to_frontend_format(graph) for graph in graphs]
+    except Exception as e:
+        logger.error(f"Error listing graphs: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Router Inclusions - All endpoints are now modularized
+# ---------------------------------------------------------------------------
+
+# Include all API routers
+app.include_router(health_router)
+app.include_router(documents_router)
+app.include_router(retrieval_router)
+app.include_router(ingest_router)
+app.include_router(query_router)
+app.include_router(batch_router)
+app.include_router(graphs_router)
+app.include_router(folders_router)
+app.include_router(models_router)
 app.include_router(manual_generation_router)
+app.include_router(rule_templates_router)
+app.include_router(usage_router)
+app.include_router(cache_router)
+

@@ -1,0 +1,40 @@
+API Restoration Changes Log
+================================
+
+Missing Endpoints that need to be restored:
+
+1. Core Query and Agent endpoints:
+   - /query (POST) - Main completion endpoint
+   - /agent (POST) - Agent endpoint
+   - /batch/documents (POST) - Batch document processing
+   - /batch/chunks (POST) - Batch chunk processing
+
+2. Graph endpoints:
+   - /graph/create (POST) - Create new graph
+   - /graph/{name} (GET) - Get specific graph
+   - /graph/{name}/visualization (GET) - Graph visualization
+   - /graph/{name}/update (POST) - Update graph
+   - /graph/{name} (DELETE) - Delete graph
+   - /graph/workflow/{workflow_id}/status (GET) - Workflow status
+
+3. Folder endpoints:
+   - /folders (POST) - Create folder
+   - /folders (GET) - List folders
+   - /folders/{folder_id} (GET) - Get folder
+   - /folders/{folder_name} (DELETE) - Delete folder
+   - /folders/{folder_id}/documents/{document_id} (POST) - Add document to folder
+   - /folders/{folder_id}/documents/{document_id} (DELETE) - Remove document from folder
+
+4. Usage and stats endpoints:
+   - /usage/stats (GET) - Usage statistics
+   - /usage/recent (GET) - Recent usage
+
+5. Cache endpoints:
+   - /cache/{name}/query (POST) - Cache query
+
+6. Document management endpoints:
+   - /documents/{document_id}/update_text (POST) - Update document text
+   - /documents/{document_id}/update_file (POST) - Update document file
+   - /documents/{document_id}/update_metadata (POST) - Update document metadata
+
+Starting restoration process...

@@ -30,8 +30,8 @@ aqui estan los logs de lo que esta corriendo, revisalos cuando en duda /root/.ip
 /root/.ipython/aaaaaaaaaaa/logs/worker_ingestion.log  aqui se muestra los logs de ingestion de documentos.
 
 
-El backend esta corriendo en un runpod, y este es su url, https://op10na1qhzsc5m-8000.proxy.runpod.net
-El frontend esta corriendo en un runpod, y este es su url, https://op10na1qhzsc5m-3000.proxy.runpod.net
+El backend esta corriendo en un runpod, y este es su url,  https://jdr40ukhzrwcb5-8000.proxy.runpod.net/
+El frontend esta corriendo en un runpod, y este es su url, https://jdr40ukhzrwcb5-3000.proxy.runpod.net/
 
 ok mira ahora haremos la funcion principal de este proyecto, la generacion de manuales.
 
@@ -67,3 +67,10 @@ El agente de ia pasado habia hecho varios tests de lo que llevaba, buscalos tamb
 
 Asegurate de checar  /root/.ipython/aaaaaaaaaaa/core/config.py para la config de este toml donde vienen unas variables,  /root/.ipython/aaaaaaaaaaa/morphik.toml
 hay cosas en mi .env, preguntame si tienes duda.
+
+
+**Antes que nada arregla api.py , ya que el antiguo agente ai borro muchos endpoints que no debio borrar, el viejo api esta aqui /root/.ipython/aaaaaaaaaaa/old api.py, los registros estan en /root/.ipython/aaaaaaaaaaa/api_restoration_changes.txt.**
+
+le andamos haciendo refactor al api a la acarpeta de api, las descripciones estn en  /root/.ipython/aaaaaaaaaaa/api_refactoring_changes.txt
+
+Siempre registra tus cambios en  /root/.ipython/aaaaaaaaaaa/changes_log.txt

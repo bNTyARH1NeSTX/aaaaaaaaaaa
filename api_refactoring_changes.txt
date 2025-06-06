@@ -1,0 +1,58 @@
+API Refactoring Changes Log - June 5, 2025
+
+=== REFACTORING API.PY INTO MODULAR STRUCTURE ===
+
+GOAL: Break down the large api.py file (2446 lines) into smaller, more maintainable modules in the core/api folder.
+
+COMPLETED:
+1. Created core/api/__init__.py - Module initialization
+2. Created core/api/models.py - All Pydantic models for requests/responses:
+   - ManualGenerationRequest/Response
+   - PowerPointGenerationRequest  
+   - ERPImageProcessingRequest/Response
+   - ERPBatchProcessingRequest/Response
+   - RuleTemplateRequest/Response
+   - ListDocumentsRequest
+   - BatchIngestRequest/Response
+   - BatchDocumentsRequest/BatchChunksRequest
+   - CreateFolderRequest/FolderResponse
+   - GraphResponse/CreateGraphRequest/UpdateGraphRequest
+   - UsageStatsResponse/RecentUsageResponse
+   - CacheQueryRequest/Response
+
+3. Created core/api/health.py - Health check endpoints:
+   - GET /ping - Simple health check
+
+4. Created core/api/documents.py - Document management endpoints:
+   - POST /documents - List documents
+   - GET /documents/{document_id} - Get document by ID
+   - GET /documents/{document_id}/status - Get document status
+   - DELETE /documents/{document_id} - Delete document
+   - GET /documents/filename/{filename} - Get document by filename
+   - POST /documents/{document_id}/update_text - Update document text
+   - POST /documents/{document_id}/update_file - Update document file
+   - POST /documents/{document_id}/update_metadata - Update document metadata
+
+5. Created core/api/retrieval.py - Retrieval endpoints:
+   - POST /retrieve/docs - Retrieve documents by query
+   - POST /retrieve/chunks - Retrieve chunks by query
+
+NEXT STEPS:
+- Create core/api/ingest.py for ingestion endpoints
+- Create core/api/graphs.py for graph management endpoints  
+- Create core/api/query.py for query/completion endpoints
+- Create core/api/batch.py for batch operations
+- Create core/api/folders.py for folder management
+- Create core/api/rule_templates.py for rule template endpoints
+- Create core/api/usage.py for usage tracking
+- Create core/api/cache.py for cache endpoints
+- Update manual_generation_router.py with actual implementation
+- Update main api.py to import and include all routers
+- Test all endpoints to ensure functionality is preserved
+
+BENEFITS:
+- Better code organization and maintainability
+- Easier to locate specific functionality
+- Reduced complexity in main api.py file
+- Clearer separation of concerns
+- Easier testing and debugging
