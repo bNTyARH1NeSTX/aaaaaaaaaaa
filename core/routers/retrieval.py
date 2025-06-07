@@ -3,15 +3,18 @@ Document and chunk retrieval endpoints.
 Handles semantic search and retrieval operations.
 """
 
+import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from core.auth_utils import verify_token
-from core.models.user import AuthContext
-from core.models.retrieval import RetrieveRequest, DocumentResult, ChunkResult
+from core.models.auth import AuthContext
+from core.models.request import RetrieveRequest
+from core.models.documents import DocumentResult, ChunkResult
 from core.services.document_service import DocumentService
 from core.dependencies import get_document_service
-from core.telemetry import TelemetryService
-from core.logging_config import logger
+from core.services.telemetry import TelemetryService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/retrieve", tags=["Retrieval"])
 telemetry = TelemetryService()
@@ -82,17 +85,20 @@ async def retrieve_chunks(
     # Parse request
     query = request.query
     filters = request.filters or {}
-    limit = request.limit or 5
-    rerank = request.rerank if request.rerank is not None else True
+    limit = request.k or 5  # Use k instead of limit
+    rerank = request.use_reranking if request.use_reranking is not None else True
 
     try:
         # Get document results
         result = await document_service.retrieve_chunks(
-            query, 
-            auth, 
-            filters, 
-            limit, 
-            rerank=rerank
+            query=query,
+            auth=auth,
+            filters=filters,
+            k=limit,
+            use_reranking=rerank,
+            use_colpali=request.use_colpali if hasattr(request, 'use_colpali') else None,
+            folder_name=request.folder_name if hasattr(request, 'folder_name') else None,
+            end_user_id=request.end_user_id if hasattr(request, 'end_user_id') else None,
         )
         
         return result

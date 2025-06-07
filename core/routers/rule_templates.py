@@ -5,18 +5,20 @@ from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from core.api.models import RuleTemplateRequest, RuleTemplateResponse
-from core.auth import AuthContext, verify_token
+from core.models.request import RuleTemplateRequest, RuleTemplateResponse
+from core.auth_utils import verify_token
+from core.models.auth import AuthContext
 from core.database.postgres_database import PostgresDatabase
-from core.services.document_service import document_service
-from core.telemetry import telemetry
+from core.services.telemetry import TelemetryService
+from core.services_init import document_service
 
 logger = logging.getLogger(__name__)
+telemetry = TelemetryService()
 
 router = APIRouter(prefix="/rule-templates", tags=["rule-templates"])
 
 
-@router.get("/", response_model=List[RuleTemplateResponse])
+@router.get("", response_model=List[RuleTemplateResponse])
 @telemetry.track(operation_type="get_rule_templates")
 async def get_rule_templates(auth: AuthContext = Depends(verify_token)) -> List[RuleTemplateResponse]:
     """Get all rule templates accessible to the authenticated user."""
@@ -40,7 +42,7 @@ async def get_rule_templates(auth: AuthContext = Depends(verify_token)) -> List[
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/", response_model=RuleTemplateResponse)
+@router.post("", response_model=RuleTemplateResponse)
 @telemetry.track(operation_type="create_rule_template")
 async def create_rule_template(
     request: RuleTemplateRequest,

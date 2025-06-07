@@ -128,9 +128,11 @@ match settings.COLPALI_MODE:
     case "local":
         colpali_embedding_model = ColpaliEmbeddingModel()
         colpali_vector_store = MultiVectorStore(uri=settings.POSTGRES_URI)
+        colpali_vector_store.initialize()
     case "api":
         colpali_embedding_model = ColpaliApiEmbeddingModel()
         colpali_vector_store = MultiVectorStore(uri=settings.POSTGRES_URI)
+        colpali_vector_store.initialize()
     case _:
         raise ValueError(f"Unsupported COLPALI_MODE: {settings.COLPALI_MODE}")
 

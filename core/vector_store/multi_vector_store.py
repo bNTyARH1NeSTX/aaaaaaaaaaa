@@ -179,34 +179,40 @@ class MultiVectorStore(BaseVectorStore):
                 with self.get_connection() as conn:
                     conn.execute(
                         """
-                        DROP FUNCTION IF EXISTS max_sim(bit[], bit[])
+                        DROP FUNCTION IF EXISTS max_sim(bit(128)[], bit(128)[])
                     """
                     )
                     logger.info("Dropped existing max_sim function")
 
-                    # Create max_sim function
+                    # Create max_sim function with correct BIT(128)[] types
                     conn.execute(
                         """
-                        CREATE OR REPLACE FUNCTION max_sim(document bit[], query bit[]) RETURNS double precision AS $$
-                            WITH queries AS (
-                                SELECT row_number() OVER () AS query_number, *
-                                FROM (SELECT unnest(query) AS query) AS foo
-                            ),
-                            documents AS (
-                                SELECT unnest(document) AS document
-                            ),
-                            similarities AS (
-                                SELECT
-                                    query_number,
-                                    1.0 - (bit_count(document # query)::float /
-                                        greatest(bit_length(query), 1)::float) AS similarity
-                                FROM queries CROSS JOIN documents
-                            ),
-                            max_similarities AS (
-                                SELECT MAX(similarity) AS max_similarity FROM similarities GROUP BY query_number
-                            )
-                            SELECT SUM(max_similarity) FROM max_similarities
-                        $$ LANGUAGE SQL
+                        CREATE OR REPLACE FUNCTION max_sim(document_emb bit(128)[], query_emb bit(128)[]) 
+                        RETURNS double precision AS $$
+                        DECLARE
+                            max_similarity double precision := 0.0;
+                            doc_vec bit(128);
+                            query_vec bit(128);
+                            similarity double precision;
+                            hamming_dist int;
+                        BEGIN
+                            -- Calculate MaxSim: max similarity between any document vector and any query vector
+                            FOREACH doc_vec IN ARRAY document_emb LOOP
+                                FOREACH query_vec IN ARRAY query_emb LOOP
+                                    -- Calculate Hamming distance (number of differing bits)
+                                    SELECT bit_length(doc_vec # query_vec) INTO hamming_dist;
+                                    -- Convert to cosine-like similarity (1 - normalized_hamming_distance)
+                                    similarity := 1.0 - (hamming_dist::double precision / 128.0);
+                                    -- Keep track of maximum similarity
+                                    IF similarity > max_similarity THEN
+                                        max_similarity := similarity;
+                                    END IF;
+                                END LOOP;
+                            END LOOP;
+                            
+                            RETURN max_similarity;
+                        END;
+                        $$ LANGUAGE plpgsql;
                     """
                     )
                     logger.info("Created max_sim function successfully")

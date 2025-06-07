@@ -59,7 +59,6 @@ service redis-server start
 apt-get update
 apt-get install -y poppler-utils tesseract-ocr libmagic-dev
 
-ALTER USER postgres WITH PASSWORD 'postgres';
 pip install git+https://github.com/illuin-tech/colpali
 
 # Install via apt
@@ -68,6 +67,8 @@ pip install git+https://github.com/illuin-tech/colpali
 
 
 service postgresql start
+ALTER USER postgres WITH PASSWORD 'postgres';
+
 
 # Install NVM
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash

@@ -3,6 +3,7 @@ Graph management endpoints.
 Handles knowledge graph operations.
 """
 
+import logging
 from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -16,7 +17,8 @@ from core.models.request import (
 )
 from core.services.telemetry import TelemetryService
 from core.services_init import document_service
-from core.logging_config import logger
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Graphs"])
 telemetry = TelemetryService()
@@ -234,7 +236,7 @@ async def delete_graph(
 
 
 @router.get("/graph/{name}/visualization")
-@telemetry.track(operation_type="get_graph_visualization", metadata_resolver=telemetry.get_graph_visualization_metadata)
+@telemetry.track(operation_type="get_graph_visualization", metadata_resolver=telemetry.get_graph_metadata)
 async def get_graph_visualization(
     name: str,
     auth: AuthContext = Depends(verify_token),
@@ -265,7 +267,7 @@ async def get_graph_visualization(
 
 
 @router.get("/graph/workflow/{workflow_id}/status")
-@telemetry.track(operation_type="get_workflow_status", metadata_resolver=telemetry.get_workflow_status_metadata)
+@telemetry.track(operation_type="get_workflow_status", metadata_resolver=telemetry.workflow_status_metadata)
 async def get_workflow_status(
     workflow_id: str,
     auth: AuthContext = Depends(verify_token),

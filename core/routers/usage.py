@@ -5,10 +5,12 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends
 
-from core.auth import AuthContext, verify_token
-from core.telemetry import telemetry
+from core.auth_utils import verify_token
+from core.models.auth import AuthContext
+from core.services.telemetry import TelemetryService
 
 logger = logging.getLogger(__name__)
+telemetry = TelemetryService()
 
 router = APIRouter(prefix="/usage", tags=["usage"])
 

@@ -79,7 +79,7 @@ async def query_completion(
 
 
 @router.post("/agent", response_model=CompletionResponse)
-@telemetry.track(operation_type="agent", metadata_resolver=telemetry.agent_metadata)
+@telemetry.track(operation_type="agent", metadata_resolver=telemetry.query_metadata)
 async def agent_completion(
     request: AgentQueryRequest, 
     auth: AuthContext = Depends(verify_token)

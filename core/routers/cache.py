@@ -4,15 +4,17 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from core.auth import AuthContext, verify_token
+from core.auth_utils import verify_token
+from core.models.auth import AuthContext
 from core.config import get_settings
 from core.limits_utils import check_and_increment_limits
 from core.models.completion import CompletionResponse
-from core.services.document_service import document_service
-from core.telemetry import telemetry
+from core.services.telemetry import TelemetryService
+from core.services_init import document_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+telemetry = TelemetryService()
 
 router = APIRouter(prefix="/cache", tags=["cache"])
 

@@ -953,6 +953,83 @@ class DocumentService:
 
         return doc
 
+    async def ingest_file(
+        self,
+        file: UploadFile,
+        metadata: Optional[Dict[str, Any]],
+        auth: AuthContext,
+        redis: arq.ArqRedis,
+        rules: Optional[List[str]] = None,
+        use_colpali: Optional[bool] = False,
+        folder_name: Optional[str] = None,
+        end_user_id: Optional[str] = None,
+    ) -> Document:
+        """
+        Ingest a single file from UploadFile object.
+        This is a wrapper around ingest_file_content that handles the file reading.
+        """
+        # Read file content
+        file_content = await file.read()
+
+        # Call the existing ingest_file_content method
+        return await self.ingest_file_content(
+            file_content_bytes=file_content,
+            filename=file.filename,
+            content_type=file.content_type,
+            metadata=metadata,
+            auth=auth,
+            redis=redis,
+            folder_name=folder_name,
+            end_user_id=end_user_id,
+            rules=rules,
+            use_colpali=use_colpali,
+        )
+
+    async def batch_ingest_files(
+        self,
+        files: List[UploadFile],
+        metadata: Optional[Dict[str, Any]],
+        auth: AuthContext,
+        redis: arq.ArqRedis,
+        rules: Optional[List[str]] = None,
+        use_colpali: Optional[bool] = False,
+        parallel: Optional[bool] = True,
+        folder_name: Optional[str] = None,
+        end_user_id: Optional[str] = None,
+    ):
+        """
+        Batch ingest multiple files asynchronously.
+        Returns a BatchIngestResponse with documents and errors.
+        """
+        from core.models.request import BatchIngestResponse
+
+        if not files:
+            raise HTTPException(status_code=400, detail="No files provided for batch ingestion")
+
+        documents = []
+        errors = []
+
+        # Process files one by one (parallel processing can be enhanced later)
+        for file in files:
+            try:
+                doc = await self.ingest_file(
+                    file=file,
+                    metadata=metadata,
+                    rules=rules,
+                    use_colpali=use_colpali,
+                    auth=auth,
+                    folder_name=folder_name,
+                    end_user_id=end_user_id,
+                    redis=redis,
+                )
+                documents.append(doc)
+            except Exception as e:
+                error_msg = f"Error ingesting file {file.filename}: {str(e)}"
+                logger.error(error_msg)
+                errors.append(error_msg)
+
+        return BatchIngestResponse(documents=documents, errors=errors)
+
     def img_to_base64_str(self, img: Image):
         buffered = BytesIO()
         img.save(buffered, format="PNG")

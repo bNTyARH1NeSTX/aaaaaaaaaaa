@@ -7,6 +7,56 @@ from core.models.prompts import GraphPromptOverrides, QueryPromptOverrides
 from core.models.graph import Graph, Entity, Relationship
 
 
+# --- Manual Generation Models ---
+class ManualGenerationRequest(BaseModel):
+    query: str = Field(..., description="The main query or task for generating the manual content.")
+    image_path: Optional[str] = Field(default=None, description="Optional path to a specific pre-selected image to use.")
+    image_prompt: Optional[str] = Field(default=None, description="The descriptive prompt associated with the pre-selected image, if image_path is provided. This text describes the image content for the VLM.")
+    k_images: int = Field(default=1, ge=1, le=5, description="Number of relevant images to find and use if image_path is not specified.")
+
+
+class ManualGenerationResponse(BaseModel):
+    generated_text: str
+    relevant_images_used: List[Dict[str, Any]]  # e.g., [{"image_path": "...", "prompt": "...", "respuesta": "..."}]
+    query: str
+
+
+class PowerPointGenerationRequest(BaseModel):
+    query: str = Field(..., description="The main query or task for generating the manual content.")
+    image_path: Optional[str] = Field(default=None, description="Optional path to a specific pre-selected image to use.")
+    image_prompt: Optional[str] = Field(default=None, description="The descriptive prompt associated with the pre-selected image.")
+    k_images: int = Field(default=3, ge=1, le=5, description="Number of relevant images to find and use if image_path is not specified.")
+
+
+# --- Rule Template Models ---
+class RuleTemplateRequest(BaseModel):
+    name: str = Field(..., description="Name of the rule template", min_length=1, max_length=100)
+    description: Optional[str] = Field(None, description="Optional description of the rule template", max_length=500)
+    rules_json: str = Field(..., description="JSON string containing the rules configuration")
+
+
+class RuleTemplateResponse(BaseModel):
+    id: str
+    name: str
+    description: Optional[str]
+    rules_json: str
+    created_at: str
+    updated_at: str
+
+
+# --- ERP Processing Models ---
+class ERPImageProcessingRequest(BaseModel):
+    image_path: str = Field(..., description="Path to the ERP image to process")
+    force_reprocess: bool = Field(default=False, description="Force reprocessing even if metadata exists")
+
+
+class ERPImageProcessingResponse(BaseModel):
+    image_path: str
+    extracted_metadata: Dict[str, Any]
+    processing_status: str
+    error_message: Optional[str] = None
+
+
 # Frontend Graph Response Models
 class GraphNode(BaseModel):
     """Node model for frontend graph visualization"""

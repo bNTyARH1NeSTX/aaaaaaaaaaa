@@ -73,6 +73,72 @@ export default function SearchPage() {
     );
   };
 
+  // Utility function to detect if content is base64 image data
+  const isBase64Image = (content: string) => {
+    if (!content || typeof content !== 'string') return false;
+    const trimmedContent = content.trim();
+    
+    // Check if it's already a data URL
+    if (trimmedContent.startsWith('data:image/')) return true;
+    
+    // For ColPali results, check if content is very long base64 string (likely image)
+    if (trimmedContent.length > 1000 && /^[A-Za-z0-9+/]*={0,2}$/.test(trimmedContent)) {
+      return true;
+    }
+    
+    // Check if it looks like base64 image data (common patterns)
+    const base64ImagePatterns = [
+      /^\/9j\//, // JPEG
+      /^iVBORw0KGgo/, // PNG  
+      /^R0lGOD/, // GIF
+      /^UklGRg/, // WebP
+      /^Qk0/, // BMP
+    ];
+    
+    return base64ImagePatterns.some(pattern => pattern.test(trimmedContent.substring(0, 20)));
+  };
+
+  // Get proper image source for base64 content
+  const getImageSrc = (content: string, contentType?: string) => {
+    if (!content || typeof content !== 'string') return '';
+    
+    const trimmedContent = content.trim();
+
+    // If it's already a complete data URL, return it
+    if (trimmedContent.startsWith('data:')) return trimmedContent;
+    
+    // Determine MIME type
+    let mimeType = 'image/jpeg'; // Default to jpeg for ColPali
+    
+    if (contentType && contentType.startsWith('image/')) {
+      mimeType = contentType;
+    } else if (trimmedContent.startsWith('/9j/')) {
+      mimeType = 'image/jpeg';
+    } else if (trimmedContent.startsWith('iVBORw0KGgo')) {
+      mimeType = 'image/png';
+    } else if (trimmedContent.startsWith('R0lGOD')) {
+      mimeType = 'image/gif';
+    }
+    
+    // Return properly formatted data URI
+    return `data:${mimeType};base64,${trimmedContent}`;
+  };
+
+  // Enhanced image error handler
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, content: string) => {
+    console.error('Image load error:', e);
+    console.log('Content preview:', content.substring(0, 100) + '...');
+    
+    const target = e.currentTarget;
+    target.style.display = 'none';
+    
+    // Create fallback element
+    const parent = target.parentElement;
+    if (parent) {
+      parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100 dark:bg-gray-700 rounded"><span class="text-xs">Imagen no disponible</span></div>';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -214,17 +280,21 @@ export default function SearchPage() {
                 </div>
               ))
             ) : results.length > 0 ? (
-              results.map((result, index) => (
+              results.map((result, index) => {
+                const isImageContent = result.metadata.is_image || isBase64Image(result.content);
+                
+                return (
                 <div key={index} className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                      onClick={() => setSelectedResult(result)}>
                   <div className="flex items-start space-x-4">
-                    {result.metadata.is_image ? (
+                    {isImageContent ? (
                       <div className="w-16 h-16 flex-shrink-0 mt-1 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                         <img 
-                          src={result.content.startsWith('data:') ? result.content : `data:${result.metadata.content_type || 'image/png'};base64,${result.content}`}
+                          src={getImageSrc(result.content, result.metadata.content_type)}
                           alt="Vista previa"
                           className="w-full h-full object-cover"
                           onError={(e) => {
+                            console.error('Error loading image preview:', e);
                             e.currentTarget.style.display = 'none';
                             e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 7v2.99s-1.99.01-2 0V7c0-1.1-.9-2-2-2s-2 .9-2 2v1c0 .55-.45 1-1 1s-1-.45-1-1V7c0-2.21 1.79-4 4-4s4 1.79 4 4zM9.5 8C10.33 8 11 7.33 11 6.5S10.33 5 9.5 5 8 5.67 8 6.5 8.67 8 9.5 8zM19 13c0-.55-.45-1-1-1s-1 .45-1 1-.45 1-1 1-1-.45-1-1 .45-1 1-1 1 .45 1 1zm-3 7H8c-1.1 0-2-.9-2-2v-5l2-2 3 3 2-2 3 3v5z"/></svg></div>';
                           }}
@@ -240,14 +310,14 @@ export default function SearchPage() {
                         </h3>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                            Relevancia: {(result.score * 100).toFixed(1)}%
+                            Relevancia: {((result.score ?? 0) * 100).toFixed(1)}%
                           </span>
                           {result.metadata.page && (
                             <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                               Página {result.metadata.page}
                             </span>
                           )}
-                          {result.metadata.is_image && (
+                          {isImageContent && (
                             <div className="flex items-center space-x-1">
                               <Image className="w-3 h-3 text-purple-600" />
                               <span className="text-xs text-purple-600">Imagen</span>
@@ -262,7 +332,7 @@ export default function SearchPage() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                        {result.metadata.is_image ? (
+                        {isImageContent ? (
                           <span className="italic text-gray-500">Contenido visual - haz clic para ver detalles</span>
                         ) : (
                           highlightText(result.content, query)
@@ -274,7 +344,8 @@ export default function SearchPage() {
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <div className="px-6 py-8 text-center">
                 <SearchIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -372,18 +443,23 @@ export default function SearchPage() {
                   <p className="text-sm text-gray-900 dark:text-white">{(selectedResult.score * 100).toFixed(1)}%</p>
                 </div>
                 
-                {/* Mostrar imagen si es un chunk de imagen */}
-                {selectedResult.metadata.is_image && selectedResult.content && (
+                {/* Show image if content contains base64 image data */}
+                {(selectedResult.metadata.is_image || isBase64Image(selectedResult.content)) && selectedResult.content && (
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Imagen</h4>
                     <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                       <img 
-                        src={selectedResult.content.startsWith('data:') ? selectedResult.content : `data:${selectedResult.content_type};base64,${selectedResult.content}`}
+                        src={getImageSrc(selectedResult.content, selectedResult.metadata.content_type)}
                         alt="Contenido visual del documento"
                         className="max-w-full h-auto rounded-lg shadow-sm"
                         onError={(e) => {
-                          console.error('Error loading image:', e);
+                          console.error('Error loading image in modal:', e);
                           e.currentTarget.style.display = 'none';
+                          // Show error message
+                          const errorDiv = document.createElement('div');
+                          errorDiv.className = 'text-red-500 text-sm italic p-4 text-center';
+                          errorDiv.textContent = 'Error al cargar la imagen. Es posible que el formato no sea compatible.';
+                          e.currentTarget.parentElement!.appendChild(errorDiv);
                         }}
                       />
                     </div>
@@ -393,8 +469,23 @@ export default function SearchPage() {
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contenido</h4>
                   <div className="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-4 rounded-lg max-h-96 overflow-y-auto">
-                    {selectedResult.metadata.is_image ? (
-                      <p className="text-gray-500 italic">Este es un chunk de imagen. El contenido visual se muestra arriba.</p>
+                    {(selectedResult.metadata.is_image || isBase64Image(selectedResult.content)) ? (
+                      <div className="space-y-2">
+                        <p className="text-gray-500 italic">Este es un chunk que contiene contenido visual. La imagen se muestra arriba.</p>
+                        {selectedResult.metadata.content_type && (
+                          <p className="text-xs text-gray-400">Tipo de contenido: {selectedResult.metadata.content_type}</p>
+                        )}
+                        {selectedResult.content && selectedResult.content.length > 50 && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-gray-500 text-xs hover:text-gray-700">
+                              Ver datos base64 (primeros 100 caracteres)
+                            </summary>
+                            <pre className="text-xs text-gray-400 mt-1 break-all">
+                              {selectedResult.content.substring(0, 100)}...
+                            </pre>
+                          </details>
+                        )}
+                      </div>
                     ) : (
                       highlightText(selectedResult.content, query)
                     )}

@@ -3,6 +3,7 @@ Folder management endpoints.
 Handles folder operations and document organization.
 """
 
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -12,7 +13,8 @@ from core.models.folders import Folder, FolderCreate
 from core.models.request import SetFolderRuleRequest
 from core.services.telemetry import TelemetryService
 from core.services_init import document_service
-from core.logging_config import logger
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/folders", tags=["Folders"])
 telemetry = TelemetryService()

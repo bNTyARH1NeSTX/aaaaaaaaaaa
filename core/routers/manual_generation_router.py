@@ -18,16 +18,18 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import FileResponse
 
-from core.auth.auth import verify_token, AuthContext
-from core.services.telemetry_service import telemetry
-from core.api.models import (
+from core.auth_utils import verify_token
+from core.models.auth import AuthContext
+from core.services.telemetry import TelemetryService
+from core.models.request import (
     ManualGenerationRequest,
     ManualGenerationResponse,
     PowerPointGenerationRequest,
     ERPImageProcessingRequest,
     ERPImageProcessingResponse
 )
-from core.services.manual_generation_embedding_model import ManualGenerationEmbeddingModel
+import logging
+from core.embedding.manual_generation_embedding_model import ManualGenerationEmbeddingModel
 from core.services.manual_generator_service import ManualGeneratorService
 
 logger = logging.getLogger(__name__)
@@ -38,6 +40,9 @@ manual_generation_router = APIRouter(
     tags=["Manual Generation"],
     responses={404: {"description": "Not found"}},
 )
+
+# Initialize telemetry service
+telemetry = TelemetryService()
 
 # Dependency providers
 _manual_gen_embedding_model_instance: Optional[ManualGenerationEmbeddingModel] = None

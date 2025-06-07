@@ -6,12 +6,12 @@ Handles CRUD operations for documents.
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from core.auth_utils import verify_token
-from core.models.user import AuthContext
-from core.models.document import Document
+from core.models.auth import AuthContext
+from core.models.documents import Document
 from core.services.document_service import DocumentService
 from core.dependencies import get_document_service
-from core.telemetry import TelemetryService
-from .models import ListDocumentsRequest
+from core.services.telemetry import TelemetryService
+from core.routers.models import ListDocumentsRequest
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 telemetry = TelemetryService()

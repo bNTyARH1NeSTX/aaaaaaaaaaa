@@ -30,8 +30,8 @@ aqui estan los logs de lo que esta corriendo, revisalos cuando en duda /root/.ip
 /root/.ipython/aaaaaaaaaaa/logs/worker_ingestion.log  aqui se muestra los logs de ingestion de documentos.
 
 
-El backend esta corriendo en un runpod, y este es su url,  https://jdr40ukhzrwcb5-8000.proxy.runpod.net/
-El frontend esta corriendo en un runpod, y este es su url, https://jdr40ukhzrwcb5-3000.proxy.runpod.net/
+El backend esta corriendo en un runpod, y este es su url,  https://ge1q81q40r0vze-8000.proxy.runpod.net/
+El frontend esta corriendo en un runpod, y este es su url, https://ge1q81q40r0vze-3000.proxy.runpod.net/
 
 ok mira ahora haremos la funcion principal de este proyecto, la generacion de manuales.
 
