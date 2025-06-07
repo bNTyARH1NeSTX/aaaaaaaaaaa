@@ -13,16 +13,20 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { GraphVisualizationData } from '@/api/apiService';
 import { Spinner } from '@chakra-ui/react';
+import { generateEntityTypeColorMap, getLighterColor } from '@/utils/colorUtils';
 
 // Definición personalizada para nodos
 const CustomNode = ({ data }: { data: any }) => {
   return (
     <div
-      className="px-4 py-2 rounded-md shadow-md border border-gray-200"
-      style={{ backgroundColor: data.color || '#ffffff' }}
+      className="px-4 py-2 rounded-md shadow-lg border-2 transition-all duration-200 hover:shadow-xl hover:scale-105"
+      style={{ 
+        backgroundColor: data.backgroundColor || '#ffffff',
+        borderColor: data.borderColor || '#e2e8f0'
+      }}
     >
       <div className="font-medium text-gray-800">{data.label}</div>
-      <div className="text-xs text-gray-600">{data.type}</div>
+      <div className="text-xs text-gray-600 font-medium">{data.type}</div>
     </div>
   );
 };
@@ -49,20 +53,34 @@ export const GraphVisualization = ({
   const [edges, setEdges] = useState<Edge[]>([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
 
-  useEffect(() => {
+    useEffect(() => {
     if (visualizationData && !isLoading) {
+      // Extract unique entity types
+      const uniqueEntityTypes = Array.from(
+        new Set(visualizationData.nodes.map(node => node.type).filter(Boolean))
+      );
+
+      // Generate color map for entity types using rainbow colors
+      const entityColorMap = generateEntityTypeColorMap(uniqueEntityTypes);
+
       // Transformar la visualización al formato requerido por ReactFlow
-      const flowNodes = visualizationData.nodes.map((node) => ({
-        id: node.id,
-        type: 'custom',
-        data: {
-          label: node.label,
-          type: node.type,
-          color: node.color,
-          properties: node.properties
-        },
-        position: { x: 0, y: 0 }, // Se posicionará automáticamente con el layout aa a
-      }));
+      const flowNodes = visualizationData.nodes.map((node) => {
+        const baseColor = entityColorMap[node.type] || '#64748b';
+        const backgroundColor = getLighterColor(baseColor, 0.7);
+        
+        return {
+          id: node.id,
+          type: 'custom',
+          data: {
+            label: node.label,
+            type: node.type,
+            borderColor: baseColor,
+            backgroundColor: backgroundColor,
+            properties: node.properties
+          },
+          position: { x: 0, y: 0 }, // Se posicionará automáticamente con el layout
+        };
+      });
 
       const flowEdges = visualizationData.links.map((link, index) => ({
         id: `edge-${index}`,
@@ -70,7 +88,7 @@ export const GraphVisualization = ({
         target: link.target,
         label: link.type,
         animated: false,
-        style: { stroke: '#888' },
+        style: { stroke: '#6b7280', strokeWidth: 2 },
       }));
 
       setNodes(flowNodes);

@@ -6,6 +6,7 @@ Handles knowledge graph operations.
 import logging
 from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 
 from core.auth_utils import verify_token
 from core.models.auth import AuthContext
@@ -15,6 +16,7 @@ from core.models.request import (
     GraphResponse,
     transform_graph_to_frontend_format
 )
+from core.models.graph import Entity, Relationship
 from core.services.telemetry import TelemetryService
 from core.services_init import document_service
 
@@ -122,27 +124,32 @@ async def create_graph(
     Args:
         request: CreateGraphRequest containing:
             - name: Name of the graph
-            - description: Optional description
+            - description: Optional description (for documentation purposes)
             - documents: Optional list of document IDs to include
             - filters: Optional metadata filters for document selection
             - folder_name: Optional folder to scope the operation to
             - end_user_id: Optional end-user ID to scope the operation to
-            - prompts: Optional custom prompts for entity/relationship extraction
+            - prompt_overrides: Optional custom prompts for entity/relationship extraction
         auth: Authentication context
 
     Returns:
         GraphResponse: Created graph object in frontend format
     """
     try:
+        # Build system filters from folder_name and end_user_id
+        system_filters = {}
+        if request.folder_name:
+            system_filters["folder_name"] = request.folder_name
+        if request.end_user_id:
+            system_filters["end_user_id"] = request.end_user_id
+        
         graph = await document_service.create_graph(
             name=request.name,
-            description=request.description,
-            documents=request.documents,
-            filters=request.filters,
             auth=auth,
-            folder_name=request.folder_name,
-            end_user_id=request.end_user_id,
-            prompts=request.prompts,
+            filters=request.filters,
+            documents=request.documents,
+            prompt_overrides=request.prompt_overrides,
+            system_filters=system_filters if system_filters else None,
         )
         
         return transform_graph_to_frontend_format(graph)
@@ -252,7 +259,7 @@ async def get_graph_visualization(
         Graph visualization data with nodes and edges
     """
     try:
-        visualization_data = await document_service.get_graph_visualization(name, auth)
+        visualization_data = await document_service.get_graph_visualization_data(name, auth)
         if not visualization_data:
             raise HTTPException(status_code=404, detail="Graph not found")
         
@@ -295,3 +302,82 @@ async def get_workflow_status(
     except Exception as e:
         logger.error(f"Error getting workflow status for {workflow_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class EntityExtractionRequest(BaseModel):
+    """Request model for entity extraction"""
+    content: str
+    doc_id: Optional[str] = "demo_doc"
+    chunk_number: Optional[int] = 0
+
+class EntityExtractionResponse(BaseModel):
+    """Response model for entity extraction"""
+    entities: List[dict]
+    relationships: List[dict]
+    adaptive_entity_types: List[str]
+
+@router.post("/graphs/extract-entities", response_model=EntityExtractionResponse)
+@telemetry.track(operation_type="extract_entities", metadata_resolver=None)
+async def extract_entities(
+    request: EntityExtractionRequest,
+    auth: AuthContext = Depends(verify_token),
+) -> EntityExtractionResponse:
+    """
+    Extract entities and relationships from text using adaptive AI.
+    
+    This endpoint demonstrates the AI Adaptive Entity Extraction feature
+    that automatically determines the most relevant entity types based
+    on document content analysis.
+
+    Args:
+        request: Entity extraction request with content
+        auth: Authentication context
+
+    Returns:
+        EntityExtractionResponse: Extracted entities, relationships, and adaptive types
+    """
+    try:
+        # Get the graph service
+        graph_service = document_service.graph_service
+        
+        # First, determine the adaptive entity types
+        adaptive_types = await graph_service._determine_adaptive_entity_types(
+            content=request.content,
+            num_types=5
+        )
+        
+        # Extract entities and relationships using adaptive types
+        entities, relationships = await graph_service.extract_entities_from_text(
+            content=request.content,
+            doc_id=request.doc_id,
+            chunk_number=request.chunk_number
+        )
+        
+        # Convert entities to dict format for JSON response
+        entities_dict = []
+        for entity in entities:
+            entities_dict.append({
+                "label": entity.label,
+                "type": entity.type,
+                "properties": entity.properties if hasattr(entity, 'properties') else {}
+            })
+        
+        # Convert relationships to dict format for JSON response
+        relationships_dict = []
+        for relationship in relationships:
+            relationships_dict.append({
+                "source": relationship.source,
+                "target": relationship.target,
+                "relationship": relationship.relationship,
+                "properties": relationship.properties if hasattr(relationship, 'properties') else {}
+            })
+        
+        return EntityExtractionResponse(
+            entities=entities_dict,
+            relationships=relationships_dict,
+            adaptive_entity_types=adaptive_types
+        )
+        
+    except Exception as e:
+        logger.error(f"Error extracting entities: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error extracting entities: {str(e)}")

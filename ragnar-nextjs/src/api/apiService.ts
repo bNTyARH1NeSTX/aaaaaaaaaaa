@@ -256,15 +256,40 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error)) {
-      console.error('Error de API (Axios):', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        config: error.config,
-      });
+      const status = error.response?.status;
+      const method = error.config?.method?.toUpperCase();
+      const url = error.config?.url;
+      
+      // Only log unexpected errors (not client errors like 404, 401, 403)
+      // Client errors are expected and should be handled by the calling code
+      if (status && status >= 500) {
+        console.error('Server Error:', {
+          message: error.message,
+          status,
+          method,
+          url,
+          data: error.response?.data,
+        });
+      } else if (status && status >= 400 && status < 500) {
+        // Client errors - log only in development or for debugging
+        console.debug('Client Error:', {
+          message: error.message,
+          status,
+          method,
+          url,
+          data: error.response?.data,
+        });
+      } else {
+        // Network errors or other unexpected issues
+        console.error('Network/Unknown Error:', {
+          message: error.message,
+          status,
+          method,
+          url,
+        });
+      }
     } else {
-      console.error('Error de API (General):', error);
+      console.error('Non-Axios Error:', error);
     }
     return Promise.reject(error);
   }
@@ -612,8 +637,20 @@ export const getConversationHistory = async (conversationId: string): Promise<Ch
 export const deleteGraph = async (graphName: string): Promise<boolean> => {
   try {
     const response = await api.delete(`/graph/${graphName}`);
-    return response.status === 200;
+    // Backend returns { status: "ok", message: "..." } on success
+    return response.status === 200 && response.data?.status === 'ok';
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status === 404) {
+        // Graph doesn't exist - this might be expected in some cases
+        throw new Error(`Graph '${graphName}' not found`);
+      } else if (status === 403) {
+        throw new Error(`Access denied: You don't have permission to delete graph '${graphName}'`);
+      } else if (status && status >= 500) {
+        throw new Error(`Server error while deleting graph '${graphName}'. Please try again later.`);
+      }
+    }
     console.error('Error eliminando grafo:', error);
     throw error;
   }

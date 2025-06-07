@@ -2074,6 +2074,25 @@ class DocumentService:
             system_filters=system_filters,
         )
 
+    async def delete_graph(self, name: str, auth: AuthContext, system_filters: Optional[Dict[str, Any]] = None) -> bool:
+        """
+        Delete a knowledge graph.
+
+        Args:
+            name: Name of the graph to delete
+            auth: Authentication context
+            system_filters: Optional system filters for scoping
+
+        Returns:
+            bool: True if deletion was successful, False otherwise
+        """
+        try:
+            success = await self.db.delete_graph(name, auth, system_filters)
+            return success
+        except Exception as e:
+            logger.error(f"Error deleting graph '{name}': {str(e)}")
+            return False
+
     async def delete_document(self, document_id: str, auth: AuthContext) -> bool:
         """
         Delete a document and all its associated data.

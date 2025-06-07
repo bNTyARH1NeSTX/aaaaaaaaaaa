@@ -145,6 +145,7 @@ class CreateGraphRequest(BaseModel):
     """Request model for creating a graph"""
 
     name: str = Field(..., description="Name of the graph to create")
+    description: Optional[str] = Field(None, description="Optional description of the graph")
     filters: Optional[Dict[str, Any]] = Field(
         None, description="Optional metadata filters to determine which documents to include"
     )

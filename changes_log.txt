@@ -503,8 +503,8 @@ Fixed the frontend search page image display functionality for ColPali results.
     *   Simplified fallback display to show "Imagen no disponible" message
     *   Fixed potential issues with DOM element creation in React context
 
-### Issue Resolved:
-The frontend was not properly displaying base64 images from ColPali search results. The images were showing as text instead of being rendered as actual images. The fix ensures that base64 data is properly formatted as data URIs with the correct MIME type.
+### Issue Resuelto:
+El frontend no estaba mostrando correctamente las imágenes en base64 de los resultados de búsqueda de ColPali. Las imágenes aparecían como texto en lugar de ser renderizadas como imágenes reales. La solución asegura que los datos en base64 se formateen correctamente como URIs de datos con el tipo MIME correcto.
 
-### Expected Behavior:
-When ColPali toggle is enabled and search returns image results, the base64 image data should now be properly displayed as images in both the search results list and the detail modal.
+### Comportamiento Esperado:
+Cuando el toggle de ColPali está habilitado y la búsqueda devuelve resultados de imágenes, los datos de imagen en base64 ahora deberían mostrarse correctamente como imágenes en la lista de resultados de búsqueda y en el modal de detalles.

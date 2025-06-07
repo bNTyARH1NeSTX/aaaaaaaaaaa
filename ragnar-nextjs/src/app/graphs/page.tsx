@@ -24,10 +24,15 @@ import WorkflowStatusMonitor from '@/components/graph/WorkflowStatusMonitor';
 import WorkflowStatusMonitorWrapper from '@/components/graph/WorkflowStatusMonitorWrapper';
 import GraphVisualization from '@/components/graph/GraphVisualization';
 import CreateGraphForm from '@/components/graph/CreateGraphForm';
+import { generateEntityTypeColorMap, getLighterColor, ENTITY_TYPE_COLORS } from '@/utils/colorUtils';
 
 // Helper to transform visualization data to ReactFlow format
 const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizationData): { nodes: Node[], edges: Edge[] } => {
   const nodeCount = visualizationData.nodes?.length || 0;
+  
+  // Extract unique entity types for rainbow color generation
+  const entityTypes = [...new Set((visualizationData.nodes || []).map(node => node.type).filter(Boolean))];
+  const entityTypeColorMap = generateEntityTypeColorMap(entityTypes);
   
   // Calculate grid layout for better spacing
   const gridSize = Math.ceil(Math.sqrt(nodeCount));
@@ -43,20 +48,28 @@ const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizat
       y: startY + row * nodeSpacing + (Math.random() - 0.5) * 50
     };
     
+    // Get color for this entity type using rainbow distribution
+    const entityType = node.type || 'DEFAULT';
+    const baseColor = entityTypeColorMap[entityType] || 
+                     (ENTITY_TYPE_COLORS as any)[entityType] || 
+                     ENTITY_TYPE_COLORS.DEFAULT;
+    const backgroundColor = getLighterColor(baseColor, 35); // Lighter background
+    
     return {
       id: node.id,
       data: { 
         label: node.label,
         type: node.type,
         properties: node.properties || {},
-        color: node.color
+        color: baseColor,
+        backgroundColor: backgroundColor
       },
       position,
       type: 'default',
       style: {
-        background: node.color || '#f3f4f6',
-        border: '2px solid #1a73e8',
-        borderRadius: '8px',
+        background: backgroundColor,
+        border: `3px solid ${baseColor}`,
+        borderRadius: '10px',
         padding: '12px',
         fontSize: '12px',
         fontWeight: '600',
@@ -66,8 +79,9 @@ const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizat
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        boxShadow: `0 4px 6px rgba(0,0,0,0.1), 0 0 0 1px ${baseColor}20`,
         textAlign: 'center',
+        transition: 'all 0.3s ease',
       },
     };
   });
@@ -129,6 +143,13 @@ const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizat
 const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: Edge[] } => {
   const nodeCount = apiGraph.nodes?.length || 0;
   
+  // Extract unique entity types for rainbow color generation
+  const entityTypes = [...new Set((apiGraph.nodes || []).map(node => {
+    const nodeType = node.data?.type || 'DEFAULT';
+    return typeof nodeType === 'string' ? nodeType : 'DEFAULT';
+  }).filter(Boolean))];
+  const entityTypeColorMap = generateEntityTypeColorMap(entityTypes);
+  
   // Calculate grid layout for better spacing
   const gridSize = Math.ceil(Math.sqrt(nodeCount));
   const nodeSpacing = 250; // Increased spacing between nodes
@@ -150,54 +171,39 @@ const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: E
       };
     }
     
-    // Generate colors based on node type or label
-    const getNodeColor = (node: any) => {
-      if (node.data?.color) return node.data.color;
-      
-      // Color scheme based on node type or properties
-      const nodeType = node.data?.type || 'default';
-      const colorMap: { [key: string]: string } = {
-        'entity': '#dbeafe', // blue
-        'person': '#fef3c7', // yellow
-        'organization': '#d1fae5', // green
-        'location': '#fce7f3', // pink
-        'concept': '#e0e7ff', // indigo
-        'topic': '#fed7d7', // red
-        'default': '#f3f4f6' // gray
-      };
-      
-      // If no specific type, generate color based on label hash
-      if (!colorMap[nodeType]) {
-        const hash = node.label?.charCodeAt(0) || 0;
-        const colors = ['#dbeafe', '#fef3c7', '#d1fae5', '#fce7f3', '#e0e7ff', '#fed7d7'];
-        return colors[hash % colors.length];
-      }
-      
-      return colorMap[nodeType];
-    };
+    // Get color for this entity type using rainbow distribution
+    const entityType = node.data?.type || 'DEFAULT';
+    const typeKey = typeof entityType === 'string' ? entityType : 'DEFAULT';
+    const baseColor = entityTypeColorMap[typeKey] || (ENTITY_TYPE_COLORS as any)[typeKey] || ENTITY_TYPE_COLORS.DEFAULT;
+    const backgroundColor = getLighterColor(baseColor, 35); // Lighter background
     
     return {
       id: node.id,
       data: { 
         label: node.label || node.id, 
+        type: typeKey,
+        color: baseColor,
+        backgroundColor: backgroundColor,
         ...node.data 
       },
       position,
       type: node.data?.type || 'default',
       style: {
-        background: getNodeColor(node),
-        border: '2px solid #1a73e8',
-        borderRadius: '8px',
-        padding: '10px',
+        background: backgroundColor,
+        border: `3px solid ${baseColor}`,
+        borderRadius: '10px',
+        padding: '12px',
         fontSize: '12px',
-        fontWeight: '500',
+        fontWeight: '600',
         color: '#1f2937',
-        minWidth: '120px',
-        minHeight: '40px',
+        minWidth: '140px',
+        minHeight: '50px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        boxShadow: `0 4px 6px rgba(0,0,0,0.1), 0 0 0 1px ${baseColor}20`,
+        textAlign: 'center',
+        transition: 'all 0.3s ease',
       },
     };
   });

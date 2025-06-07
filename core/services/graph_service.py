@@ -722,12 +722,14 @@ class GraphService:
         prompt_overrides: Optional[EntityExtractionPromptOverride] = None,
     ) -> Tuple[List[Entity], List[Relationship]]:
         """
-        Extract entities and relationships from text content using the LLM.
+        Extract entities and relationships from text content using adaptive AI to determine
+        the most relevant entity types automatically.
 
         Args:
             content: Text content to process
             doc_id: Document ID
             chunk_number: Chunk number within the document
+            prompt_overrides: Optional prompt overrides
 
         Returns:
             Tuple of (entities, relationships)
@@ -736,9 +738,6 @@ class GraphService:
 
         # Limit text length to avoid token limits
         content_limited = content[: min(len(content), 5000)]
-
-        # We'll use the Pydantic model directly when calling litellm
-        # No need to generate JSON schema separately
 
         # Get entity extraction overrides if available
         extraction_overrides = {}
@@ -751,6 +750,19 @@ class GraphService:
         # Check for custom prompt template
         custom_prompt = extraction_overrides.get("prompt_template")
         custom_examples = extraction_overrides.get("examples")
+
+        # AI ADAPTIVE ENTITY EXTRACTION: Determine relevant entity types automatically
+        if not custom_examples and not custom_prompt:
+            # Only use adaptive typing if no custom examples or prompts are provided
+            try:
+                adaptive_entity_types = await self._determine_adaptive_entity_types(content_limited)
+                logger.info(f"Using adaptive entity types for doc {doc_id}, chunk {chunk_number}: {adaptive_entity_types}")
+            except Exception as e:
+                logger.warning(f"Failed to determine adaptive entity types, using defaults: {e}")
+                adaptive_entity_types = ["PERSONA", "ORGANIZACIÓN", "UBICACIÓN", "CONCEPTO", "PRODUCTO"]
+        else:
+            # Use default types when custom prompts are provided
+            adaptive_entity_types = ["PERSONA", "ORGANIZACIÓN", "UBICACIÓN", "CONCEPTO", "PRODUCTO"]
 
         # Prepare examples if provided
         examples_str = ""
@@ -769,15 +781,18 @@ class GraphService:
                 f"{json.dumps(examples_json, indent=2)}\n```\n"
             )
 
-        # Modify the system message to handle properties as a string that will be parsed later
+        # Create adaptive entity types string for prompts
+        entity_types_str = ", ".join(adaptive_entity_types)
+
+        # Modify the system message to use adaptive entity types
         system_message = {
             "role": "system",
             "content": (
-                "Eres un asistente de extracción de entidades y relaciones. Extrae entidades y "
+                "Eres un asistente de extracción de entidades y relaciones con IA adaptativa. Extrae entidades y "
                 "sus relaciones del texto de manera precisa y exhaustiva, extrae tantas entidades y "
                 "relaciones como sea posible. "
-                "Para las entidades, incluye la etiqueta de la entidad y el tipo (algunos ejemplos: PERSONA, ORGANIZACIÓN, UBICACIÓN, "
-                "CONCEPTO, etc.). Si el usuario ha dado ejemplos, úsalos, estos son solo sugerencias. "
+                f"Para las entidades, incluye la etiqueta de la entidad y el tipo. Los tipos más relevantes para este contenido son: {entity_types_str}. "
+                "Puedes usar estos tipos o crear tipos más específicos si son más apropiados para el contenido. "
                 "Para las relaciones, usa un formato simple con campos source, target y relationship. "
                 "Sé muy minucioso, hay muchas relaciones que no son obvias. "
                 "IMPORTANTE: Los campos source y target deben ser cadenas simples que representen "
@@ -788,7 +803,7 @@ class GraphService:
             ),
         }
 
-        # Use custom prompt if provided, otherwise use default
+        # Use custom prompt if provided, otherwise use adaptive default
         if custom_prompt:
             user_message = {
                 "role": "user",
@@ -799,7 +814,8 @@ class GraphService:
                 "role": "user",
                 "content": (
                     "Extrae entidades nombradas y sus relaciones del siguiente texto. "
-                    "Para las entidades, incluye la etiqueta de la entidad y el tipo (PERSONA, ORGANIZACIÓN, UBICACIÓN, CONCEPTO, etc.). "
+                    f"Para las entidades, incluye la etiqueta de la entidad y el tipo. Los tipos más relevantes identificados son: {entity_types_str}. "
+                    "Puedes usar estos tipos o crear tipos más específicos según el contenido. "
                     "Para las relaciones, especifica la entidad fuente, la entidad destino y la relación entre ellas. "
                     "Los campos source y target deben ser cadenas simples que coincidan con las etiquetas de las entidades, no objetos. "
                     f"{examples_str}"
@@ -1542,3 +1558,123 @@ class GraphService:
             "semantic_unit": "#8b5cf6",  # Violeta (mantener inglés para compatibilidad)
         }
         return color_map.get(node_type.lower(), "#6b7280")  # Gris como predeterminado
+
+    async def _determine_adaptive_entity_types(
+        self,
+        content: str,
+        num_types: int = 5,
+        prompt_overrides: Optional[EntityExtractionPromptOverride] = None,
+    ) -> List[str]:
+        """
+        Use AI to adaptively determine the most relevant entity types for the given content.
+
+        Args:
+            content: Text content to analyze
+            num_types: Number of entity types to determine (default: 5)
+            prompt_overrides: Optional prompt overrides
+
+        Returns:
+            List of determined entity types
+        """
+        settings = get_settings()
+
+        # Limit content length for analysis
+        content_limited = content[:2000]
+
+        # Create prompt for entity type determination
+        system_message = {
+            "role": "system",
+            "content": (
+                "Eres un experto en análisis de documentos. Tu tarea es analizar el contenido del texto "
+                "y determinar automáticamente los tipos de entidades más relevantes que se pueden extraer. "
+                "Los tipos de entidades deben ser específicos y útiles para el dominio del documento. "
+                "Responde con una lista JSON de tipos de entidades relevantes."
+            ),
+        }
+
+        user_message = {
+            "role": "user",
+            "content": (
+                f"Analiza el siguiente contenido y determina los {num_types} tipos de entidades más relevantes "
+                "que se pueden extraer. Considera el dominio, tema y contexto del contenido. "
+                "Los tipos deben ser específicos y útiles (ej. 'EMPRESA', 'TECNOLOGÍA', 'PRODUCTO', "
+                "'PERSONA', 'UBICACIÓN', 'FECHA', 'METODOLOGÍA', 'HERRAMIENTA', etc.).\n\n"
+                "Responde SOLO con un array JSON de strings con los tipos de entidades:\n\n"
+                f"Contenido a analizar:\n{content_limited}"
+            ),
+        }
+
+        # Get model configuration
+        model_config = settings.REGISTERED_MODELS.get(settings.GRAPH_MODEL, {})
+        if not model_config:
+            logger.warning(f"Model '{settings.GRAPH_MODEL}' not found, using default entity types")
+            return ["PERSONA", "ORGANIZACIÓN", "UBICACIÓN", "CONCEPTO", "PRODUCTO"]
+
+        try:
+            import litellm
+
+            # Prepare model parameters
+            model_params = {
+                "model": model_config.get("model_name"),
+                "messages": [system_message, user_message],
+                "temperature": 0.3,  # Lower temperature for more focused results
+                "max_tokens": 200,  # Limit tokens since we only need a short list
+            }
+
+            # Add model-specific parameters
+            for key, value in model_config.items():
+                if key not in ["model_name"]:
+                    model_params[key] = value
+
+            logger.debug(f"Determining adaptive entity types with params: {model_params}")
+
+            # Call LLM for entity type determination
+            response = await litellm.acompletion(**model_params)
+
+            if response and response.choices and len(response.choices) > 0:
+                content_response = response.choices[0].message.content.strip()
+                logger.debug(f"Raw entity types response: {content_response}")
+
+                # Try to parse JSON response
+                try:
+                    import json
+
+                    # Remove any markdown code blocks if present
+                    if "```json" in content_response:
+                        content_response = content_response.split("```json")[1].split("```")[0].strip()
+                    elif "```" in content_response:
+                        content_response = content_response.split("```")[1].split("```")[0].strip()
+
+                    entity_types = json.loads(content_response)
+
+                    if isinstance(entity_types, list) and all(isinstance(t, str) for t in entity_types):
+                        logger.info(f"Adaptively determined entity types: {entity_types}")
+                        return entity_types[:num_types]  # Limit to requested number
+                    else:
+                        logger.warning(f"Invalid entity types format: {entity_types}")
+
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse entity types JSON: {e}, content: {content_response}")
+
+                    # Fallback: try to extract types from text response
+                    entity_types = []
+                    lines = content_response.split("\n")
+                    for line in lines:
+                        line = line.strip()
+                        if line and not line.startswith("#") and not line.startswith("//"):
+                            # Remove quotes, brackets, and common JSON characters
+                            clean_line = line.replace('"', "").replace("'", "").replace("[", "").replace("]", "").replace(",", "").strip()
+                            if clean_line and len(clean_line) < 50:  # Reasonable entity type length
+                                entity_types.append(clean_line.upper())
+
+                    if entity_types:
+                        logger.info(f"Extracted entity types from text: {entity_types[:num_types]}")
+                        return entity_types[:num_types]
+
+        except Exception as e:
+            logger.error(f"Error determining adaptive entity types: {e}")
+
+        # Fallback to default entity types
+        default_types = ["PERSONA", "ORGANIZACIÓN", "UBICACIÓN", "CONCEPTO", "PRODUCTO"]
+        logger.info(f"Using default entity types: {default_types}")
+        return default_types
