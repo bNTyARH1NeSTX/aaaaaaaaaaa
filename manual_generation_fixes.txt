@@ -1,0 +1,154 @@
+CAMBIOS REALIZADOS EN EL SISTEMA DE GENERACIÓN DE MANUALES
+=========================================================
+Fecha: 9 de Junio 2025
+
+PROBLEMA IDENTIFICADO:
+- Error en las dimensiones de los vectores de embeddings: "Query vector has unexpected dimensions: (19, 128)"
+- El sistema estaba usando EMBEDDING_DIMENSION (de OpenAI) en lugar de COLPALI_EMBEDDING_DIMENSION (128)
+- La lógica de procesamiento de embeddings era demasiado compleja comparada con la implementación original
+- Error de sintaxis en manual_generation_embedding_model.py: Bloque try sin except correspondiente
+
+CAMBIOS REALIZADOS:
+
+1. ARCHIVO: /root/.ipython/aaaaaaaaaaa/core/models/manual_generation_document.py
+   - Corregido para usar COLPALI_EMBEDDING_DIMENSION = 128 en lugar de las dimensiones de OpenAI
+   - Comentarios agregados explicando que ColPali tiene sus propias dimensiones específicas
+
+2. ARCHIVO: /root/.ipython/aaaaaaaaaaa/core/embedding/manual_generation_embedding_model.py
+   - MÉTODO find_relevant_images(): Simplificado el manejo de embeddings para seguir la lógica del col.py original:
+     * if query_vector.ndim == 2 and query_vector.shape[0] == 1: query_vector = query_vector[0]
+     * elif query_vector.ndim == 3: query_vector = query_vector.mean(axis=1).squeeze()
+   
+   - MÉTODO embed_for_query(): Simplificado para usar la misma lógica simple del col.py original
+   
+   - MÉTODO embed_for_ingestion(): 
+     * Simplificado el procesamiento de embeddings para seguir la lógica original
+     * Corregido bloque try sin except
+     * Agregado except Exception para manejar errores durante la inferencia del modelo
+     * Ahora maneja correctamente los errores y retorna arrays vacíos cuando hay problemas
+   
+   - Corregidas todas las referencias de EMBEDDING_DIMENSION por COLPALI_EMBEDDING_DIMENSION en:
+     * Validaciones de dimensiones de embeddings
+     * Verificaciones de shape en store_image_metadata()
+     * Checks de dimensiones en embed_for_ingestion()
+
+LÓGICA IMPLEMENTADA (siguiendo col.py original):
+- Para embeddings de imágenes y queries:
+  ```python
+  if embedding.ndim == 2 and embedding.shape[0] == 1:
+      embedding = embedding[0]
+  elif embedding.ndim == 3:
+      embedding = embedding.mean(axis=1).squeeze()
+  ```
+- Validación final: embedding.ndim == 1 and len(embedding) == COLPALI_EMBEDDING_DIMENSION (128)
+
+ARCHIVOS DE REFERENCIA UTILIZADOS:
+- /root/.ipython/aaaaaaaaaaa/Bnext%20RAGnar/col.py (implementación original)
+
+RESULTADO ESPERADO:
+- Eliminación del error "Query vector has unexpected dimensions"
+- Correcto manejo de embeddings multi-vector de ColPali
+- Compatibilidad con el modelo ARHVNAAG/Bnext fine-tuneado
+- Uso consistente de 128 dimensiones para embeddings de manual generation
+
+PRÓXIMOS PASOS:
+1. Probar el endpoint /manuals/generate_manual con una query como "como agregar impresoras"
+2. Verificar que el sistema encuentra imágenes relevantes
+3. Asegurar que los embeddings se generen correctamente antes de la búsqueda
+4. Implementar el procesamiento de imágenes ERP si aún no se han generado los embeddings
+
+### 2025-06-09 16:17:00 - Corrección de Error de Sintaxis
+
+**Problema identificado:**
+- Error de sintaxis en manual_generation_embedding_model.py
+- Bloque try sin except correspondiente causando SyntaxError al importar el módulo
+
+**Cambios realizados:**
+
+1. **core/embedding/manual_generation_embedding_model.py**:
+   - Corregido bloque try sin except en el método embed_for_ingestion
+   - Agregado except Exception para manejar errores durante la inferencia del modelo
+   - El método ahora maneja correctamente los errores y retorna arrays vacíos cuando hay problemas
+
+**Estado:**
+- ✅ Error de sintaxis corregido
+- ✅ Manejo de excepciones mejorado en embed_for_ingestion
+- 🔄 Listo para probar el servidor nuevamente
+
+### ✅ COMPLETADO - 2025-06-09 16:18:00 - Corrección de Dimensiones de Base de Datos
+
+#### 🔧 Corrección de Dimensiones de Embedding
+- **Problema**: La tabla manual_gen_documents usaba 1536 dimensiones (OpenAI) en lugar de 128 (ColPali)
+- **Error**: "expected 1536 dimensions, not 128" al intentar almacenar embeddings
+- **Solución**: 
+  - Creado script fix_manual_db_dimensions.py
+  - Tabla manual_gen_documents recreada con vector(128)
+  - Índice HNSW creado correctamente para búsquedas vectoriales
+  - Trigger updated_at configurado
+  - ✅ **Estado**: COMPLETADO - Base de datos corregida exitosamente
+
+#### 📊 Estructura de Tabla Final:
+```sql
+CREATE TABLE manual_gen_documents (
+    id SERIAL PRIMARY KEY,
+    image_path VARCHAR UNIQUE NOT NULL,
+    prompt TEXT,
+    respuesta TEXT,
+    embedding vector(128),  -- ColPali specific dimension ✅
+    module VARCHAR,
+    section VARCHAR,
+    subsection VARCHAR,
+    function_detected VARCHAR,
+    hierarchy_level INTEGER,
+    keywords JSONB,
+    additional_metadata JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### 🔍 Indices Creados:
+- `idx_manual_gen_image_path` - Para búsquedas por ruta de imagen
+- `idx_manual_gen_embedding_hnsw` - HNSW vector index para similitud coseno
+- Trigger `update_manual_gen_documents_updated_at` - Actualización automática de timestamp
+
+## Fixed Manual Generation Response Handling (2025-06-09 17:10)
+
+**Issue**: Manual generation endpoint returning 500 error due to Pydantic validation error. The `ManualGenerationResponse` expected `generated_text` as a string, but the service was returning a dictionary with `{'manual_text': '...', 'analysis': '...'}`.
+
+**Root Cause**: The `generate_manual_text` service method returns a dictionary (matching original code behavior), but the router was passing this dictionary directly to the response model which expects a string.
+
+**Changes Made**:
+
+1. **Fixed Manual Generation Router** (`/root/.ipython/aaaaaaaaaaa/core/routers/manual_generation_router.py`):
+   - Added proper extraction of `manual_text` from service response dictionary
+   - Updated both manual generation and PowerPoint generation endpoints
+   - Added type checking to handle both dict and string responses gracefully
+
+2. **Fixed Test Script** (`/root/.ipython/aaaaaaaaaaa/test_process_erp_images.py`):
+   - Changed `max_images` to `k_images` to match the actual request model
+   - Updated response parsing to use correct field names (`generated_text`, `relevant_images_used`)
+
+**Code Changes**:
+```python
+# Before:
+return ManualGenerationResponse(
+    generated_text=generated_text_result,  # This was a dict!
+    relevant_images_used=relevant_images_metadata,
+    query=request.query,
+)
+
+# After:
+if isinstance(generated_text_result, dict):
+    manual_text = generated_text_result.get('manual_text', str(generated_text_result))
+else:
+    manual_text = str(generated_text_result)
+
+return ManualGenerationResponse(
+    generated_text=manual_text,  # Now a string
+    relevant_images_used=relevant_images_metadata,
+    query=request.query,
+)
+```
+
+**Status**: ✅ Fixed - Manual generation should now return proper responses without validation errors

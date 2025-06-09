@@ -132,6 +132,13 @@ async def generate_manual_endpoint(
             images_metadata=relevant_images_metadata,
         )
         logger.info(f"Successfully generated manual text for query: '{request.query}'.")
+        
+        # Extract the manual text from the response (service returns a dict with 'manual_text' and 'analysis')
+        if isinstance(generated_text_result, dict):
+            manual_text = generated_text_result.get('manual_text', str(generated_text_result))
+        else:
+            manual_text = str(generated_text_result)
+            
     except HTTPException:
         raise
     except Exception as e:
@@ -139,7 +146,7 @@ async def generate_manual_endpoint(
         raise HTTPException(status_code=500, detail=f"An error occurred during manual text generation: {str(e)}")
 
     return ManualGenerationResponse(
-        generated_text=generated_text_result,
+        generated_text=manual_text,
         relevant_images_used=relevant_images_metadata,
         query=request.query,
     )
@@ -210,11 +217,17 @@ async def generate_powerpoint_endpoint(
             images_metadata=relevant_images_metadata,
         )
         
+        # Extract the manual text from the response (service returns a dict with 'manual_text' and 'analysis')
+        if isinstance(generated_text_result, dict):
+            manual_text = generated_text_result.get('manual_text', str(generated_text_result))
+        else:
+            manual_text = str(generated_text_result)
+        
         # Generate PowerPoint
         logger.info("Generating PowerPoint presentation...")
         powerpoint_path = await generator_service.generate_powerpoint(
             query=request.query,
-            manual_text=generated_text_result,
+            manual_text=manual_text,
             image_metadata_list=relevant_images_metadata
         )
         
@@ -672,7 +685,6 @@ async def process_all_erp_images_endpoint(
 class ERPImageProcessingRequestExtended(BaseModel):
     folder_path: Optional[str] = Field(default=None, description="Path to folder with ERP images")
     force_reprocess: bool = Field(default=False, description="Force reprocessing of existing images")
-    max_images: Optional[int] = Field(default=None, description="Maximum number of images to process")
     batch_size: int = Field(default=10, description="Number of images to process per batch")
 
 class ERPImageProcessingResponseExtended(BaseModel):
@@ -735,11 +747,6 @@ async def process_erp_images_endpoint(
         
         total_images_found = len(image_files)
         logger.info(f"Found {total_images_found} images to process")
-        
-        # Limit images if specified
-        if request.max_images and request.max_images < total_images_found:
-            image_files = image_files[:request.max_images]
-            logger.info(f"Limited to {request.max_images} images")
         
         # Process images in batches
         for i in range(0, len(image_files), request.batch_size):

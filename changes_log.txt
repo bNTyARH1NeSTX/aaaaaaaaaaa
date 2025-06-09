@@ -508,3 +508,46 @@ El frontend no estaba mostrando correctamente las imágenes en base64 de los res
 
 ### Comportamiento Esperado:
 Cuando el toggle de ColPali está habilitado y la búsqueda devuelve resultados de imágenes, los datos de imagen en base64 ahora deberían mostrarse correctamente como imágenes en la lista de resultados de búsqueda y en el modal de detalles.
+
+2025-06-09 - BUG CRÍTICO ARREGLADO: ResponseValidationError en /usage/recent
+==========================================================================
+
+### PROBLEMA IDENTIFICADO:
+- ERROR: ResponseValidationError en endpoint /usage/recent
+- FastAPI error: "Input should be a valid dictionary" 
+- Causa: List comprehension incompleta sin 'for record in records'
+
+### SOLUCIÓN APLICADA:
+1. **Archivo modificado**: `/root/.ipython/aaaaaaaaaaa/core/routers/usage.py`
+   - **Líneas 42-53**: Completada la list comprehension faltante
+   - **Problema**: Faltaba `for record in records` al final de la conversión
+   - **Solución**: Agregado `for record in records` para que la conversión funcione correctamente
+
+### CÓDIGO ARREGLADO:
+```python
+# Convert UsageRecord objects to dictionaries matching the frontend RecentActivity interface
+return [
+    {
+        "operation_type": record.operation_type,
+        "metadata": record.metadata or {},
+        "timestamp": record.timestamp.isoformat() if hasattr(record.timestamp, 'isoformat') else str(record.timestamp),
+        "status": record.status,
+        "user_id": record.user_id,
+        "tokens_used": record.tokens_used,
+        "duration_ms": record.duration_ms,
+    }
+    for record in records  # <- ESTA LÍNEA ESTABA FALTANDO
+]
+```
+
+### RESULTADO:
+- ✅ Error HTTP 500 resuelto en endpoint /usage/recent
+- ✅ Frontend ya no debería mostrar "Network/Unknown Error"
+- ✅ Estadísticas de uso ahora cargan correctamente
+- ✅ Backend devuelve respuesta JSON válida compatible con interfaz RecentActivity del frontend
+
+[2025-06-09 14:47:30] ARREGLADO: Error de sintaxis en /core/routers/usage.py  
+- Descripción: Eliminada línea duplicada "for record in records" que causaba IndentationError
+- Cambio: Removido código duplicado en la list comprehension
+- Líneas modificadas: 56
+- Estado: ✅ COMPLETADO

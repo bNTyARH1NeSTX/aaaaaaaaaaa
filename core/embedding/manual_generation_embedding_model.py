@@ -19,7 +19,7 @@ from sqlalchemy.exc import IntegrityError
 from core.config import get_settings, Settings
 from core.embedding.base_embedding_model import BaseEmbeddingModel
 from core.models.chunk import Chunk 
-from core.models.manual_generation_document import ManualGenDocument, EMBEDDING_DIMENSION, Base as ManualGenBase
+from core.models.manual_generation_document import ManualGenDocument, EMBEDDING_DIMENSION, COLPALI_EMBEDDING_DIMENSION, Base as ManualGenBase
 
 # Import ColPali for manual generation
 try:
@@ -202,19 +202,37 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
                     logger.error("Cannot determine embedding tensor from ColPali model output.")
                     return [np.array([]) for _ in texts_to_embed]
 
-                embeddings = embeddings_tensor.to(torch.float32).cpu().numpy()
+                embeddings = output.to(torch.float32).cpu().numpy()
+                
+                # Handle multi-vector output from ColPali - simplified like in original col.py
+                if embeddings.ndim == 2 and embeddings.shape[0] == 1:
+                    embeddings = embeddings[0]
+                elif embeddings.ndim == 3:
+                    embeddings = embeddings.mean(axis=1).squeeze()
+
+                # Ensure we have proper shape for multiple texts
+                if embeddings.ndim == 1 and len(texts_to_embed) == 1:
+                    # Single text, single embedding
+                    embeddings = np.expand_dims(embeddings, axis=0)
+                elif embeddings.ndim == 1 and len(texts_to_embed) > 1:
+                    # This shouldn't happen, but handle it
+                    logger.warning(f"Expected {len(texts_to_embed)} embeddings but got single vector")
+                    return [embeddings for _ in texts_to_embed]
+
+                # Validate embedding dimensions
+                if embeddings.ndim == 2 and embeddings.shape[1] != COLPALI_EMBEDDING_DIMENSION:
+                    logger.error(f"Generated embedding dimension ({embeddings.shape[1]}) does not match expected ({COLPALI_EMBEDDING_DIMENSION}). Check model configuration.")
+                    return [np.array([]) for _ in texts_to_embed]
+                elif embeddings.ndim == 1 and embeddings.shape[0] != COLPALI_EMBEDDING_DIMENSION:
+                    logger.error(f"Generated embedding dimension ({embeddings.shape[0]}) does not match expected ({COLPALI_EMBEDDING_DIMENSION}). Check model configuration.")
+                    return [np.array([]) for _ in texts_to_embed]
+
+                # Convert to list of individual embeddings
+                return [emb for emb in embeddings]
+                
             except Exception as e:
-                logger.error(f"Error during model inference or embedding extraction in embed_for_ingestion: {e}")
+                logger.error(f"Error during model inference in embed_for_ingestion: {e}")
                 return [np.array([]) for _ in texts_to_embed]
-        
-        if embeddings.ndim == 1: # If a single embedding was returned and it's 1D
-            embeddings = np.expand_dims(embeddings, axis=0)
-
-        if embeddings.shape[1] != EMBEDDING_DIMENSION:
-            logger.error(f"Generated embedding dimension ({embeddings.shape[1]}) does not match expected ({EMBEDDING_DIMENSION}). Check model and EMBEDDING_DIMENSION.")
-            return [np.array([]) for _ in texts_to_embed]
-
-        return [emb for emb in embeddings]
 
     async def embed_for_query(self, text: str) -> np.ndarray:
         """Generate query embedding for similarity search."""
@@ -227,25 +245,20 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             inputs = self.colpali_processor.process_queries([text]).to(self.device)
             with torch.no_grad():
                 output = self.colpali_model(**inputs)
-                
-                # Handle different output formats from ColPali
-                if hasattr(output, 'last_hidden_state'):
-                    query_vector = output.last_hidden_state.mean(dim=1).squeeze()
-                elif hasattr(output, 'pooler_output'):
-                    query_vector = output.pooler_output.squeeze()
-                elif torch.is_tensor(output):
-                    query_vector = output.squeeze()
-                else:
-                    logger.error("Cannot determine embedding tensor from ColPali model output for query.")
-                    return np.array([])
-                    
-                query_vector = query_vector.to(torch.float32).cpu().numpy()
+                query_vector = output.to(torch.float32).cpu().numpy()
 
+            # Handle multi-vector output from ColPali - simplified like in original col.py
             if query_vector.ndim == 2 and query_vector.shape[0] == 1:
-                return query_vector[0]
-            elif query_vector.ndim == 3: # Should not happen for single query
-                return query_vector.mean(axis=1).squeeze()
-            return query_vector # Should be 1D array
+                query_vector = query_vector[0]
+            elif query_vector.ndim == 3:
+                query_vector = query_vector.mean(axis=1).squeeze()
+
+            # Validate final vector
+            if query_vector.ndim != 1 or len(query_vector) != COLPALI_EMBEDDING_DIMENSION:
+                logger.error(f"Query vector has unexpected dimensions: {query_vector.shape}, expected ({COLPALI_EMBEDDING_DIMENSION},)")
+                return np.array([])
+                
+            return query_vector
         except Exception as e:
             logger.error(f"Error generating query embedding: {e}")
             return np.array([])
@@ -296,27 +309,31 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             with torch.no_grad():
                 output = self.colpali_model(**inputs)
                 
-                # Handle different output formats from ColPali
-                if hasattr(output, 'last_hidden_state'):
-                    query_vector = output.last_hidden_state.mean(dim=1).squeeze()
+                # ColPali puede devolver múltiples embeddings por query (multi-vector)
+                # Necesitamos manejar esto correctamente
+                if torch.is_tensor(output):
+                    query_vector = output
+                elif hasattr(output, 'last_hidden_state'):
+                    query_vector = output.last_hidden_state
                 elif hasattr(output, 'pooler_output'):
-                    query_vector = output.pooler_output.squeeze()
-                elif torch.is_tensor(output):
-                    query_vector = output.squeeze()
+                    query_vector = output.pooler_output
                 else:
                     logger.error("Cannot determine embedding tensor from ColPali model output.")
                     return []
                     
+                # Convert to numpy
                 query_vector = query_vector.to(torch.float32).cpu().numpy()
 
+                # Handle multi-vector output from ColPali - simplified like in original col.py
                 if query_vector.ndim == 2 and query_vector.shape[0] == 1:
                     query_vector = query_vector[0]
-                elif query_vector.ndim == 3: # Should not happen for single query
+                elif query_vector.ndim == 3:
                     query_vector = query_vector.mean(axis=1).squeeze()
-                # Ensure query_vector is 1D
-                if query_vector.ndim != 1:
-                    logger.error(f"Query vector has unexpected dimensions: {query_vector.shape}")
-                    query_vector = query_vector.reshape(-1)
+
+                # Validate final vector
+                if query_vector.ndim != 1 or len(query_vector) != COLPALI_EMBEDDING_DIMENSION:
+                    logger.error(f"Query vector has unexpected dimensions: {query_vector.shape}, expected ({COLPALI_EMBEDDING_DIMENSION},)")
+                    return []
 
             # Ejecutar búsqueda semántica
             results = db_session.execute(
@@ -378,16 +395,16 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
 
         final_embedding_list: Optional[List[float]] = None
         if embedding_override is not None:
-            if embedding_override.ndim == 1 and embedding_override.shape[0] == EMBEDDING_DIMENSION:
+            if embedding_override.ndim == 1 and embedding_override.shape[0] == COLPALI_EMBEDDING_DIMENSION:
                 final_embedding_list = embedding_override.tolist()
             else:
-                logger.warning(f"Provided embedding_override for {image_path} has incorrect shape ({embedding_override.shape}). Expected ({EMBEDDING_DIMENSION},). Skipping embedding.")
+                logger.warning(f"Provided embedding_override for {image_path} has incorrect shape ({embedding_override.shape}). Expected ({COLPALI_EMBEDDING_DIMENSION},). Skipping embedding.")
         elif embedding_text:
             try:
                 # Use embed_for_ingestion as it handles lists and returns a list of embeddings
                 # We expect a single text, so we take the first result.
                 embedding_results = await self.embed_for_ingestion([embedding_text])
-                if embedding_results and embedding_results[0].ndim == 1 and embedding_results[0].shape[0] == EMBEDDING_DIMENSION:
+                if embedding_results and embedding_results[0].ndim == 1 and embedding_results[0].shape[0] == COLPALI_EMBEDDING_DIMENSION:
                     final_embedding_list = embedding_results[0].tolist()
                 else:
                     logger.warning(f"Failed to generate valid embedding for text: '{embedding_text[:50]}...'")

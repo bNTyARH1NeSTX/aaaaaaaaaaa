@@ -8,16 +8,20 @@ from pgvector.sqlalchemy import Vector
 
 from core.config import Settings, get_settings # Import Settings and get_settings
 
-# Load settings to get VECTOR_DIMENSIONS
-# This assumes get_settings() is available and configured
-# If morphik.toml is not in the root or get_settings() has issues, this might fail
+# ColPali model specific dimensions (from ARHVNAAG/Bnext fine-tuned model)
+# This is different from the general OpenAI embedding dimensions in config
+COLPALI_EMBEDDING_DIMENSION = 128  # Specific to the fine-tuned ColPali model for manual generation
+
+# Load settings for other configurations but use specific dimensions for ColPali
 try:
     settings = get_settings() # Use get_settings() to load all configurations
-    EMBEDDING_DIMENSION = settings.VECTOR_DIMENSIONS
+    # Note: We don't use settings.VECTOR_DIMENSIONS here because that's for OpenAI embeddings
+    # ColPali has its own specific dimension requirements
+    EMBEDDING_DIMENSION = COLPALI_EMBEDDING_DIMENSION
 except Exception as e:
-    print(f"Warning: Could not load VECTOR_DIMENSIONS from core.config.Settings: {e}")
-    print("Defaulting EMBEDDING_DIMENSION to 1024. Ensure core.config.Settings is accessible and VECTOR_DIMENSIONS is set.")
-    EMBEDDING_DIMENSION = 1024 # Fallback, ensure this is a safe default or handle error appropriately
+    print(f"Warning: Could not load settings from core.config.Settings: {e}")
+    print(f"Using ColPali specific embedding dimension: {COLPALI_EMBEDDING_DIMENSION}")
+    EMBEDDING_DIMENSION = COLPALI_EMBEDDING_DIMENSION # Use ColPali specific dimensions
 
 Base = declarative_base()
 

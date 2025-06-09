@@ -39,5 +39,18 @@ async def get_recent_usage(
         )
     else:
         records = telemetry.get_recent_usage(operation_type=operation_type, since=since, status=status)
+
+    # Convert UsageRecord objects to dictionaries matching the frontend RecentActivity interface
+    return [
+        {
+            "operation_type": record.operation_type,
+            "metadata": record.metadata or {},
+            "timestamp": record.timestamp.isoformat() if hasattr(record.timestamp, 'isoformat') else str(record.timestamp),
+            "status": record.status,
+            "user_id": record.user_id,
+            "tokens_used": record.tokens_used,
+            "duration_ms": record.duration_ms,
+        }
+        for record in records
+    ]
     
-    return records

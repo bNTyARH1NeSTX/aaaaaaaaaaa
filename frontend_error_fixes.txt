@@ -1,0 +1,31 @@
+Frontend Error Fixes Log
+========================
+
+Fecha: $(date)
+
+## Error 1: Network/Unknown Error en apiService.ts
+
+**Problema**: 
+- Error en /usage/recent endpoint
+- El backend estaba devolviendo objetos UsageRecord directamente sin convertir a diccionarios
+- El frontend esperaba una interfaz RecentActivity específica
+
+**Archivos modificados**:
+- /root/.ipython/aaaaaaaaaaa/core/routers/usage.py
+
+**Cambios realizados**:
+1. Convertir objetos UsageRecord a diccionarios con el formato correcto:
+   - operation_type: string
+   - metadata: dict
+   - timestamp: string (ISO format)
+   - status: string
+   - user_id: string
+   - tokens_used: number
+   - duration_ms: number
+
+**Solución aplicada**:
+- Agregué conversión explícita de los objetos UsageRecord a diccionarios
+- Manejé la conversión del timestamp a formato ISO string
+- Incluí todos los campos esperados por el frontend
+
+**Estado**: ✅ COMPLETADO
