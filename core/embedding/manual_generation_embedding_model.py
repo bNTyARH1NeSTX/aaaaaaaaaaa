@@ -7,6 +7,7 @@ import json  # For CSV loading
 import csv  # For CSV loading
 import datetime  # For updated_at timestamp
 from typing import List, Tuple, Union, Optional
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -284,6 +285,7 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
     async def find_relevant_images(self, query: str, k: int = 3) -> List[ManualGenDocument]:
         """
         Busca imágenes relevantes en la base de datos usando ColPali.
+        Si la base de datos está vacía, automáticamente procesa las imágenes ERP.
         
         Args:
             query: String con la consulta del usuario
@@ -293,6 +295,12 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             Lista de ManualGenDocument objects
         """
         logger.info(f"🔎 Buscando imágenes relevantes para: {query}")
+
+        # First ensure database is initialized
+        db_initialized = await self.ensure_database_initialized()
+        if not db_initialized:
+            logger.error("Failed to initialize vector database with ERP images")
+            return []
 
         db_session = self.get_manual_gen_db_session()
         if not db_session:
@@ -333,8 +341,8 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
                 # Validate final vector
                 if query_vector.ndim != 1 or len(query_vector) != COLPALI_EMBEDDING_DIMENSION:
                     logger.error(f"Query vector has unexpected dimensions: {query_vector.shape}, expected ({COLPALI_EMBEDDING_DIMENSION},)")
-                    return []
-
+                    return np.array([])
+                
             # Ejecutar búsqueda semántica
             results = db_session.execute(
                 text('''
@@ -540,7 +548,7 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             "section": None,
             "subsection": None,
             "function": None,
-            "hierarchy_level": 0
+            "hierarchy_level": None
         }
         
         path_parts = image_path.split("/")
@@ -773,6 +781,372 @@ class ManualGenerationEmbeddingModel(BaseEmbeddingModel):
             return False
         finally:
             db_session.close()
+
+    async def ensure_database_initialized(self) -> bool:
+        """
+        Ensures the vector database is initialized with ERP images.
+        If the database is empty, automatically calls the initialization script.
+        
+        Returns:
+            bool: True if database has data (either existed or was just initialized), False if failed
+        """
+        db_session = self.get_manual_gen_db_session()
+        if not db_session:
+            logger.error("Cannot check database initialization: Manual generation database session not available.")
+            return False
+        
+        try:
+            # Check if database has any images
+            from core.models.manual_generation_document import ManualGenDocument
+            count = db_session.query(ManualGenDocument).count()
+            
+            if count > 0:
+                logger.info(f"✅ Vector database already initialized with {count} images")
+                return True
+            
+            logger.warning("❌ Vector database is empty. Auto-initializing with ERP images...")
+            
+            # Database is empty, call the initialization script
+            try:
+                from core.utils.initialize_manual_db import initialize_manual_db
+                success = await initialize_manual_db(force_reprocess=False)
+                
+                if success:
+                    logger.info("✅ Auto-initialization completed successfully")
+                    return True
+                else:
+                    logger.error("❌ Auto-initialization failed")
+                    return False
+                    
+            except ImportError as e:
+                logger.error(f"Cannot import initialization script: {e}")
+                # Fallback to the internal method
+                logger.info("Falling back to internal auto-processing...")
+                return await self._auto_process_erp_images()
+            
+        except Exception as e:
+            logger.error(f"Error checking database initialization: {e}")
+            return False
+        finally:
+            db_session.close()
+    
+    async def _auto_process_erp_images(self) -> bool:
+        """
+        Automatically process all ERP images to populate the vector database using ColPali.
+        This follows the exact same logic as the original col.py script.
+        
+        Returns:
+            bool: True if processing succeeded, False otherwise
+        """
+        try:
+            from PIL import Image
+            
+            if not self.image_folder or not os.path.isdir(self.image_folder):
+                logger.error(f"ERP images folder not configured or not found: {self.image_folder}")
+                return False
+            
+            if not self.colpali_model or not self.colpali_processor:
+                logger.error("ColPali model or processor not loaded. Cannot process images.")
+                return False
+            
+            # Find all image files
+            image_folder = Path(self.image_folder)
+            image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')
+            image_files = []
+            
+            for root, dirs, files in os.walk(image_folder):
+                for file in files:
+                    if file.lower().endswith(image_extensions):
+                        full_path = os.path.join(root, file)
+                        relative_path = os.path.relpath(full_path, image_folder)
+                        image_files.append((full_path, relative_path))
+            
+            total_images = len(image_files)
+            logger.info(f"🔄 Auto-processing {total_images} ERP images with ColPali...")
+            
+            if total_images == 0:
+                logger.warning("No ERP images found to process")
+                return False
+            
+            # Get database session
+            db_session = self.get_manual_gen_db_session()
+            if not db_session:
+                logger.error("Cannot get database session for image processing")
+                return False
+            
+            processed_count = 0
+            failed_count = 0
+            skipped_count = 0
+            
+            try:
+                for full_path, relative_path in image_files:
+                    try:
+                        # Check if image already exists in database (using relative path)
+                        from core.models.manual_generation_document import ManualGenDocument
+                        existing_doc = db_session.query(ManualGenDocument).filter_by(image_path=relative_path).first()
+                        if existing_doc:
+                            skipped_count += 1
+                            logger.debug(f"⏭️ Skipping existing image: {relative_path}")
+                            continue
+                        
+                        # Load and process image with ColPali (exactly like col.py)
+                        logger.debug(f"🔄 Processing: {relative_path}")
+                        img = Image.open(full_path).convert("RGB")
+                        
+                        # Use ColPali to process the image (same as col.py)
+                        inputs = self.colpali_processor.process_images([img]).to(self.device)
+                        with torch.no_grad():
+                            output = self.colpali_model(**inputs)
+                            embedding = output.to(torch.float32).cpu().numpy()
+                            
+                            # Apply same normalization as col.py
+                            if embedding.ndim == 2 and embedding.shape[0] == 1:
+                                embedding = embedding[0]
+                            elif embedding.ndim == 3:
+                                embedding = embedding.mean(axis=1).squeeze()
+                            
+                            # Validate embedding (same assertions as col.py)
+                            assert embedding.ndim == 1, f"Vector debe ser 1D, es {embedding.shape}"
+                            assert len(embedding) == COLPALI_EMBEDDING_DIMENSION, f"Vector debe ser de {COLPALI_EMBEDDING_DIMENSION} dimensiones, es {len(embedding)}"
+                        
+                        # Extract metadata from path
+                        metadata = self._extract_metadata_from_path_sync(relative_path, full_path)
+                        
+                        # Create document (same structure as col.py)
+                        new_doc = ManualGenDocument(
+                            image_path=relative_path,  # Store relative path
+                            prompt=metadata.get('prompt'),
+                            respuesta=metadata.get('respuesta'),
+                            embedding=embedding.tolist(),  # Store as list for pgvector
+                            module=metadata.get('module'),
+                            section=metadata.get('section'),
+                            subsection=metadata.get('subsection'),
+                            function_detected=metadata.get('function_detected'),
+                            hierarchy_level=metadata.get('hierarchy_level'),
+                            keywords=metadata.get('keywords'),
+                            additional_metadata=metadata.get('additional_metadata')
+                        )
+                        
+                        db_session.add(new_doc)
+                        processed_count += 1
+                        
+                        # Commit in batches to avoid memory issues
+                        if processed_count % 10 == 0:
+                            db_session.commit()
+                            logger.info(f"📊 Processed {processed_count}/{total_images} images...")
+                            
+                    except Exception as e:
+                        failed_count += 1
+                        logger.error(f"Error processing {relative_path}: {e}")
+                        continue
+                
+                # Final commit
+                db_session.commit()
+                
+                logger.info(f"🎯 ColPali processing completed:")
+                logger.info(f"  • Successfully processed: {processed_count}")
+                logger.info(f"  • Failed: {failed_count}")
+                logger.info(f"  • Skipped: {skipped_count}")
+                logger.info(f"  • Total: {total_images}")
+                
+                return processed_count > 0
+                
+            finally:
+                db_session.close()
+            
+        except Exception as e:
+            logger.error(f"Error during ColPali auto-processing of ERP images: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def _extract_metadata_from_path_sync(self, relative_path: str, full_path: str) -> dict:
+        """
+        Extract metadata from image path using simple rules (synchronous version).
+        This is used during auto-initialization.
+        """
+        try:
+            path_parts = relative_path.split('/')
+            
+            # Basic extraction from path structure
+            module = path_parts[0] if len(path_parts) > 1 else "general"
+            section = path_parts[1] if len(path_parts) > 2 else None
+            subsection = path_parts[2] if len(path_parts) > 3 else None
+            
+            # Generate basic prompt from filename and path
+            filename = os.path.splitext(os.path.basename(relative_path))[0]
+            hierarchy_parts = [part for part in path_parts[:-1] if part]
+            hierarchy_str = ' > '.join(hierarchy_parts) if hierarchy_parts else 'Raíz'
+            
+            prompt = f"Pantalla del módulo {module}"
+            if section:
+                prompt += f" en la sección {section}"
+            if subsection:
+                prompt += f", subsección {subsection}"
+            prompt += f". Archivo: {filename}"
+            
+            respuesta = f"Esta imagen muestra la interfaz del ERP en la ruta: {hierarchy_str}"
+            
+            # Basic function detection from filename
+            function_detected = None
+            filename_lower = filename.lower()
+            if any(word in filename_lower for word in ['agregar', 'añadir', 'crear', 'nuevo']):
+                function_detected = "agregar"
+            elif any(word in filename_lower for word in ['editar', 'modificar', 'cambiar']):
+                function_detected = "editar"
+            elif any(word in filename_lower for word in ['eliminar', 'borrar', 'delete']):
+                function_detected = "eliminar"
+            elif any(word in filename_lower for word in ['buscar', 'filtrar', 'search']):
+                function_detected = "buscar"
+            elif any(word in filename_lower for word in ['configurar', 'config', 'setup']):
+                function_detected = "configurar"
+            
+            # Extract keywords from path and filename
+            keywords = []
+            for part in path_parts:
+                if part and len(part) > 2:
+                    keywords.append(part.lower())
+            
+            return {
+                'prompt': prompt,
+                'respuesta': respuesta,
+                'module': module,
+                'section': section,
+                'subsection': subsection,
+                'function_detected': function_detected,
+                'hierarchy_level': len(path_parts) - 1,
+                'keywords': keywords,
+                'additional_metadata': {
+                    'auto_processed': True,
+                    'source_path': relative_path,
+                    'hierarchy': hierarchy_str
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error extracting metadata from path {relative_path}: {e}")
+            return {
+                'prompt': f"Imagen del ERP: {os.path.basename(relative_path)}",
+                'respuesta': "Pantalla del sistema ERP",
+                'module': "general",
+                'additional_metadata': {'auto_processed': True, 'extraction_error': str(e)}
+            }
+
+    async def _extract_metadata_from_path(self, relative_path: str, full_path: str) -> dict:
+        """
+        Extract metadata from image path using simple rules.
+        This is used during auto-initialization.
+        """
+        try:
+            path_parts = relative_path.split('/')
+            
+            # Basic extraction from path structure
+            module = path_parts[0] if len(path_parts) > 1 else "general"
+            section = path_parts[1] if len(path_parts) > 2 else None
+            subsection = path_parts[2] if len(path_parts) > 3 else None
+            
+            # Generate basic prompt from filename and path
+            filename = os.path.splitext(os.path.basename(relative_path))[0]
+            hierarchy_parts = [part for part in path_parts[:-1] if part]
+            hierarchy_str = ' > '.join(hierarchy_parts) if hierarchy_parts else 'Raíz'
+            
+            prompt = f"Pantalla del módulo {module}"
+            if section:
+                prompt += f" en la sección {section}"
+            if subsection:
+                prompt += f", subsección {subsection}"
+            prompt += f". Archivo: {filename}"
+            
+            respuesta = f"Esta imagen muestra la interfaz del ERP en la ruta: {hierarchy_str}"
+            
+            # Basic function detection from filename
+            function_detected = None
+            filename_lower = filename.lower()
+            if any(word in filename_lower for word in ['agregar', 'añadir', 'crear', 'nuevo']):
+                function_detected = "agregar"
+            elif any(word in filename_lower for word in ['editar', 'modificar', 'cambiar']):
+                function_detected = "editar"
+            elif any(word in filename_lower for word in ['eliminar', 'borrar', 'delete']):
+                function_detected = "eliminar"
+            elif any(word in filename_lower for word in ['buscar', 'filtrar', 'search']):
+                function_detected = "buscar"
+            elif any(word in filename_lower for word in ['configurar', 'config', 'setup']):
+                function_detected = "configurar"
+            
+            # Extract keywords from path and filename
+            keywords = []
+            for part in path_parts:
+                if part and len(part) > 2:
+                    keywords.append(part.lower())
+            
+            return {
+                'prompt': prompt,
+                'respuesta': respuesta,
+                'module': module,
+                'section': section,
+                'subsection': subsection,
+                'function_detected': function_detected,
+                'hierarchy_level': len(path_parts) - 1,
+                'keywords': keywords,
+                'additional_metadata': {
+                    'auto_processed': True,
+                    'source_path': relative_path,
+                    'hierarchy': hierarchy_str
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error extracting metadata from path {relative_path}: {e}")
+            return {
+                'prompt': f"Imagen del ERP: {os.path.basename(relative_path)}",
+                'respuesta': "Pantalla del sistema ERP",
+                'module': "general",
+                'additional_metadata': {'auto_processed': True, 'extraction_error': str(e)}
+            }
+
+    def _generate_embedding_text(self, metadata: dict, image_path: str) -> str:
+        """
+        Generate text for embedding based on metadata.
+        This text will be used to generate ColPali embeddings.
+        """
+        try:
+            parts = []
+            
+            # Add module and hierarchy info
+            if metadata.get('module'):
+                parts.append(f"Módulo: {metadata['module']}")
+            
+            if metadata.get('section'):
+                parts.append(f"Sección: {metadata['section']}")
+                
+            if metadata.get('subsection'):
+                parts.append(f"Subsección: {metadata['subsection']}")
+            
+            # Add prompt and respuesta
+            if metadata.get('prompt'):
+                parts.append(metadata['prompt'])
+                
+            if metadata.get('respuesta'):
+                parts.append(metadata['respuesta'])
+            
+            # Add function info
+            if metadata.get('function_detected'):
+                parts.append(f"Función: {metadata['function_detected']}")
+            
+            # Add keywords
+            if metadata.get('keywords'):
+                keywords_str = ', '.join(metadata['keywords'])
+                parts.append(f"Palabras clave: {keywords_str}")
+            
+            # Add filename for context
+            filename = os.path.basename(image_path)
+            parts.append(f"Archivo: {filename}")
+            
+            return ' | '.join(parts)
+            
+        except Exception as e:
+            logger.error(f"Error generating embedding text for {image_path}: {e}")
+            return f"Imagen del ERP: {os.path.basename(image_path)}"
 
 # Example of how you might get settings and instantiate:
 # settings = get_settings()

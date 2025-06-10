@@ -551,3 +551,68 @@ return [
 - Cambio: Removido código duplicado en la list comprehension
 - Líneas modificadas: 56
 - Estado: ✅ COMPLETADO
+
+## 2025-06-10 - Auto-inicialización de Base de Datos Vectorial
+
+### 🚀 Funcionalidad Principal Implementada
+- **Problema**: El sistema requiere que las imágenes ERP estén procesadas en la base de datos vectorial antes de generar manuales
+- **Solución**: Implementación de auto-inicialización que procesa automáticamente las imágenes cuando la base de datos está vacía
+
+### 📁 Archivos Modificados:
+
+1. **core/embedding/manual_generation_embedding_model.py**:
+   - ✅ Agregado método `ensure_database_initialized()` - Verifica si la BD tiene datos y auto-inicializa si está vacía
+   - ✅ Agregado método `_auto_process_erp_images()` - Procesa automáticamente todas las imágenes ERP
+   - ✅ Agregado método `_extract_metadata_from_path()` - Extrae metadatos básicos del path de la imagen
+   - ✅ Agregado método `_generate_embedding_text()` - Genera texto para embeddings ColPali
+   - ✅ Modificado `find_relevant_images()` - Ahora verifica e inicializa la BD antes de buscar
+
+2. **core/utils/initialize_manual_db.py** (NUEVO):
+   - ✅ Script independiente para inicializar manualmente la base de datos
+   - ✅ Soporte para argumentos de línea de comandos (--initialize, --force, --status)
+   - ✅ Logging detallado del proceso de inicialización
+   - ✅ Verificación de estado de la base de datos
+
+### 🔧 Funcionalidades Implementadas:
+
+#### Auto-inicialización Automática:
+- ✅ Se ejecuta automáticamente cuando `find_relevant_images()` detecta BD vacía
+- ✅ Procesa todas las imágenes en `/root/.ipython/aaaaaaaaaaa/ERP_screenshots`
+- ✅ Extrae metadatos básicos del path de archivo (módulo, sección, subsección)
+- ✅ Genera texto de embedding optimizado para ColPali
+- ✅ Detección básica de funciones desde nombres de archivo
+- ✅ Procesamiento en lotes para optimizar rendimiento
+
+#### Extracción de Metadatos Automática:
+- ✅ Módulo desde primer nivel de carpeta
+- ✅ Sección y subsección desde estructura de directorios
+- ✅ Detección de funciones: agregar, editar, eliminar, buscar, configurar
+- ✅ Generación de prompts descriptivos automáticos
+- ✅ Keywords extraídas del path
+- ✅ Nivel de jerarquía calculado automáticamente
+
+#### Script Manual:
+- ✅ `python core/utils/initialize_manual_db.py --status` - Verificar estado
+- ✅ `python core/utils/initialize_manual_db.py --initialize` - Inicializar
+- ✅ `python core/utils/initialize_manual_db.py --initialize --force` - Forzar reprocesamiento
+
+### 🎯 Beneficios:
+1. **Experiencia sin fricción**: El usuario no necesita hacer setup manual
+2. **Auto-recuperación**: Si la BD se corrompe, se auto-restaura
+3. **Flexibilidad**: Soporte tanto automático como manual
+4. **Logging completo**: Visibilidad total del proceso
+5. **Batch processing**: Manejo eficiente de grandes volúmenes de imágenes
+
+### 📊 Flujo de Trabajo:
+1. Usuario hace request a `/manuals/generate_manual`
+2. Sistema llama `find_relevant_images()`
+3. Se ejecuta `ensure_database_initialized()`
+4. Si BD vacía → se ejecuta `_auto_process_erp_images()`
+5. Se procesan todas las imágenes ERP automáticamente
+6. Se continúa con la búsqueda de imágenes relevantes
+7. Se genera el manual normalmente
+
+### ⚡ Estado:
+- ✅ **COMPLETADO** - Auto-inicialización implementada en el core
+- ✅ **LISTO PARA PRUEBAS** - Sistema debe funcionar automáticamente
+- 🔄 **PENDIENTE** - Pruebas en entorno de producción

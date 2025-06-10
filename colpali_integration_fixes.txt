@@ -1,0 +1,70 @@
+## Cambios realizados - ColPali Integration Fixes - 2025-06-10
+
+### 1. Inicialización automática de la base de datos vectorial ColPali
+- **Archivo modificado**: `core/embedding/manual_generation_embedding_model.py`
+- **Cambios**:
+  - Corregido el método `_auto_process_erp_images()` para usar exactamente la misma lógica que `col.py`
+  - Usa `processor.process_images()` para procesar imágenes (no `process_queries()`)
+  - Aplica la misma normalización de embeddings que el código original
+  - Valida dimensiones con assertions como en `col.py`: `assert len(embedding) == 128`
+  - Almacena paths relativos en la base de datos
+  - Procesa imágenes en lotes de 10 para evitar problemas de memoria
+
+### 2. Integración con script de inicialización
+- **Archivo**: `core/utils/initialize_manual_db.py`
+- **Funcionalidad**: Script independiente que puede ser llamado automáticamente
+- **Mejoras**:
+  - Método `ensure_database_initialized()` llama automáticamente al script si la DB está vacía
+  - Fallback al método interno si el script no está disponible
+  - Logging detallado del proceso de inicialización
+
+### 3. Configuración ColPali correcta
+- **Dimensiones**: 128 (correcto para el modelo finetuneado ARHVNAAG/Bnext)
+- **Modelo**: "ARHVNAAG/Bnext" (modelo ColPali finetuneado para ERP)
+- **Procesamiento**: Usa `process_images()` para imágenes y `process_queries()` para consultas
+
+### 4. Lógica de auto-inicialización
+- Cuando se intenta generar un manual y la DB está vacía:
+  1. Se detecta automáticamente que no hay imágenes
+  2. Se llama al script de inicialización
+  3. Se procesan todas las imágenes ERP con ColPali
+  4. Se continúa con la generación del manual
+
+### 5. Extracción de metadatos sincronizada
+- **Método**: `_extract_metadata_from_path_sync()`
+- **Funcionalidad**: Extrae metadatos básicos de la ruta de la imagen
+- **Información extraída**:
+  - Módulo, sección, subsección
+  - Detección básica de funciones (agregar, editar, eliminar, etc.)
+  - Keywords de la ruta
+  - Jerarquía de carpetas
+
+### Resultado esperado:
+- Al intentar generar un manual desde el frontend, si la base de datos está vacía, automáticamente se procesan las imágenes ERP
+- La funcionalidad queda integrada en el core sin necesidad de ejecutar scripts externos manualmente
+- Usa la misma lógica exacta que el código original de `col.py`
+
+### Testing:
+Para probar, simplemente:
+1. Ir al frontend en https://ed0ydm1lmmui9v-3000.proxy.runpod.net/manuals
+2. Intentar generar un manual con una consulta como "como añadir impresoras"
+3. El sistema automáticamente debería procesar las imágenes ERP primero
+4. Luego continuar con la generación del manual
+
+### Status: ✅ COMPLETADO - Listo para pruebas
+
+### Hotfix - Syntax Error Fix - 2025-06-10 15:33
+- **Error**: SyntaxError en línea 550 de `manual_generation_embedding_model.py`
+- **Problema**: 
+  1. `"hierarchy_level":` sin valor (línea 550)
+  2. `os.path.basename(image_path)f.replace` con `f` extra (línea 553)
+- **Solución**: 
+  1. Agregado `None` como valor para `hierarchy_level`
+  2. Removido `f` extra del método `replace`
+- **Estado**: ✅ CORREGIDO - El servidor debería arrancar sin errores ahora
+
+### Hotfix 2 - Missing Import Fix - 2025-06-10 15:41
+- **Error**: `NameError: name 'Path' is not defined` en línea 852 de `_auto_process_erp_images()`
+- **Problema**: Falta import de `Path` de `pathlib`
+- **Solución**: Agregado `from pathlib import Path` en los imports
+- **Estado**: ✅ CORREGIDO - La auto-inicialización debería funcionar ahora
