@@ -152,3 +152,49 @@ return ManualGenerationResponse(
 ```
 
 **Status**: ✅ Fixed - Manual generation should now return proper responses without validation errors
+
+## Enhanced Frontend Manual Visualization and PowerPoint Image Integration (2025-06-09 17:40)
+
+**Objetivo**: Mejorar la visualización de manuales en el frontend con markdown renderizado e imágenes, y actualizar PowerPoint para usar imágenes en base64.
+
+**Cambios Implementados**:
+
+### 1. **Frontend - Nuevo Componente ManualRenderer** (`/root/.ipython/aaaaaaaaaaa/ragnar-nextjs/src/components/ManualRenderer.tsx`):
+   - Componente React para renderizar markdown con imágenes incrustadas
+   - Soporte para referencias `IMAGE_PATH:ruta/imagen.png` que se convierten a imágenes base64
+   - Modal de imágenes con zoom para mejor visualización
+   - Estilos mejorados con Tailwind CSS para títulos, listas, tablas, etc.
+   - Botón integrado para descarga de PowerPoint
+
+### 2. **Backend - Referencias de Imágenes en Manual** (`/root/.ipython/aaaaaaaaaaa/core/services/manual_generator_service.py`):
+   - Modificado prompt para incluir instrucciones sobre referencias de imágenes
+   - Formato: `![Descripción](IMAGE_PATH:ruta/de/la/imagen.png)`
+   - Agregada función `_convert_image_to_base64()` para convertir imágenes a base64
+   - Agregada función `_save_base64_image_to_temp()` para PowerPoint
+
+### 3. **Backend - Respuesta con Imágenes Base64** (`/root/.ipython/aaaaaaaaaaa/core/models/request.py` y router):
+   - Actualizado `ManualGenerationResponse` para incluir campo `images_base64: Dict[str, str]`
+   - Modificado endpoint `generate_manual` para incluir imágenes en base64 en la respuesta
+   - Actualizadas interfaces TypeScript correspondientes
+
+### 4. **Backend - PowerPoint con Base64** (`/root/.ipython/aaaaaaaaaaa/core/services/manual_generator_service.py`):
+   - Actualizado método `generate_powerpoint()` para aceptar `images_base64` opcional
+   - Prioridad: base64 primero, luego fallback a archivos del sistema
+   - Limpieza automática de archivos temporales después de usar base64
+   - Mejor manejo de errores en conversión de imágenes
+
+### 5. **Frontend - Página de Manuales Actualizada** (`/root/.ipython/aaaaaaaaaaa/ragnar-nextjs/src/app/manuals/page.tsx`):
+   - Separación de generación de manual y PowerPoint
+   - Uso del nuevo componente `ManualRenderer` para visualización mejorada
+   - Botón dedicado para descarga de PowerPoint
+   - Instaladas dependencias: `react-markdown`, `remark-gfm`, `rehype-raw`
+
+**Flujo de Trabajo Actualizado**:
+1. Usuario solicita manual
+2. IA genera texto markdown con referencias `IMAGE_PATH:`
+3. Backend convierte imágenes relevantes a base64
+4. Frontend recibe manual + imágenes base64
+5. ManualRenderer convierte referencias a imágenes reales
+6. Usuario puede descargar PowerPoint con las mismas imágenes
+
+**Estado**: ✅ Implementado - Manual se visualiza con imágenes en frontend, PowerPoint usa base64

@@ -246,19 +246,46 @@ class ManualGeneratorService:
 
         user_text_prompt = f"""Eres un experto en sistemas ERP y creación de manuales de usuario.
 Crea un manual detallado y claro que explique: {query}
-Utiliza las imágenes proporcionadas como guía y sigue estas instrucciones:
+
+REGLAS OBLIGATORIAS QUE DEBES SEGUIR:
 1. Explica cada paso de forma clara y concisa
 2. Describe los elementos de la interfaz que son relevantes
 3. Organiza la información en secciones lógicas
-4. Incluye consejos útiles cuando sea apropiado
-5. Aprovecha la estructura jerárquica y el orden de las imágenes para entender el flujo de navegación
+4. **CRÍTICO**: Para CADA imagen proporcionada, DEBES incluir al menos una referencia usando exactamente este formato: ![Descripción de la imagen](IMAGE_PATH:ruta/de/la/imagen.png)
+5. **OBLIGATORIO**: Usa TODAS las imágenes proporcionadas en tu manual
+6. Las referencias IMAGE_PATH: son ESENCIALES para mostrar las imágenes al usuario
+7. Aprovecha la estructura jerárquica y el orden de las imágenes para entender el flujo de navegación
 
-Información adicional de las imágenes:
+Información de las imágenes (ÚSALAS TODAS):
 """
         for i, detail in enumerate(image_details_for_prompt):
-            user_text_prompt += f"\\nImagen {i+1}:\\n- Ruta: {detail['path']}\\n- Jerarquía: {detail['hierarchy']}\\n- Prompt: {detail['prompt']}\\n- Respuesta: {detail['respuesta']}\\n"
+            user_text_prompt += f"""
+Imagen {i+1}:
+- Ruta: {detail['path']}
+- Jerarquía: {detail['hierarchy']}
+- Prompt: {detail['prompt']}
+- Respuesta: {detail['respuesta']}
+"""
         
-        user_text_prompt += "\\nIMPORTANTE: Al final del manual, añade una breve nota que explique cómo has utilizado la información de las imágenes y su metadata para generar este manual."
+        user_text_prompt += """
+
+FORMATO ESPERADO - SIGUE EXACTAMENTE ESTE PATRÓN:
+1. Usa formato markdown para títulos, subtítulos, listas, etc.
+2. Para CADA paso del manual, incluye la imagen correspondiente usando: ![Descripción](IMAGE_PATH:ruta/de/la/imagen.png)
+3. **OBLIGATORIO**: El manual DEBE incluir referencias IMAGE_PATH: para todas las imágenes proporcionadas
+4. Al final del manual, añade una breve nota que explique cómo has utilizado la información de las imágenes
+
+EJEMPLO OBLIGATORIO DE ESTRUCTURA:
+## Paso 1: Acceder al módulo
+Para acceder al módulo, siga estos pasos:
+![Pantalla principal del ERP](IMAGE_PATH:pantalla principal/Catalogos/Impresoras.png)
+
+## Paso 2: Configurar opciones
+Configure las opciones como se muestra:
+![Configuración de opciones](IMAGE_PATH:otra/ruta/imagen.png)
+
+RECUERDA: DEBES usar el formato IMAGE_PATH: para TODAS las imágenes proporcionadas o el manual será inútil.
+"""
         
         generated_text = "Error: Could not generate manual text."
         current_padding_side = self.processor.tokenizer.padding_side
@@ -363,7 +390,8 @@ Información adicional de las imágenes:
         self, 
         query: str, 
         manual_text: str, 
-        image_metadata_list: List[Dict[str, Any]]
+        image_metadata_list: List[Dict[str, Any]],
+        images_base64: Optional[Dict[str, str]] = None
     ) -> str:
         """
         Generate a PowerPoint presentation from manual text and images.
@@ -371,7 +399,8 @@ Información adicional de las imágenes:
         Args:
             query: Original query for the manual
             manual_text: Generated manual text in markdown format
-            images_metadata: List of image metadata dictionaries
+            image_metadata_list: List of image metadata dictionaries
+            images_base64: Dictionary of base64 encoded images by path
             
         Returns:
             Path to the generated PowerPoint file
@@ -439,25 +468,67 @@ Información adicional de las imágenes:
                 if hasattr(images_slide.shapes, 'title') and images_slide.shapes.title:
                     images_slide.shapes.title.text = "Imágenes de Referencia"
                 
-                # Add up to 4 images per slide
-                for i, img_meta in enumerate(image_metadata_list[:4]):
-                    if "image_path" in img_meta:
-                        img_path = img_meta["image_path"]
-                        full_img_path = os.path.join(self.image_folder, img_path) if not os.path.isabs(img_path) else img_path
+                temp_files_to_cleanup = []
+                
+                try:
+                    # Add up to 4 images per slide
+                    for i, img_meta in enumerate(image_metadata_list[:4]):
+                        image_added = False
                         
-                        if os.path.exists(full_img_path):
-                            try:
-                                # Calculate position (2x2 grid)
-                                left = Inches(1 + (i % 2) * 4.5)
-                                top = Inches(2 + (i // 2) * 3)
-                                width = Inches(4)
-                                height = Inches(2.5)
+                        if "image_path" in img_meta:
+                            img_path = img_meta["image_path"]
+                            
+                            # Try to use base64 data first
+                            if images_base64 and img_path in images_base64:
+                                try:
+                                    temp_img_path = self._save_base64_image_to_temp(
+                                        images_base64[img_path], img_path
+                                    )
+                                    if temp_img_path:
+                                        temp_files_to_cleanup.append(temp_img_path)
+                                        
+                                        # Calculate position (2x2 grid)
+                                        left = Inches(1 + (i % 2) * 4.5)
+                                        top = Inches(2 + (i // 2) * 3)
+                                        width = Inches(4)
+                                        height = Inches(2.5)
+                                        
+                                        images_slide.shapes.add_picture(
+                                            temp_img_path, left, top, width, height
+                                        )
+                                        image_added = True
+                                        logger.debug(f"Added base64 image {img_path} to PowerPoint")
+                                        
+                                except Exception as e:
+                                    logger.warning(f"Could not add base64 image {img_path} to PowerPoint: {e}")
+                            
+                            # Fallback to file system image if base64 failed
+                            if not image_added:
+                                full_img_path = os.path.join(self.image_folder, img_path) if not os.path.isabs(img_path) else img_path
                                 
-                                images_slide.shapes.add_picture(
-                                    full_img_path, left, top, width, height
-                                )
-                            except Exception as e:
-                                logger.warning(f"Could not add image {full_img_path} to PowerPoint: {e}")
+                                if os.path.exists(full_img_path):
+                                    try:
+                                        # Calculate position (2x2 grid)
+                                        left = Inches(1 + (i % 2) * 4.5)
+                                        top = Inches(2 + (i // 2) * 3)
+                                        width = Inches(4)
+                                        height = Inches(2.5)
+                                        
+                                        images_slide.shapes.add_picture(
+                                            full_img_path, left, top, width, height
+                                        )
+                                        logger.debug(f"Added file system image {img_path} to PowerPoint")
+                                    except Exception as e:
+                                        logger.warning(f"Could not add file system image {full_img_path} to PowerPoint: {e}")
+                
+                finally:
+                    # Clean up temporary files
+                    for temp_file in temp_files_to_cleanup:
+                        try:
+                            os.unlink(temp_file)
+                            logger.debug(f"Cleaned up temporary file: {temp_file}")
+                        except Exception as e:
+                            logger.warning(f"Could not clean up temporary file {temp_file}: {e}")
             
             # Save PowerPoint
             prs.save(output_path)
@@ -550,4 +621,65 @@ Información adicional de las imágenes:
         else:
             analysis += "\\n**Conclusión**: El modelo podría no estar referenciando explícitamente las imágenes o sus detalles.\\n"
         return analysis
+
+    def _convert_image_to_base64(self, image_path: str) -> Optional[str]:
+        """
+        Convert an image file to base64 string.
+        
+        Args:
+            image_path: Full path to the image file
+            
+        Returns:
+            Base64 encoded string or None if error
+        """
+        try:
+            import base64
+            
+            if not os.path.exists(image_path):
+                logger.warning(f"Image not found for base64 conversion: {image_path}")
+                return None
+                
+            with open(image_path, "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+                logger.debug(f"Successfully converted image to base64: {image_path}")
+                return encoded_string
+                
+        except Exception as e:
+            logger.error(f"Error converting image to base64 {image_path}: {e}")
+            return None
+
+    def _save_base64_image_to_temp(self, base64_data: str, image_path: str) -> Optional[str]:
+        """
+        Save base64 image data to a temporary file for PowerPoint insertion.
+        
+        Args:
+            base64_data: Base64 encoded image string
+            image_path: Original image path (used for extension)
+            
+        Returns:
+            Path to temporary image file or None if error
+        """
+        try:
+            import base64
+            import tempfile
+            
+            # Decode base64 data
+            image_bytes = base64.b64decode(base64_data)
+            
+            # Get file extension from original path
+            _, ext = os.path.splitext(image_path)
+            if not ext:
+                ext = '.png'  # Default to PNG
+                
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
+                temp_file.write(image_bytes)
+                temp_path = temp_file.name
+                
+            logger.debug(f"Saved base64 image to temporary file: {temp_path}")
+            return temp_path
+            
+        except Exception as e:
+            logger.error(f"Error saving base64 image to temp file: {e}")
+            return None
 

@@ -224,6 +224,7 @@ export interface ManualGenerationResponse {
     [key: string]: any;
   }>;
   query: string;
+  images_base64?: { [key: string]: string };
 }
 
 // Additional interfaces for missing API functions

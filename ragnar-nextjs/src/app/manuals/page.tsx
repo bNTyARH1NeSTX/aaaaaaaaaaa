@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Wand2, FileSearch, CheckCircle, AlertCircle, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { generateManual, generatePowerPoint, ManualGenerationRequest, ManualGenerationResponse, PowerPointGenerationRequest } from '../../api/apiService';
+import ManualRenderer from '../../components/ManualRenderer';
 
 export default function ManualsPage() {
   const [formData, setFormData] = useState<ManualGenerationRequest>({
@@ -32,11 +33,23 @@ export default function ManualsPage() {
     setGeneratedManual(null);
 
     try {
-      // Primero generamos el manual para mostrar el contenido
+      // Generar el manual
       const result = await generateManual(formData);
       setGeneratedManual(result);
       
-      // Luego generamos automáticamente el PowerPoint
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al generar el manual');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGeneratePowerPoint = async () => {
+    if (!generatedManual) return;
+
+    try {
+      setIsGenerating(true);
+      
       const powerPointRequest: PowerPointGenerationRequest = {
         query: formData.query,
         k_images: formData.k_images,
@@ -51,13 +64,11 @@ export default function ManualsPage() {
       link.download = `manual_${formData.query.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
       document.body.appendChild(link);
       link.click();
-      
-      // Clean up
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al generar el manual');
+      setError(err instanceof Error ? err.message : 'Error al generar PowerPoint');
     } finally {
       setIsGenerating(false);
     }
@@ -85,7 +96,19 @@ export default function ManualsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
+        {/* Manual renderizado con imágenes */}
+        {generatedManual && (
+          <ManualRenderer
+            markdownContent={generatedManual.generated_text}
+            imageData={generatedManual.images_base64 || {}}
+            title={`Manual: ${generatedManual.query}`}
+            onDownloadPowerPoint={handleGeneratePowerPoint}
+          />
+        )}
+
+        {/* Formulario y resultados básicos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -132,7 +155,7 @@ export default function ManualsPage() {
                 ) : (
                   <>
                     <Wand2 className="w-5 h-5" />
-                    Generar Manual y PowerPoint
+                    Generar Manual
                   </>
                 )}
               </button>
@@ -252,6 +275,7 @@ export default function ManualsPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

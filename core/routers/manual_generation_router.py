@@ -145,10 +145,32 @@ async def generate_manual_endpoint(
         logger.error(f"Error generating manual text: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"An error occurred during manual text generation: {str(e)}")
 
+    # Convert images to base64 for frontend display
+    images_base64 = {}
+    try:
+        from core.config import get_settings
+        settings = get_settings()
+        base_folder = getattr(settings, 'MANUAL_GENERATION_IMAGE_FOLDER', None)
+        
+        if base_folder:
+            for img_metadata in relevant_images_metadata:
+                img_path = img_metadata.get('image_path')
+                if img_path:
+                    full_path = os.path.join(base_folder, img_path)
+                    base64_data = generator_service._convert_image_to_base64(full_path)
+                    if base64_data:
+                        images_base64[img_path] = base64_data
+                        logger.debug(f"Added base64 data for image: {img_path}")
+                        
+    except Exception as e:
+        logger.warning(f"Error converting images to base64: {str(e)}")
+        # Continue without base64 images
+
     return ManualGenerationResponse(
         generated_text=manual_text,
         relevant_images_used=relevant_images_metadata,
         query=request.query,
+        images_base64=images_base64,
     )
 
 
@@ -223,12 +245,34 @@ async def generate_powerpoint_endpoint(
         else:
             manual_text = str(generated_text_result)
         
+        # Convert images to base64 for PowerPoint
+        images_base64 = {}
+        try:
+            from core.config import get_settings
+            settings = get_settings()
+            base_folder = getattr(settings, 'MANUAL_GENERATION_IMAGE_FOLDER', None)
+            
+            if base_folder:
+                for img_metadata in relevant_images_metadata:
+                    img_path = img_metadata.get('image_path')
+                    if img_path:
+                        full_path = os.path.join(base_folder, img_path)
+                        base64_data = generator_service._convert_image_to_base64(full_path)
+                        if base64_data:
+                            images_base64[img_path] = base64_data
+                            logger.debug(f"Added base64 data for PowerPoint image: {img_path}")
+                            
+        except Exception as e:
+            logger.warning(f"Error converting images to base64 for PowerPoint: {str(e)}")
+            # Continue without base64 images
+        
         # Generate PowerPoint
         logger.info("Generating PowerPoint presentation...")
         powerpoint_path = await generator_service.generate_powerpoint(
             query=request.query,
             manual_text=manual_text,
-            image_metadata_list=relevant_images_metadata
+            image_metadata_list=relevant_images_metadata,
+            images_base64=images_base64
         )
         
         logger.info(f"Successfully generated PowerPoint for query: '{request.query}'")
@@ -983,3 +1027,70 @@ def _generate_embedding_text(metadata: Dict[str, Any], relative_path: str) -> st
         embedding_text = f"{metadata['prompt']} | {embedding_text}"
     
     return embedding_text
+
+
+@manual_generation_router.get(
+    "/images/{image_path:path}",
+    summary="Serve ERP images for manual visualization"
+)
+async def serve_erp_image(
+    image_path: str,
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Serve ERP images for manual visualization in the frontend.
+    
+    Args:
+        image_path: The relative path to the image within the ERP screenshots folder
+        
+    Returns:
+        FileResponse: The requested image file
+    """
+    try:
+        from core.config import get_settings
+        settings = get_settings()
+        
+        # Get the base ERP images folder
+        base_folder = getattr(settings, 'MANUAL_GENERATION_IMAGE_FOLDER', None)
+        if not base_folder:
+            raise HTTPException(status_code=500, detail="ERP images folder not configured")
+            
+        # Construct full path
+        full_path = os.path.join(base_folder, image_path)
+        
+        # Security check: ensure the path is within the allowed directory
+        if not os.path.abspath(full_path).startswith(os.path.abspath(base_folder)):
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+            
+        # Check if file exists
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail=f"Image not found: {image_path}")
+            
+        # Check if it's actually a file (not a directory)
+        if not os.path.isfile(full_path):
+            raise HTTPException(status_code=400, detail="Path does not point to a file")
+            
+        # Determine media type based on file extension
+        file_extension = os.path.splitext(full_path)[1].lower()
+        media_type_map = {
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.bmp': 'image/bmp',
+            '.webp': 'image/webp'
+        }
+        
+        media_type = media_type_map.get(file_extension, 'application/octet-stream')
+        
+        return FileResponse(
+            path=full_path,
+            media_type=media_type,
+            filename=os.path.basename(full_path)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving ERP image {image_path}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error serving image: {str(e)}")

@@ -19,6 +19,7 @@ class ManualGenerationResponse(BaseModel):
     generated_text: str
     relevant_images_used: List[Dict[str, Any]]  # e.g., [{"image_path": "...", "prompt": "...", "respuesta": "..."}]
     query: str
+    images_base64: Dict[str, str] = Field(default_factory=dict, description="Base64 encoded images by path")
 
 
 class PowerPointGenerationRequest(BaseModel):

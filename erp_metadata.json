@@ -1,0 +1,5140 @@
+[
+  {
+    "image_path": "pantalla principal/Modulo Administrador del Sistema.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo Administrador del Sistema.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Administrador del Sistema | Función: Administración",
+    "respuesta": "Pantalla de Administración",
+    "module": "Pantalla Principal",
+    "section": "Módulo Administrador del Sistema",
+    "subsection": null,
+    "function_detected": "Administración",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "administrador del sistema",
+      "administrador"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Administrador del Sistema",
+        "subsection": null,
+        "function_detected": "Administración",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "administrador del sistema",
+          "administrador"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 327375,
+    "filename": "Modulo Administrador del Sistema.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo Contabilidad.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo Contabilidad.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Contabilidad | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo Contabilidad",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "contabilidad"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Contabilidad",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "contabilidad"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 350338,
+    "filename": "Modulo Contabilidad.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo Credito y cobranza.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo Credito y cobranza.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Credito y cobranza | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo Credito y cobranza",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "credito y cobranza"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Credito y cobranza",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "credito y cobranza"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 331561,
+    "filename": "Modulo Credito y cobranza.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_Inventarios.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_Inventarios.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Inventarios | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo Inventarios",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "inventarios"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Inventarios",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "inventarios"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 340854,
+    "filename": "Modulo_Inventarios.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_Sesion.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_Sesion.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Sesion | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo Sesion",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "sesion"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Sesion",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "sesion"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 317960,
+    "filename": "Modulo_Sesion.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_Ventas.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_Ventas.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Ventas | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo Ventas",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "ventas"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Ventas",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "ventas"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 352646,
+    "filename": "Modulo_Ventas.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_Visualizador_de_Reportes.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_Visualizador_de_Reportes.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo Visualizador de Reportes | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo Visualizador de Reportes",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "visualizador de reportes"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo Visualizador de Reportes",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "visualizador de reportes"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 309393,
+    "filename": "Modulo_Visualizador_de_Reportes.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_adeudos_y_pagos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_adeudos_y_pagos.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo adeudos y pagos | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo adeudos y pagos",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "adeudos y pagos"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo adeudos y pagos",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "adeudos y pagos"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 331025,
+    "filename": "Modulo_adeudos_y_pagos.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_ayuda.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_ayuda.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo ayuda | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo ayuda",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "ayuda"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo ayuda",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "ayuda"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 310890,
+    "filename": "Modulo_ayuda.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_entregas.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_entregas.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo entregas | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo entregas",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "entregas"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo entregas",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "entregas"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 318491,
+    "filename": "Modulo_entregas.png"
+  },
+  {
+    "image_path": "pantalla principal/Modulo_percepciones_y_reducciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Modulo_percepciones_y_reducciones.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo percepciones y reducciones | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo percepciones y reducciones",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "percepciones y reducciones"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo percepciones y reducciones",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "percepciones y reducciones"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 315174,
+    "filename": "Modulo_percepciones_y_reducciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Pantalla principal.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Pantalla principal.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Visualización de pantalla",
+    "respuesta": "Pantalla de Visualización de pantalla",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Visualización de pantalla",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "pantalla"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Visualización de pantalla",
+        "hierarchy_level": 1,
+        "keywords": [
+          "pantalla"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 306864,
+    "filename": "Pantalla principal.png"
+  },
+  {
+    "image_path": "pantalla principal/modulo_compras.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/modulo_compras.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo compras | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo compras",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "compras"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo compras",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "compras"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 318661,
+    "filename": "modulo_compras.png"
+  },
+  {
+    "image_path": "pantalla principal/modulo_tesoreria.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/modulo_tesoreria.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo tesoreria | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo tesoreria",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 1,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "tesoreria"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo tesoreria",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 1,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "tesoreria"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 347423,
+    "filename": "modulo_tesoreria.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/modulo_catalogos_menu_principal.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/modulo_catalogos_menu_principal.png",
+    "prompt": "Módulo: Pantalla Principal | Sección: Módulo catalogos menu principal | Función: Acceso a módulo",
+    "respuesta": "Pantalla de Acceso a módulo",
+    "module": "Pantalla Principal",
+    "section": "Módulo catalogos menu principal",
+    "subsection": null,
+    "function_detected": "Acceso a módulo",
+    "hierarchy_level": 2,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "módulo",
+      "acceso",
+      "catalogos menu principal"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": "Módulo catalogos menu principal",
+        "subsection": null,
+        "function_detected": "Acceso a módulo",
+        "hierarchy_level": 2,
+        "keywords": [
+          "módulo",
+          "acceso",
+          "catalogos menu principal"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 336930,
+    "filename": "modulo_catalogos_menu_principal.png"
+  },
+  {
+    "image_path": "pantalla principal/Ayuda/Bnext Info/BnextErp.Application_rskwUl3Ao4.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Ayuda/Bnext Info/BnextErp.Application_rskwUl3Ao4.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 3,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 3,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 250339,
+    "filename": "BnextErp.Application_rskwUl3Ao4.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Clientes/BnextErp.Application_rTSazFmhTN.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Clientes/BnextErp.Application_rTSazFmhTN.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 3,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 3,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 342615,
+    "filename": "BnextErp.Application_rTSazFmhTN.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/pantalla_catalogos_generales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/pantalla_catalogos_generales.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Visualización de pantalla",
+    "respuesta": "Pantalla de Visualización de pantalla",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Visualización de pantalla",
+    "hierarchy_level": 3,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "pantalla"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Visualización de pantalla",
+        "hierarchy_level": 3,
+        "keywords": [
+          "pantalla"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 390076,
+    "filename": "pantalla_catalogos_generales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Pestaña impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Pestaña impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 3,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 3,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 348560,
+    "filename": "Pestaña impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/catalogos_productos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/catalogos_productos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 3,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 3,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 394959,
+    "filename": "catalogos_productos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Usuarios/BnextErp.Application_1pVA54quno.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Usuarios/BnextErp.Application_1pVA54quno.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 3,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 3,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 339427,
+    "filename": "BnextErp.Application_1pVA54quno.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Clientes/Administrador de Clientes/BnextErp.Application_U5y2US86ns.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Clientes/Administrador de Clientes/BnextErp.Application_U5y2US86ns.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 79486,
+    "filename": "BnextErp.Application_U5y2US86ns.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Cuidad/Cuidad.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Cuidad/Cuidad.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 105070,
+    "filename": "Cuidad.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Departamentos/Busqueda departamentos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Departamentos/Busqueda departamentos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 76011,
+    "filename": "Busqueda departamentos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Especialidades Medicas/Busqueda especialidades medicas.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Especialidades Medicas/Busqueda especialidades medicas.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 57770,
+    "filename": "Busqueda especialidades medicas.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Estado/Estado.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Estado/Estado.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 102360,
+    "filename": "Estado.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Giro/Giro.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Giro/Giro.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 158257,
+    "filename": "Giro.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Impresoras/Impresoras_pantalla.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Impresoras/Impresoras_pantalla.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Visualización de pantalla",
+    "respuesta": "Pantalla de Visualización de pantalla",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Visualización de pantalla",
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "pantalla"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Visualización de pantalla",
+        "hierarchy_level": 4,
+        "keywords": [
+          "pantalla"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 86151,
+    "filename": "Impresoras_pantalla.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Migracion de Ubicaciones/Migracion de ubicaciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Migracion de Ubicaciones/Migracion de ubicaciones.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 77193,
+    "filename": "Migracion de ubicaciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Moneda/Moneda busqueda.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Moneda/Moneda busqueda.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 42254,
+    "filename": "Moneda busqueda.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Médicos/Busqueda Medicos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Médicos/Busqueda Medicos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 74861,
+    "filename": "Busqueda Medicos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Pais/Pais.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Pais/Pais.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 98755,
+    "filename": "Pais.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Punto de ventas.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Punto de ventas.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 46588,
+    "filename": "Punto de ventas.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipo De Cambio Oficial/Tipo de cambio oficial.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipo De Cambio Oficial/Tipo de cambio oficial.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 62664,
+    "filename": "Tipo de cambio oficial.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipo de cambio por ubicacion/Tipo de cambio por ubicacion.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipo de cambio por ubicacion/Tipo de cambio por ubicacion.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 111716,
+    "filename": "Tipo de cambio por ubicacion.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipo de impresoras/Tipo de impresoras.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipo de impresoras/Tipo de impresoras.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 91338,
+    "filename": "Tipo de impresoras.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipos de Ubicaciones/Tipo_de_Ubicaciones_Busqueda.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipos de Ubicaciones/Tipo_de_Ubicaciones_Busqueda.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 41997,
+    "filename": "Tipo_de_Ubicaciones_Busqueda.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Transportes/Transportes.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Transportes/Transportes.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 55906,
+    "filename": "Transportes.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Pantalla Ubicaciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Pantalla Ubicaciones.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Visualización de pantalla",
+    "respuesta": "Pantalla de Visualización de pantalla",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Visualización de pantalla",
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "pantalla"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Visualización de pantalla",
+        "hierarchy_level": 4,
+        "keywords": [
+          "pantalla"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 76658,
+    "filename": "Pantalla Ubicaciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Unidades de Negocios/Unidades de negocio.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Unidades de Negocios/Unidades de negocio.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 79486,
+    "filename": "Unidades de negocio.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Variables de sucursal/Variables de sucursal.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Variables de sucursal/Variables de sucursal.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 62260,
+    "filename": "Variables de sucursal.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Cuidad/Nuevo/Cuidad Nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Cuidad/Nuevo/Cuidad Nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 44597,
+    "filename": "Cuidad Nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Cuidad/Nuevo/Nuevo/Tipos de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Cuidad/Nuevo/Nuevo/Tipos de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 69191,
+    "filename": "Tipos de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Departamentos/Nuevo/Nuevo departamento.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Departamentos/Nuevo/Nuevo departamento.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 29649,
+    "filename": "Nuevo departamento.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Especialidades Medicas/Nuevo/Editar especialidades medicas.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Especialidades Medicas/Nuevo/Editar especialidades medicas.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Editar registro",
+    "respuesta": "Pantalla de Editar registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Editar registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "editar",
+      "modificar"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Editar registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "editar",
+          "modificar"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 35635,
+    "filename": "Editar especialidades medicas.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Estado/Nuevo/Estado Nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Estado/Nuevo/Estado Nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 42077,
+    "filename": "Estado Nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Estado/Nuevo/Nuevo/Tipos de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Estado/Nuevo/Nuevo/Tipos de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 69191,
+    "filename": "Tipos de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Impresoras/Nuevo/Impresoras Nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Impresoras/Nuevo/Impresoras Nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 110272,
+    "filename": "Impresoras Nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Migracion de Ubicaciones/Nuevo/Nuevo migracion de ubicaciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Migracion de Ubicaciones/Nuevo/Nuevo migracion de ubicaciones.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 117420,
+    "filename": "Nuevo migracion de ubicaciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Moneda/Nuevo/Moneda nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Moneda/Nuevo/Moneda nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 46588,
+    "filename": "Moneda nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Médicos/Nuevo/Nuevo Medicos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Médicos/Nuevo/Nuevo Medicos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 54274,
+    "filename": "Nuevo Medicos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/BnextErp.Application_vEl4pu2wZM.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/BnextErp.Application_vEl4pu2wZM.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 5,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 86394,
+    "filename": "BnextErp.Application_vEl4pu2wZM.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_BnextDelivery/Bnnext_delivery.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_BnextDelivery/Bnnext_delivery.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 98595,
+    "filename": "Bnnext_delivery.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionNavegacionWEb/BnextErp.Application_Hmpy9VFRwt.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionNavegacionWEb/BnextErp.Application_Hmpy9VFRwt.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 86129,
+    "filename": "BnextErp.Application_Hmpy9VFRwt.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_Huella_Digital/nuevo_huella_digital.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_Huella_Digital/nuevo_huella_digital.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 7,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 97958,
+    "filename": "nuevo_huella_digital.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_InformacionFiscal/BnextErp.Application_gSAOSlgZxn.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_InformacionFiscal/BnextErp.Application_gSAOSlgZxn.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 104166,
+    "filename": "BnextErp.Application_gSAOSlgZxn.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_Información_correo/BnextErp.Application_sNcBzrIQ5C.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_Información_correo/BnextErp.Application_sNcBzrIQ5C.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 114123,
+    "filename": "BnextErp.Application_sNcBzrIQ5C.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_Programa_Externo/BnextErp.Application_VrxnqCwfkO.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_Programa_Externo/BnextErp.Application_VrxnqCwfkO.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 76957,
+    "filename": "BnextErp.Application_VrxnqCwfkO.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Consulta de promociones centrales/BnextErp.Application_QeNcPrkIe9.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Consulta de promociones centrales/BnextErp.Application_QeNcPrkIe9.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 106320,
+    "filename": "BnextErp.Application_QeNcPrkIe9.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Consulta_de_Existencia/BnextErp.Application_vkN8JSR2yi.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Consulta_de_Existencia/BnextErp.Application_vkN8JSR2yi.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 105756,
+    "filename": "BnextErp.Application_vkN8JSR2yi.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Devoluciones_foraneas/BnextErp.Application_aIAXiczLBf.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Devoluciones_foraneas/BnextErp.Application_aIAXiczLBf.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 107603,
+    "filename": "BnextErp.Application_aIAXiczLBf.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Generales/BnextErp.Application_4baG1otxoc.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Generales/BnextErp.Application_4baG1otxoc.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 171704,
+    "filename": "BnextErp.Application_4baG1otxoc.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Limite_de_Credito_remoto/BnextErp.Application_PtfQL53SFI.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Limite_de_Credito_remoto/BnextErp.Application_PtfQL53SFI.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 105200,
+    "filename": "BnextErp.Application_PtfQL53SFI.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Notificaciones_push/BnextErp.Application_AWuGPZ5tJS.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Notificaciones_push/BnextErp.Application_AWuGPZ5tJS.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 99993,
+    "filename": "BnextErp.Application_AWuGPZ5tJS.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Pedido Remoto/BnextErp.Application_mplYJff7Ty.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Pedido Remoto/BnextErp.Application_mplYJff7Ty.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 101213,
+    "filename": "BnextErp.Application_mplYJff7Ty.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Pedido_electronico/BnextErp.Application_hVFRzxBDOF.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Pedido_electronico/BnextErp.Application_hVFRzxBDOF.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 104967,
+    "filename": "BnextErp.Application_hVFRzxBDOF.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Producto_Negado/BnextErp.Application_h0tN1e1AVl.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Producto_Negado/BnextErp.Application_h0tN1e1AVl.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 100825,
+    "filename": "BnextErp.Application_h0tN1e1AVl.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Secuencias_de_socios_de_negocios/BnextErp.Application_Qg2rNP6aGP.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/Secuencias_de_socios_de_negocios/BnextErp.Application_Qg2rNP6aGP.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 96316,
+    "filename": "BnextErp.Application_Qg2rNP6aGP.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/consulta_estatus_facturacion/BnextErp.Application_c1VXZdqQ4T.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Organizaciones/Buscar/Nuevo/Nuevo_ConfiguracionGeneral/consulta_estatus_facturacion/BnextErp.Application_c1VXZdqQ4T.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 106804,
+    "filename": "BnextErp.Application_c1VXZdqQ4T.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Pais/Nuevo/Pais nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Pais/Nuevo/Pais nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 59078,
+    "filename": "Pais nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Pais/Nuevo/Nuevo/Tipos de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Pais/Nuevo/Nuevo/Tipos de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 69191,
+    "filename": "Tipos de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Cajón de Dinero/Cajon de dinero.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Cajón de Dinero/Cajon de dinero.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 129469,
+    "filename": "Cajon de dinero.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Comportamientos/Comportamientos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Comportamientos/Comportamientos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 272585,
+    "filename": "Comportamientos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Configuracion General/Configuracion General.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Configuracion General/Configuracion General.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 124601,
+    "filename": "Configuracion General.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Configuracion Pruebas de Conexion/Configuracion Pruebas de conexion.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Configuracion Pruebas de Conexion/Configuracion Pruebas de conexion.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 71499,
+    "filename": "Configuracion Pruebas de conexion.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Impresión Ticket/Impresión ticket.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Impresión Ticket/Impresión ticket.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 61601,
+    "filename": "Impresión ticket.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/KDS/KDS.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/KDS/KDS.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 68477,
+    "filename": "KDS.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Notificaciones/Notificaciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Notificaciones/Notificaciones.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 97832,
+    "filename": "Notificaciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Pinpads/Pinpads.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Pinpads/Pinpads.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 61122,
+    "filename": "Pinpads.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Pinpads/seleccion de tipos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Pinpads/seleccion de tipos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 42504,
+    "filename": "seleccion de tipos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Preubas de Conexion VPN/Pruebas de conexion VPN.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Preubas de Conexion VPN/Pruebas de conexion VPN.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 71071,
+    "filename": "Pruebas de conexion VPN.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Pruebas de velocidad de Conexion/Pruebas de velocidad de conexion.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Pruebas de velocidad de Conexion/Pruebas de velocidad de conexion.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 72087,
+    "filename": "Pruebas de velocidad de conexion.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Publicidad/Publicidad.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Publicidad/Publicidad.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 61470,
+    "filename": "Publicidad.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Segundo monitor/Segundo monitor.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Segundo monitor/Segundo monitor.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 64451,
+    "filename": "Segundo monitor.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Cajón de Dinero/Conceptos/Asignacion de conceptos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Cajón de Dinero/Conceptos/Asignacion de conceptos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 63896,
+    "filename": "Asignacion de conceptos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Cajón de Dinero/Tipo de cobros/Asignacion de tipo de cobros.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Cajón de Dinero/Tipo de cobros/Asignacion de tipo de cobros.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 229122,
+    "filename": "Asignacion de tipo de cobros.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Notificaciones/tipos/Seleccion de tipos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Puntos de Venta/Nuevo/Notificaciones/tipos/Seleccion de tipos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 25374,
+    "filename": "Seleccion de tipos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipo De Cambio Oficial/Nuevo/Nuevo tipo de cambio oficial datos generales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipo De Cambio Oficial/Nuevo/Nuevo tipo de cambio oficial datos generales.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 98015,
+    "filename": "Nuevo tipo de cambio oficial datos generales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipo de cambio por ubicacion/Nuevo/Nuevo tipo de cambio por ubicacion.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipo de cambio por ubicacion/Nuevo/Nuevo tipo de cambio por ubicacion.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 188851,
+    "filename": "Nuevo tipo de cambio por ubicacion.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipo de impresoras/Nuevo/Nuevo tipo de impresoras.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipo de impresoras/Nuevo/Nuevo tipo de impresoras.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 107603,
+    "filename": "Nuevo tipo de impresoras.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Tipos de Ubicaciones/Nuevo/Tipo_de_ubicaciones_nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Tipos de Ubicaciones/Nuevo/Tipo_de_ubicaciones_nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 36752,
+    "filename": "Tipo_de_ubicaciones_nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Caja Chica/Responsabilidad_de_caja_chica.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Caja Chica/Responsabilidad_de_caja_chica.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 74371,
+    "filename": "Responsabilidad_de_caja_chica.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuraciones/Configuraciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuraciones/Configuraciones.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 144400,
+    "filename": "Configuraciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Códigos Postales/Codigos postales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Códigos Postales/Codigos postales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 56044,
+    "filename": "Codigos postales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Datos Adicionales/Datos adicionales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Datos Adicionales/Datos adicionales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 46818,
+    "filename": "Datos adicionales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Datos Generales/Datos generales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Datos Generales/Datos generales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 148345,
+    "filename": "Datos generales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Impresoras/Impresoras.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Impresoras/Impresoras.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 57895,
+    "filename": "Impresoras.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/POS/POS caracteristicas.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/POS/POS caracteristicas.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 86670,
+    "filename": "POS caracteristicas.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuracion de documentos/Facturación electronica/Facturacion electronica.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuracion de documentos/Facturación electronica/Facturacion electronica.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 131050,
+    "filename": "Facturacion electronica.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuracion de documentos/Jobs de facturacion global/Jobs de facturacion global.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuracion de documentos/Jobs de facturacion global/Jobs de facturacion global.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 82562,
+    "filename": "Jobs de facturacion global.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuracion de documentos/Facturación electronica/U. de Negocio/Unidades de negocio.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuracion de documentos/Facturación electronica/U. de Negocio/Unidades de negocio.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 8,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 8,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 73384,
+    "filename": "Unidades de negocio.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuraciones/Gpo productos/BnextErp.Application_b70KvylhBf.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuraciones/Gpo productos/BnextErp.Application_b70KvylhBf.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 106783,
+    "filename": "BnextErp.Application_b70KvylhBf.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuraciones/Tipos de impuestos/Asignacion de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Ubicaciones/Nuevo/Configuraciones/Tipos de impuestos/Asignacion de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 7,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 7,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 87264,
+    "filename": "Asignacion de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Unidades de Negocios/Nuevo/Nuevo Unidades de negocio.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Unidades de Negocios/Nuevo/Nuevo Unidades de negocio.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 40492,
+    "filename": "Nuevo Unidades de negocio.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Generales/Variables de sucursal/Nuevo/Nuevo Variables de sucursal.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Generales/Variables de sucursal/Nuevo/Nuevo Variables de sucursal.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 62686,
+    "filename": "Nuevo Variables de sucursal.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Conversion de impuestos/Conversion de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Conversion de impuestos/Conversion de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 83612,
+    "filename": "Conversion de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Grupo de impuestos/Grupo de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Grupo de impuestos/Grupo de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 86702,
+    "filename": "Grupo de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Impuestos/Impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Impuestos/Impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 40962,
+    "filename": "Impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Tipo de impuestos/Tipo de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Tipo de impuestos/Tipo de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 63268,
+    "filename": "Tipo de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Conversion de impuestos/Nuevo/Nuevo converison de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Conversion de impuestos/Nuevo/Nuevo converison de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 113814,
+    "filename": "Nuevo converison de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Grupo de impuestos/Nuevo/Nuevo grupo de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Grupo de impuestos/Nuevo/Nuevo grupo de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 72430,
+    "filename": "Nuevo grupo de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Impuestos/Nuevo/Nuevo impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Impuestos/Nuevo/Nuevo impuestos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 36746,
+    "filename": "Nuevo impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Impuestos/Tipo de impuestos/Nuevo/Nuevo tipo de impuestos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Impuestos/Tipo de impuestos/Nuevo/Nuevo tipo de impuestos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 102140,
+    "filename": "Nuevo tipo de impuestos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administracion de Productos/Administrador de productos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administracion de Productos/Administrador de productos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Administración",
+    "respuesta": "Pantalla de Administración",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Administración",
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "administrador"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Administración",
+        "hierarchy_level": 4,
+        "keywords": [
+          "administrador"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 106236,
+    "filename": "Administrador de productos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administracion de prodctuo no encontrado/Administrador de producto no encontrado.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administracion de prodctuo no encontrado/Administrador de producto no encontrado.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Administración",
+    "respuesta": "Pantalla de Administración",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Administración",
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "administrador"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Administración",
+        "hierarchy_level": 4,
+        "keywords": [
+          "administrador"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 101124,
+    "filename": "Administrador de producto no encontrado.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administrador de Datos Adicionales/Administrador de datos adicionales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administrador de Datos Adicionales/Administrador de datos adicionales.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Administración",
+    "respuesta": "Pantalla de Administración",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Administración",
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "administrador"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Administración",
+        "hierarchy_level": 4,
+        "keywords": [
+          "administrador"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 61653,
+    "filename": "Administrador de datos adicionales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administrador de Listado de Datos Adicionales/Administrador de Listado de Datos Adicionales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administrador de Listado de Datos Adicionales/Administrador de Listado de Datos Adicionales.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Administración",
+    "respuesta": "Pantalla de Administración",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Administración",
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "administrador"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Administración",
+        "hierarchy_level": 4,
+        "keywords": [
+          "administrador"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 64444,
+    "filename": "Administrador de Listado de Datos Adicionales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Campos dinamicos/Busqueda Campos dinamicos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Campos dinamicos/Busqueda Campos dinamicos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 73200,
+    "filename": "Busqueda Campos dinamicos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Categoria/Categoria busqueda.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Categoria/Categoria busqueda.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 82880,
+    "filename": "Categoria busqueda.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Configuracion Productos-Ubicaciones/Configuracion producto - ubicaciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Configuracion Productos-Ubicaciones/Configuracion producto - ubicaciones.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 62738,
+    "filename": "Configuracion producto - ubicaciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Conversion de unidades/Conversion de Unidades busqueda.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Conversion de unidades/Conversion de Unidades busqueda.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 84366,
+    "filename": "Conversion de Unidades busqueda.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Familias/Familias.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Familias/Familias.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 71759,
+    "filename": "Familias.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Grupo/Grupo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Grupo/Grupo.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 46430,
+    "filename": "Grupo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Localizacion de Productos/Localizacion de productos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Localizacion de Productos/Localizacion de productos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 74932,
+    "filename": "Localizacion de productos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Marca/Busqueda Marca.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Marca/Busqueda Marca.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 38989,
+    "filename": "Busqueda Marca.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Tipo de Datos Adicional/Tipo de datos adicionales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Tipo de Datos Adicional/Tipo de datos adicionales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 59842,
+    "filename": "Tipo de datos adicionales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Tipo de servicio externo/tipo_servicio_externo_busqueda.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Tipo de servicio externo/tipo_servicio_externo_busqueda.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 91282,
+    "filename": "tipo_servicio_externo_busqueda.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Tipo/Busqueda tipos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Tipo/Busqueda tipos.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 84057,
+    "filename": "Busqueda tipos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Unidades/Unidades.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Unidades/Unidades.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 72990,
+    "filename": "Unidades.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administracion de Productos/Nuevo/Codigo de barras/Nuevo codigo de barras.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administracion de Productos/Nuevo/Codigo de barras/Nuevo codigo de barras.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 6,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 61458,
+    "filename": "Nuevo codigo de barras.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administracion de Productos/Nuevo/Nuevo/General Nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administracion de Productos/Nuevo/Nuevo/General Nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 6,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 164432,
+    "filename": "General Nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administracion de prodctuo no encontrado/Nuevo/Nuevo administrador de producto no encontrado.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administracion de prodctuo no encontrado/Nuevo/Nuevo administrador de producto no encontrado.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Administración",
+    "respuesta": "Pantalla de Administración",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Administración",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "administrador"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Administración",
+        "hierarchy_level": 5,
+        "keywords": [
+          "administrador"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 68508,
+    "filename": "Nuevo administrador de producto no encontrado.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administrador de Datos Adicionales/Nuevo/Configuraciones/Nuevo configuraciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administrador de Datos Adicionales/Nuevo/Configuraciones/Nuevo configuraciones.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 6,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 75029,
+    "filename": "Nuevo configuraciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administrador de Listado de Datos Adicionales/Nuevo/Configuraciones/Configuraciones.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administrador de Listado de Datos Adicionales/Nuevo/Configuraciones/Configuraciones.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 87558,
+    "filename": "Configuraciones.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Administrador de Listado de Datos Adicionales/Nuevo/Documentos adicionales/Documentos adicionales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Administrador de Listado de Datos Adicionales/Nuevo/Documentos adicionales/Documentos adicionales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 6,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 6,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 72752,
+    "filename": "Documentos adicionales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Busqueda de Productos/Caracteristicas Especiales/Busqueda Caracteristicas Especiales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Busqueda de Productos/Caracteristicas Especiales/Busqueda Caracteristicas Especiales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 5,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 127488,
+    "filename": "Busqueda Caracteristicas Especiales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Busqueda de Productos/Columnas Opcionales/Busqueda-Columnas opcionales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Busqueda de Productos/Columnas Opcionales/Busqueda-Columnas opcionales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 5,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 67857,
+    "filename": "Busqueda-Columnas opcionales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Busqueda de Productos/Datos Generales/Busqueda-Datos Generales.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Busqueda de Productos/Datos Generales/Busqueda-Datos Generales.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 5,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 100305,
+    "filename": "Busqueda-Datos Generales.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Campos dinamicos/Nuevo/Agregar nuevo campo dinamico.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Campos dinamicos/Nuevo/Agregar nuevo campo dinamico.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 77576,
+    "filename": "Agregar nuevo campo dinamico.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Categoria/Nuevo/Nuevo Categoria.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Categoria/Nuevo/Nuevo Categoria.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 82170,
+    "filename": "Nuevo Categoria.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Conversion de unidades/Nuevo/Nuevo conversion de unidades.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Conversion de unidades/Nuevo/Nuevo conversion de unidades.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 120686,
+    "filename": "Nuevo conversion de unidades.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Familias/Nuevo/Nuevo Familias.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Familias/Nuevo/Nuevo Familias.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 36242,
+    "filename": "Nuevo Familias.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Grupo/Nuevo/Grupo Nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Grupo/Nuevo/Grupo Nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 45145,
+    "filename": "Grupo Nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Marca/Nuevo/Nuevo Marca.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Marca/Nuevo/Nuevo Marca.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 37201,
+    "filename": "Nuevo Marca.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Tipo de Datos Adicional/Nuevo/Editar tipo de datos adicional.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Tipo de Datos Adicional/Nuevo/Editar tipo de datos adicional.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Editar registro",
+    "respuesta": "Pantalla de Editar registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Editar registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "editar",
+      "modificar"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Editar registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "editar",
+          "modificar"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 48932,
+    "filename": "Editar tipo de datos adicional.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Tipo de servicio externo/Nuevo/tipo_servicio_externo_nuevo.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Tipo de servicio externo/Nuevo/tipo_servicio_externo_nuevo.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 213563,
+    "filename": "tipo_servicio_externo_nuevo.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Productos/Tipo/Nuevo/Tipo nuevos.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Productos/Tipo/Nuevo/Tipo nuevos.png",
+    "prompt": "Módulo: Pantalla Principal | Función: Crear nuevo registro",
+    "respuesta": "Pantalla de Crear nuevo registro",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": "Crear nuevo registro",
+    "hierarchy_level": 5,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [
+      "agregar",
+      "nuevo",
+      "crear"
+    ],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": "Crear nuevo registro",
+        "hierarchy_level": 5,
+        "keywords": [
+          "agregar",
+          "nuevo",
+          "crear"
+        ]
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 208858,
+    "filename": "Tipo nuevos.png"
+  },
+  {
+    "image_path": "pantalla principal/Catalogos/Usuarios/Usuarios/BnextErp.Application_U5y2US86ns.png",
+    "absolute_path": "/root/.ipython/aaaaaaaaaaa/ERP_screenshots/pantalla principal/Catalogos/Usuarios/Usuarios/BnextErp.Application_U5y2US86ns.png",
+    "prompt": "Módulo: Pantalla Principal",
+    "respuesta": "Pantalla de None",
+    "module": "Pantalla Principal",
+    "section": null,
+    "subsection": null,
+    "function_detected": null,
+    "hierarchy_level": 4,
+    "screen_type": null,
+    "buttons_visible": [],
+    "form_fields": [],
+    "navigation_elements": [],
+    "main_actions": [],
+    "user_workflow": null,
+    "keywords": [],
+    "additional_metadata": {
+      "ai_analysis_successful": false,
+      "structural_analysis": {
+        "module": "Pantalla Principal",
+        "section": null,
+        "subsection": null,
+        "function_detected": null,
+        "hierarchy_level": 4,
+        "keywords": []
+      },
+      "ai_raw_response": {}
+    },
+    "file_size": 79486,
+    "filename": "BnextErp.Application_U5y2US86ns.png"
+  }
+]
