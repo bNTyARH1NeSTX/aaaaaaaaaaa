@@ -90,10 +90,11 @@ async def agent_completion(
     Args:
         request: AgentQueryRequest containing:
             - query: The user's query text
+            - conversation_id: Optional conversation ID for chat continuity
             - filters: Optional metadata filters
             - k: Number of documents to retrieve (default: 5)
             - max_tokens: Maximum tokens in response (default: 1000)
-            - temperature: Sampling temperature (default: 0.0)
+            - temperature: Sampling temperature (default: 0.7)
             - graph_name: Optional graph to search in
             - folder_name: Optional folder to scope the operation to
             - end_user_id: Optional end-user ID to scope the operation to
@@ -103,7 +104,7 @@ async def agent_completion(
         CompletionResponse: Generated completion with tools usage and sources
     """
     try:
-        return await morphik_agent.query(
+        response = await morphik_agent.query(
             request.query,
             auth,
             request.filters,
@@ -114,6 +115,14 @@ async def agent_completion(
             request.folder_name,
             request.end_user_id,
         )
+        
+        # Add conversation_id to metadata if provided
+        if request.conversation_id:
+            if response.metadata is None:
+                response.metadata = {}
+            response.metadata["conversation_id"] = request.conversation_id
+        
+        return response
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:

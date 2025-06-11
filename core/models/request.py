@@ -232,6 +232,14 @@ class AgentQueryRequest(BaseModel):
     """Request model for agent queries"""
 
     query: str = Field(..., description="Natural language query for the Morphik agent")
+    conversation_id: Optional[str] = Field(None, description="Optional conversation ID for chat continuity")
+    k: Optional[int] = Field(5, description="Number of chunks to retrieve")
+    temperature: Optional[float] = Field(0.7, description="Sampling temperature")
+    max_tokens: Optional[int] = Field(1000, description="Maximum tokens in response")
+    folder_name: Optional[str] = Field(None, description="Folder name to scope the operation")
+    end_user_id: Optional[str] = Field(None, description="End user ID for multi-tenancy")
+    filters: Optional[Dict[str, Any]] = Field(None, description="Optional metadata filters")
+    graph_name: Optional[str] = Field(None, description="Optional graph name for search")
 
 
 def transform_graph_to_frontend_format(graph: Graph) -> GraphResponse:

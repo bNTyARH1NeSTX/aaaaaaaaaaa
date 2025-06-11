@@ -242,6 +242,8 @@ export interface ChatRequest {
   max_tokens?: number;
   folder_name?: string;
   end_user_id?: string;
+  model_type?: 'manual_generation' | 'openai';
+  use_images?: boolean;
 }
 
 export interface ChatResponse {
@@ -692,8 +694,32 @@ export const searchChunks = async (request: RetrieveRequest): Promise<ChunkResul
 // === API DE CHAT ===
 export const sendChatMessage = async (request: ChatRequest): Promise<ChatResponse> => {
   try {
-    const response: AxiosResponse<ChatResponse> = await api.post('/query', request);
-    return response.data;
+    // Use the new dedicated chat endpoint
+    const chatRequest = {
+      query: request.query,
+      conversation_id: request.conversation_id,
+      k_images: request.k || 3,
+      temperature: request.temperature || 0.7,
+      max_tokens: request.max_tokens || 1000,
+      model_type: request.model_type || 'manual_generation', // Default to manual generation
+      use_images: request.use_images !== undefined ? request.use_images : true, // Enable ColPali by default
+    };
+
+    const response: AxiosResponse<any> = await api.post('/chat/query', chatRequest);
+    
+    // Transform response to ChatResponse format
+    const chatResponse: ChatResponse = {
+      response: response.data.response,
+      completion: response.data.response,
+      message: response.data.response,
+      conversation_id: response.data.conversation_id || request.conversation_id,
+      metadata: {
+        ...response.data.metadata,
+        sources: response.data.relevant_images || [],
+      },
+    };
+
+    return chatResponse;
   } catch (error) {
     console.error('Error enviando mensaje de chat:', error);
     throw error;

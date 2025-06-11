@@ -46,26 +46,16 @@ CREATE USER manual_user WITH PASSWORD 'manual_password';
 -- Create the database and set manual_user as the owner
 CREATE DATABASE manual_db OWNER manual_user;
 
-Tambien en el api ya vienen ahi unas cosas.
 
-Pero bueno el codigo orginal esta aqui,  /root/.ipython/aaaaaaaaaaa/Bnext%20RAGnar/col.py, aqui se usa un colpali finetuneado para generar los embeddings,
-los metadatos y el json que se usa se hicieron con  /root/.ipython/manualesaaaaaaaaaaa//Bnext%20RAGnar/n.py  , pero si luego ya que se hace todo esto la magia sucede en /root/.ipython/aaaaaaaaaaa/Bnext%20RAGnar/generate_manual.py,
-aqui la logica es la siguiente:
 
-Se hizo un folder de imagenes que representa los paneles del ERP, estos pues te dicen como llegar a un lado, osea si esta en ventas y dentro de ventas hay un subfolder de agregar pues el path de la imagen te
-dice a que irte para llegar ahi. Bueno colpali recupera esto y atravez de un codigo se recuperan las imagenes de los rooths padres de la imagen,
-aqui se mandan las imagenes y los metadatos correspondientes a un modelo qwen finetuneado para generar manuales, es de modalidad visual, por lo que usa metadatos y imagenes para generar el manual.
-El modelo genera un manual en formato markdown, y este  se supone que debe ser convertido a un powerpoint para aplicarle un diseño, a esto solo falta ponerle las imagenes que si son.
-Ayudame a implementar esto, y pues a usar las funcionalidades que tambien ya tengo en el backend cuando sea posible para hacer esto un proceso
-mas rapido, osea podriamos usar reglas para los metadatos,etc.
 
-La implementacion debe quedar en el frontend.
-
-VE registrando los cambios que hagas en un .txt porfa.
-
-El agente de ia pasado habia hecho varios tests de lo que llevaba, buscalos tambien.
 
 Asegurate de checar  /root/.ipython/aaaaaaaaaaa/core/config.py para la config de este toml donde vienen unas variables,  /root/.ipython/aaaaaaaaaaa/morphik.toml
 hay cosas en mi .env, preguntame si tienes duda.
 
 ENFOCATE EN HACER LA FUNCIONALIDAD EN EL CORE
+
+
+nos concentraremos en que en el chat se le pueda poner cualquier modelo de ia, y que vaya recibiendo los mensajes como un rag usando el colpali finetuneado y el colpali normal. Modifica borra lo que se nesecite para que funcione.
+El modelo principal es este junto la base de la que se baso el modelo ia MANUAL_MODEL_NAME = "ARHVNAAG/Manuales_finetuning_generator"
+BASE_MODEL_NAME = "Qwen/Qwen2.5-VL-3B-Instruct"  # Base del modelo fine-tuned.

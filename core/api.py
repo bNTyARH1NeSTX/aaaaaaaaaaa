@@ -45,6 +45,7 @@ from core.services_init import document_service, storage
 # Import API routers from refactored modules
 from core.routers.batch import router as batch_router
 from core.routers.cache import router as cache_router
+from core.routers.chat import chat_router
 from core.routers.documents import router as documents_router
 from core.routers.folders import router as folders_router
 from core.routers.graphs import router as graphs_router
@@ -174,6 +175,7 @@ app.include_router(batch_router)
 app.include_router(graphs_router)
 app.include_router(folders_router)
 app.include_router(manual_generation_router)
+app.include_router(chat_router)
 app.include_router(rule_templates_router)
 app.include_router(usage_router)
 app.include_router(cache_router)

@@ -297,12 +297,14 @@ export const useChat = () => {
       const response = await api.sendChatMessage({
         query,
         conversation_id: conversationId,
+        k: 4,
+        temperature: 0.7,
       });
 
       // Agregar respuesta del asistente
       const assistantMessage = { 
         role: 'assistant' as const, 
-        content: response.completion || response.message || 'Sin respuesta'
+        content: response.completion || response.response || response.message || 'Sin respuesta'
       };
       setMessages(prev => [...prev, assistantMessage]);
 
