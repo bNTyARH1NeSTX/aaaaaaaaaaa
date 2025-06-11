@@ -97,7 +97,7 @@ async def lifespan(app_instance: FastAPI):
     pool_to_close = getattr(app_instance.state, "redis_pool", _global_redis_pool)
     if pool_to_close:
         logger.info("Closing Redis connection pool from lifespan…")
-        pool_to_close.close()
+        await pool_to_close.close()
         # await pool_to_close.wait_closed()  # Uncomment if needed
         logger.info("Redis connection pool closed from lifespan.")
     logger.info("Lifespan: Shutdown complete.")

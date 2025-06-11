@@ -17,7 +17,10 @@ from core.models.auth import AuthContext
 from core.models.chat import ChatMessage, ChatConversation
 from core.services.telemetry import TelemetryService
 from core.embedding.manual_generation_embedding_model import ManualGenerationEmbeddingModel
+from core.services.chat_service import ChatService
 from core.services.manual_generator_service import ManualGeneratorService
+from core.models.chat_feedback import ChatFeedbackRequest, ChatFeedbackResponse, ChatFeedbackSummary
+from core.services_init import database
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,7 @@ telemetry = TelemetryService()
 # Dependency providers
 _manual_gen_embedding_model_instance: Optional[ManualGenerationEmbeddingModel] = None
 _manual_generator_service_instance: Optional[ManualGeneratorService] = None
+_chat_service_instance: Optional[ChatService] = None
 
 def get_manual_generation_embedding_model() -> ManualGenerationEmbeddingModel:
     """Get or create the manual generation embedding model instance."""
@@ -53,6 +57,26 @@ def get_manual_generator_service() -> ManualGeneratorService:
         _manual_generator_service_instance = ManualGeneratorService(settings=settings)
     return _manual_generator_service_instance
 
+def get_chat_service() -> ChatService:
+    """Get or create the chat service instance."""
+    global _chat_service_instance
+    if _chat_service_instance is None:
+        settings = get_settings()
+        logger.info("Initializing ChatService instance.")
+        _chat_service_instance = ChatService()
+        
+        # Initialize chat service with manual generation model components
+        generator_service = get_manual_generator_service()
+        if hasattr(generator_service, 'model') and hasattr(generator_service, 'processor') and hasattr(generator_service, 'image_folder'):
+            _chat_service_instance.initialize(
+                model=generator_service.model,
+                processor=generator_service.processor,
+                image_folder=generator_service.image_folder
+            )
+        else:
+            logger.warning("Manual generator service not properly initialized, chat service may not work correctly.")
+    return _chat_service_instance
+
 # Pydantic Models for Chat API
 class ChatRequest(BaseModel):
     """Chat request model."""
@@ -68,6 +92,7 @@ class ChatResponse(BaseModel):
     """Chat response model."""
     response: str = Field(..., description="AI response message")
     conversation_id: str = Field(..., description="Conversation ID")
+    response_id: str = Field(..., description="Unique ID for this specific response (for feedback)")
     relevant_images: Optional[List[Dict[str, Any]]] = Field(None, description="Relevant images found")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
@@ -84,7 +109,7 @@ async def chat_query(
     request: ChatRequest,
     auth: AuthContext = Depends(verify_token),
     embedding_model: ManualGenerationEmbeddingModel = Depends(get_manual_generation_embedding_model),
-    generator_service: ManualGeneratorService = Depends(get_manual_generator_service),
+    chat_service: ChatService = Depends(get_chat_service),
 ):
     """
     Process a chat query using RAG with ColPali image retrieval and AI model generation.
@@ -136,26 +161,19 @@ async def chat_query(
             model_type = request.model_type or "manual_generation"
             
             if model_type == "manual_generation":
-                # Use manual generator service with Qwen2.5-VL (default)
-                logger.info("Generating response using manual generation model (Qwen2.5-VL)")
+                # Use chat service with Qwen2.5-VL (default)
+                logger.info("Generating chat response using manual generation model (Qwen2.5-VL)")
                 
-                if relevant_images_metadata:
-                    # Use RAG with images
-                    generated_result = await generator_service.generate_manual_text(
-                        query=request.query,
-                        images_metadata=relevant_images_metadata,
-                    )
-                else:
-                    # Text-only generation with manual generator
-                    generated_result = await generator_service.generate_manual_text(
-                        query=request.query,
-                        images_metadata=[],  # Empty list for text-only generation
-                    )
+                # Get conversation history for context
+                conversation_history = []
+                # Note: In a real implementation, you'd retrieve conversation history from database
+                # For now, we'll just use the current query
                 
-                if isinstance(generated_result, dict):
-                    ai_response = generated_result.get('manual_text', str(generated_result))
-                else:
-                    ai_response = str(generated_result)
+                ai_response = await chat_service.generate_chat_response(
+                    query=request.query,
+                    images_metadata=relevant_images_metadata,
+                    conversation_history=conversation_history
+                )
                     
                 used_model = "Qwen2.5-VL-3B-Instruct (Fine-tuned)"
                 
@@ -192,8 +210,8 @@ async def chat_query(
                 raise ValueError(f"Unsupported model type: {model_type}")
                 
         except Exception as e:
-            logger.error(f"Error generating AI response: {str(e)}", exc_info=True)
-            ai_response = f"Lo siento, ocurrió un error al generar la respuesta: {str(e)}"
+            logger.error(f"Error generating chat response: {str(e)}", exc_info=True)
+            ai_response = "Lo siento, ocurrió un error al procesar tu mensaje. Por favor, inténtalo de nuevo."
             used_model = f"Error with {request.model_type or 'manual_generation'}"
         
         # Step 3: Prepare response metadata
@@ -208,11 +226,15 @@ async def chat_query(
         # TODO: Store conversation history in database if needed
         # For now, we just return the response
         
-        logger.info(f"Chat query processed successfully for conversation {conversation_id}")
+        # Generate unique response ID for feedback linking
+        response_id = str(uuid.uuid4())
+        
+        logger.info(f"Chat query processed successfully for conversation {conversation_id}, response_id: {response_id}")
         
         return ChatResponse(
             response=ai_response,
             conversation_id=conversation_id,
+            response_id=response_id,
             relevant_images=relevant_images_metadata if request.use_images else None,
             metadata=response_metadata,
         )
@@ -279,3 +301,143 @@ async def switch_chat_model(
     except Exception as e:
         logger.error(f"Error switching model: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error switching model: {str(e)}")
+
+# Chat Feedback Endpoints
+
+@chat_router.post("/feedback", response_model=ChatFeedbackResponse)
+@telemetry.track(operation_type="chat_feedback", metadata_resolver=None)
+async def submit_chat_feedback(
+    request: ChatFeedbackRequest,
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Submit feedback (thumbs up/down) for a chat response.
+    
+    This endpoint allows users to rate chat responses and provide optional comments.
+    The feedback is stored in the database for analysis and improvement.
+    """
+    try:
+        # Generate feedback ID
+        import uuid
+        feedback_id = str(uuid.uuid4())
+        
+        # Store feedback in database
+        success = await database.store_chat_feedback(
+            feedback_id=feedback_id,
+            conversation_id=request.conversation_id,
+            query=request.query,
+            response=request.response,
+            rating=request.rating,
+            comment=request.comment,
+            user_id=auth.user_id,
+            model_used=request.model_used,
+            relevant_images=request.relevant_images
+        )
+        
+        if success:
+            logger.info(f"Stored chat feedback {feedback_id} for conversation {request.conversation_id}")
+            return ChatFeedbackResponse(
+                success=True,
+                message="Feedback submitted successfully",
+                feedback_id=feedback_id
+            )
+        else:
+            logger.error(f"Failed to store chat feedback for conversation {request.conversation_id}")
+            return ChatFeedbackResponse(
+                success=False,
+                message="Failed to submit feedback",
+                feedback_id=None
+            )
+            
+    except Exception as e:
+        logger.error(f"Error submitting chat feedback: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error submitting feedback: {str(e)}")
+
+@chat_router.get("/feedback", response_model=List[Dict[str, Any]])
+async def get_chat_feedback(
+    auth: AuthContext = Depends(verify_token),
+    skip: int = 0,
+    limit: int = 100,
+    rating_filter: Optional[str] = None,
+    model_filter: Optional[str] = None,
+):
+    """
+    Get chat feedback entries with optional filtering.
+    
+    This endpoint returns a list of feedback entries that can be filtered by:
+    - Rating (up/down)
+    - Model used
+    - Pagination (skip/limit)
+    """
+    try:
+        # Validate rating filter
+        if rating_filter and rating_filter not in ['up', 'down']:
+            raise HTTPException(status_code=400, detail="rating_filter must be 'up' or 'down'")
+        
+        # Get feedback from database
+        feedback_list = await database.get_chat_feedback(
+            auth=auth,
+            skip=skip,
+            limit=limit,
+            rating_filter=rating_filter,
+            model_filter=model_filter
+        )
+        
+        logger.info(f"Retrieved {len(feedback_list)} feedback entries for user {auth.user_id}")
+        return feedback_list
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving chat feedback: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error retrieving feedback: {str(e)}")
+
+@chat_router.get("/feedback/stats", response_model=Dict[str, Any])
+async def get_chat_feedback_stats(
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Get statistics about chat feedback.
+    
+    Returns aggregated data about user feedback including:
+    - Total feedback count
+    - Thumbs up/down breakdown
+    - Model performance statistics
+    """
+    try:
+        stats = await database.get_chat_feedback_stats(auth=auth)
+        
+        logger.info(f"Retrieved feedback stats for user {auth.user_id}: {stats}")
+        return stats
+        
+    except Exception as e:
+        logger.error(f"Error retrieving feedback stats: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error retrieving feedback stats: {str(e)}")
+
+@chat_router.delete("/feedback/{feedback_id}")
+async def delete_chat_feedback(
+    feedback_id: str,
+    auth: AuthContext = Depends(verify_token),
+):
+    """
+    Delete a specific feedback entry.
+    
+    Users can only delete their own feedback entries unless they have admin permissions.
+    """
+    try:
+        success = await database.delete_chat_feedback(
+            feedback_id=feedback_id,
+            auth=auth
+        )
+        
+        if success:
+            logger.info(f"Deleted chat feedback {feedback_id}")
+            return {"message": "Feedback deleted successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Feedback not found or not authorized to delete")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting chat feedback: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error deleting feedback: {str(e)}")

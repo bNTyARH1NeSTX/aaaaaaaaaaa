@@ -12,7 +12,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Sun, 
-  Moon 
+  Moon,
+  ThumbsUp 
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -36,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Búsqueda', href: '/search', icon: Search },
   { label: 'Manuales', href: '/manuals', icon: BookOpen },
   { label: 'Grafos de Conocimiento', href: '/graphs', icon: BarChart2 },
+  { label: 'Feedback', href: '/feedback', icon: ThumbsUp },
 ];
 
 const FOOTER_ITEMS: NavItem[] = [

@@ -3,9 +3,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, User, Bot, Loader2, AlertCircle, FileText, Database, Settings } from 'lucide-react';
 import { sendChatMessage, ChatRequest, ChatResponse, ChatMessage } from '../../api/apiService';
+import ChatFeedback from '../../components/ChatFeedback';
+
+// Extended message interface for feedback support
+interface ExtendedChatMessage extends ChatMessage {
+  response_id?: string;
+  query?: string; // Original query for assistant responses
+  model_used?: string;
+  relevant_images?: number;
+}
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<ExtendedChatMessage[]>([
     {
       role: 'assistant',
       content: '¡Hola! Soy tu asistente de IA para el sistema Ragnar. Uso el modelo Qwen2.5-VL fine-tuned por defecto para generar respuestas basadas en imágenes del ERP usando ColPali. Puedo ayudarte con consultas sobre manuales del ERP, análisis de imágenes y generación de documentación. ¿En qué puedo asistirte hoy?',
@@ -31,7 +40,7 @@ export default function ChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage: ExtendedChatMessage = {
       role: 'user',
       content: input,
     };
@@ -62,16 +71,20 @@ export default function ChatPage() {
       // Get the completion content
       const completionContent = response.completion || response.response || response.message || 'Sin respuesta';
 
-      const assistantMessage: ChatMessage = {
+      const assistantMessage: ExtendedChatMessage = {
         role: 'assistant',
         content: completionContent,
+        response_id: response.response_id,
+        query: currentInput, // Store original query for feedback
+        model_used: response.metadata?.model_used || (selectedModel === 'manual_generation' ? 'Qwen2.5-VL-3B-Instruct (Fine-tuned)' : 'OpenAI GPT-4o-mini'),
+        relevant_images: response.metadata?.images_found || 0,
       };
 
       setMessages(prev => [...prev, assistantMessage]);
       
       // If there are sources/images in metadata, add them as a separate informational message
       if (response.metadata?.sources && response.metadata.sources.length > 0) {
-        const sourcesMessage: ChatMessage = {
+        const sourcesMessage: ExtendedChatMessage = {
           role: 'assistant',
           content: `**Imágenes relevantes encontradas:**\n${response.metadata.sources.map((source: any, index: number) => {
             const imagePath = source.image_path || source.metadata?.filename || 'Imagen';
@@ -88,7 +101,7 @@ export default function ChatPage() {
       setError(err instanceof Error ? err.message : 'Error al enviar el mensaje');
       
       // Add error message to chat
-      const errorMessage: ChatMessage = {
+      const errorMessage: ExtendedChatMessage = {
         role: 'assistant',
         content: 'Lo siento, ocurrió un error al procesar tu mensaje. Por favor, inténtalo de nuevo.',
       };
@@ -201,18 +214,43 @@ export default function ChatPage() {
                 </div>
               )}
               
-              <div
-                className={`max-w-xs lg:max-w-2xl px-4 py-3 rounded-lg ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                }`}
-              >
-                <div className="text-sm whitespace-pre-wrap">
-                  {message.content.split('**').map((part: string, i: number) => 
-                    i % 2 === 0 ? part : <strong key={i}>{part}</strong>
-                  )}
+              <div className="flex flex-col gap-2 max-w-xs lg:max-w-2xl">
+                <div
+                  className={`px-4 py-3 rounded-lg ${
+                    message.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                  }`}
+                >
+                  <div className="text-sm whitespace-pre-wrap">
+                    {message.content.split('**').map((part: string, i: number) => 
+                      i % 2 === 0 ? part : <strong key={i}>{part}</strong>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Show feedback component for assistant messages with response_id and query */}
+                {message.role === 'assistant' && (
+                  <div className="ml-2">
+                    {message.response_id && message.query ? (
+                      <ChatFeedback
+                        conversationId={conversationId || 'default'}
+                        responseId={message.response_id}
+                        query={message.query}
+                        response={message.content}
+                        modelUsed={message.model_used}
+                        relevantImages={message.relevant_images}
+                        onFeedbackSubmitted={(rating) => {
+                          console.log(`Feedback submitted: ${rating} for response ${message.response_id}`);
+                        }}
+                      />
+                    ) : (
+                      <div className="text-xs text-gray-400 mt-1">
+                        Feedback not available for this message
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {message.role === 'user' && (

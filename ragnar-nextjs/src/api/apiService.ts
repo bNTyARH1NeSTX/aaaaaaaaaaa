@@ -251,7 +251,47 @@ export interface ChatResponse {
   completion?: string; // Alternative response field
   message?: string; // Alternative response field
   conversation_id?: string;
+  response_id?: string; // For linking feedback
   metadata?: { [key: string]: any };
+}
+
+// Chat Feedback interfaces
+export interface ChatFeedbackRequest {
+  conversation_id: string;
+  response_id?: string;
+  query: string;
+  response: string;
+  rating: 'up' | 'down';
+  comment?: string;
+  model_used?: string;
+  relevant_images?: number;
+}
+
+export interface ChatFeedbackResponse {
+  success: boolean;
+  message: string;
+  feedback_id?: string;
+}
+
+export interface ChatFeedbackEntry {
+  id: string;
+  conversation_id: string;
+  query: string;
+  response: string;
+  rating: 'up' | 'down';
+  comment?: string;
+  user_id?: string;
+  model_used?: string;
+  relevant_images?: number;
+  timestamp: string;
+}
+
+export interface ChatFeedbackStats {
+  total_feedback: number;
+  thumbs_up: number;
+  thumbs_down: number;
+  satisfaction_rate: number;
+  model_stats: { [model: string]: { up: number; down: number } };
 }
 
 // Interceptor para manejo de errores
@@ -713,6 +753,7 @@ export const sendChatMessage = async (request: ChatRequest): Promise<ChatRespons
       completion: response.data.response,
       message: response.data.response,
       conversation_id: response.data.conversation_id || request.conversation_id,
+      response_id: response.data.response_id, // ADD THIS LINE
       metadata: {
         ...response.data.metadata,
         sources: response.data.relevant_images || [],
@@ -846,3 +887,52 @@ export interface PowerPointGenerationRequest {
   image_prompt?: string;
   k_images?: number;
 }
+
+// === CHAT FEEDBACK API ===
+export const submitChatFeedback = async (feedback: ChatFeedbackRequest): Promise<ChatFeedbackResponse> => {
+  try {
+    const response: AxiosResponse<ChatFeedbackResponse> = await api.post('/chat/feedback', feedback);
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting chat feedback:', error);
+    throw error;
+  }
+};
+
+export const getChatFeedback = async (
+  skip: number = 0,
+  limit: number = 100,
+  ratingFilter?: 'up' | 'down',
+  modelFilter?: string
+): Promise<ChatFeedbackEntry[]> => {
+  try {
+    const params: any = { skip, limit };
+    if (ratingFilter) params.rating_filter = ratingFilter;
+    if (modelFilter) params.model_filter = modelFilter;
+    
+    const response: AxiosResponse<ChatFeedbackEntry[]> = await api.get('/chat/feedback', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching chat feedback:', error);
+    return [];
+  }
+};
+
+export const getChatFeedbackStats = async (): Promise<ChatFeedbackStats> => {
+  try {
+    const response: AxiosResponse<ChatFeedbackStats> = await api.get('/chat/feedback/stats');
+    return response.data;
+  } catch (error) {
+    console.error('Error getting chat feedback stats:', error);
+    throw error;
+  }
+};
+
+export const deleteChatFeedback = async (feedbackId: string): Promise<void> => {
+  try {
+    await api.delete(`/chat/feedback/${feedbackId}`);
+  } catch (error) {
+    console.error('Error deleting chat feedback:', error);
+    throw error;
+  }
+};

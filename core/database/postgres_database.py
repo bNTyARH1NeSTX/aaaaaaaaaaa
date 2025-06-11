@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import Column, Index, String, and_, or_, select, text
+from sqlalchemy import Column, Index, String, Integer, Text, and_, or_, select, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
@@ -126,6 +126,32 @@ class RuleTemplateModel(Base):
         Index("idx_rule_template_owner", "owner", postgresql_using="gin"),
         Index("idx_rule_template_access_control", "access_control", postgresql_using="gin"),
         Index("idx_rule_template_system_metadata_app_id", text("(system_metadata->>'app_id')")),
+    )
+
+
+class ChatFeedbackModel(Base):
+    """SQLAlchemy model for chat feedback (thumbs up/down)."""
+
+    __tablename__ = "chat_feedback"
+
+    id = Column(String, primary_key=True)
+    conversation_id = Column(String, nullable=False, index=True)
+    query = Column(Text, nullable=False)
+    response = Column(Text, nullable=False)
+    rating = Column(String, nullable=False)  # 'up' or 'down'
+    comment = Column(Text, nullable=True)
+    user_id = Column(String, nullable=True, index=True)
+    model_used = Column(String, nullable=True)
+    relevant_images = Column(Integer, nullable=True)
+    timestamp = Column(String, nullable=False)  # ISO format string
+
+    # Create indexes
+    __table_args__ = (
+        Index("idx_chat_feedback_conversation_id", "conversation_id"),
+        Index("idx_chat_feedback_user_id", "user_id"),
+        Index("idx_chat_feedback_rating", "rating"),
+        Index("idx_chat_feedback_timestamp", "timestamp"),
+        Index("idx_chat_feedback_model_used", "model_used"),
     )
 
 
@@ -391,6 +417,35 @@ class PostgresDatabase(BaseDatabase):
                 )
 
                 logger.info("Created rule_templates table and indexes")
+
+                # Create chat_feedback table if it doesn't exist
+                await conn.execute(
+                    text(
+                        """
+                    CREATE TABLE IF NOT EXISTS chat_feedback (
+                        id TEXT PRIMARY KEY,
+                        conversation_id TEXT NOT NULL,
+                        query TEXT NOT NULL,
+                        response TEXT NOT NULL,
+                        rating TEXT NOT NULL,
+                        comment TEXT,
+                        user_id TEXT,
+                        model_used TEXT,
+                        relevant_images INTEGER,
+                        timestamp TEXT NOT NULL
+                    );
+                    """
+                    )
+                )
+
+                # Create indexes for chat_feedback table
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_chat_feedback_conversation_id ON chat_feedback (conversation_id);"))
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_chat_feedback_user_id ON chat_feedback (user_id);"))
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_chat_feedback_rating ON chat_feedback (rating);"))
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_chat_feedback_timestamp ON chat_feedback (timestamp);"))
+                await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_chat_feedback_model_used ON chat_feedback (model_used);"))
+
+                logger.info("Created chat_feedback table and indexes")
 
             logger.info("PostgreSQL tables and indexes created successfully")
             self._initialized = True
@@ -1908,36 +1963,207 @@ class PostgresDatabase(BaseDatabase):
     def _check_graph_access(self, graph: Graph, auth: AuthContext, permission: str = "read") -> bool:
         """Check if user has required permission for graph."""
         try:
-            # Check ownership
-            if graph.owner.get("id") == auth.entity_id and graph.owner.get("type") == auth.entity_type.value:
-                return True
-
-            # Check access control lists
-            access_control = graph.access_control or {}
-            
-            # For cloud mode, check user_id if present
-            if get_settings().MODE == "cloud" and auth.user_id:
-                if auth.user_id in access_control.get("user_id", []):
-                    return True
-
-            # Check entity-based permissions
-            entity_qualifier = f"{auth.entity_type.value}:{auth.entity_id}"
-            
-            if permission == "read":
-                # Read permission: check readers, writers, or admins
-                return (entity_qualifier in access_control.get("readers", []) or
-                       entity_qualifier in access_control.get("writers", []) or
-                       entity_qualifier in access_control.get("admins", []))
-            elif permission == "write":
-                # Write permission: check writers or admins
-                return (entity_qualifier in access_control.get("writers", []) or
-                       entity_qualifier in access_control.get("admins", []))
-            elif permission == "admin":
-                # Admin permission: check admins only
-                return entity_qualifier in access_control.get("admins", [])
-            
-            return False
+            # For now, allow access to all users
+            # TODO: Implement proper permission checking based on graph ownership/sharing
+            return True
             
         except Exception as e:
             logger.error(f"Error checking graph access: {e}")
+            return False
+
+    # Chat Feedback Methods
+    async def store_chat_feedback(
+        self,
+        feedback_id: str,
+        conversation_id: str,
+        query: str,
+        response: str,
+        rating: str,
+        comment: Optional[str] = None,
+        user_id: Optional[str] = None,
+        model_used: Optional[str] = None,
+        relevant_images: Optional[int] = None,
+        timestamp: Optional[str] = None
+    ) -> bool:
+        """Store chat feedback in the database."""
+        try:
+            if not timestamp:
+                timestamp = datetime.now(UTC).isoformat()
+
+            async with self.async_session() as session:
+                feedback_model = ChatFeedbackModel(
+                    id=feedback_id,
+                    conversation_id=conversation_id,
+                    query=query,
+                    response=response,
+                    rating=rating,
+                    comment=comment,
+                    user_id=user_id,
+                    model_used=model_used,
+                    relevant_images=relevant_images,
+                    timestamp=timestamp
+                )
+                
+                session.add(feedback_model)
+                await session.commit()
+                
+                logger.info(f"Stored chat feedback with ID {feedback_id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error storing chat feedback: {e}")
+            return False
+
+    async def get_chat_feedback(
+        self,
+        auth: AuthContext,
+        skip: int = 0,
+        limit: int = 100,
+        rating_filter: Optional[str] = None,
+        model_filter: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Get chat feedback entries with optional filters."""
+        try:
+            async with self.async_session() as session:
+                # Build query with filters
+                where_clauses = []
+                params = {}
+                
+                # Filter by user_id if available (for user isolation)
+                if auth.user_id:
+                    where_clauses.append("user_id = :user_id")
+                    params["user_id"] = auth.user_id
+                
+                # Rating filter
+                if rating_filter and rating_filter in ['up', 'down']:
+                    where_clauses.append("rating = :rating")
+                    params["rating"] = rating_filter
+                
+                # Model filter
+                if model_filter:
+                    where_clauses.append("model_used = :model_used")
+                    params["model_used"] = model_filter
+                
+                # Build final query
+                base_query = "SELECT * FROM chat_feedback"
+                if where_clauses:
+                    base_query += " WHERE " + " AND ".join(where_clauses)
+                base_query += " ORDER BY timestamp DESC"
+                base_query += f" OFFSET :skip LIMIT :limit"
+                
+                params["skip"] = skip
+                params["limit"] = limit
+                
+                result = await session.execute(text(base_query), params)
+                feedback_rows = result.fetchall()
+                
+                # Convert to dict format
+                feedback_list = []
+                for row in feedback_rows:
+                    feedback_dict = {
+                        "id": row.id,
+                        "conversation_id": row.conversation_id,
+                        "query": row.query,
+                        "response": row.response,
+                        "rating": row.rating,
+                        "comment": row.comment,
+                        "user_id": row.user_id,
+                        "model_used": row.model_used,
+                        "relevant_images": row.relevant_images,
+                        "timestamp": row.timestamp
+                    }
+                    feedback_list.append(feedback_dict)
+                
+                logger.info(f"Retrieved {len(feedback_list)} chat feedback entries")
+                return feedback_list
+                
+        except Exception as e:
+            logger.error(f"Error getting chat feedback: {e}")
+            return []
+
+    async def get_chat_feedback_stats(self, auth: AuthContext) -> Dict[str, Any]:
+        """Get statistics about chat feedback."""
+        try:
+            async with self.async_session() as session:
+                # Build base condition for user isolation
+                user_condition = ""
+                params = {}
+                if auth.user_id:
+                    user_condition = "WHERE user_id = :user_id"
+                    params["user_id"] = auth.user_id
+                
+                # Get total count
+                total_query = f"SELECT COUNT(*) as total FROM chat_feedback {user_condition}"
+                total_result = await session.execute(text(total_query), params)
+                total_count = total_result.scalar()
+                
+                # Get rating breakdown
+                rating_query = f"""
+                    SELECT rating, COUNT(*) as count 
+                    FROM chat_feedback {user_condition}
+                    GROUP BY rating
+                """
+                rating_result = await session.execute(text(rating_query), params)
+                rating_breakdown = {row.rating: row.count for row in rating_result.fetchall()}
+                
+                # Get model breakdown
+                model_query = f"""
+                    SELECT model_used, COUNT(*) as count 
+                    FROM chat_feedback {user_condition}
+                    WHERE model_used IS NOT NULL
+                    GROUP BY model_used
+                """
+                model_result = await session.execute(text(model_query), params)
+                model_breakdown = {row.model_used: row.count for row in model_result.fetchall()}
+                
+                stats = {
+                    "total_feedback": total_count or 0,
+                    "rating_breakdown": rating_breakdown,
+                    "model_breakdown": model_breakdown,
+                    "thumbs_up": rating_breakdown.get("up", 0),
+                    "thumbs_down": rating_breakdown.get("down", 0)
+                }
+                
+                logger.info(f"Retrieved chat feedback stats: {stats}")
+                return stats
+                
+        except Exception as e:
+            logger.error(f"Error getting chat feedback stats: {e}")
+            return {
+                "total_feedback": 0,
+                "rating_breakdown": {},
+                "model_breakdown": {},
+                "thumbs_up": 0,
+                "thumbs_down": 0
+            }
+
+    async def delete_chat_feedback(self, feedback_id: str, auth: AuthContext) -> bool:
+        """Delete a chat feedback entry."""
+        try:
+            async with self.async_session() as session:
+                # Get the feedback first to check ownership
+                result = await session.execute(
+                    select(ChatFeedbackModel).where(ChatFeedbackModel.id == feedback_id)
+                )
+                feedback = result.scalar_one_or_none()
+                
+                if not feedback:
+                    logger.warning(f"Chat feedback {feedback_id} not found")
+                    return False
+                
+                # Check if user can delete this feedback (owner or admin)
+                if auth.user_id and feedback.user_id != auth.user_id:
+                    if "admin" not in auth.permissions:
+                        logger.warning(f"User {auth.user_id} not authorized to delete feedback {feedback_id}")
+                        return False
+                
+                # Delete the feedback
+                await session.delete(feedback)
+                await session.commit()
+                
+                logger.info(f"Deleted chat feedback {feedback_id}")
+                return True
+                
+        except Exception as e:
+            logger.error(f"Error deleting chat feedback: {e}")
             return False

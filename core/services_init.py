@@ -26,6 +26,7 @@ from core.embedding.litellm_embedding import LiteLLMEmbeddingModel
 from core.parser.morphik_parser import MorphikParser
 from core.reranker.flag_reranker import FlagReranker
 from core.services.document_service import DocumentService
+from core.services.chat_service import ChatService
 from core.storage.local_storage import LocalStorage
 from core.storage.s3_storage import S3Storage
 from core.vector_store.multi_vector_store import MultiVectorStore
@@ -155,6 +156,13 @@ document_service = DocumentService(
 )
 logger.info("Document service initialised")
 
+# ---------------------------------------------------------------------------
+# Chat service
+# ---------------------------------------------------------------------------
+
+chat_service = ChatService()
+logger.info("Chat service initialised")
+
 __all__ = [
     "settings",
     "database",
@@ -163,4 +171,5 @@ __all__ = [
     "embedding_model",
     "completion_model",
     "document_service",
+    "chat_service",
 ]
