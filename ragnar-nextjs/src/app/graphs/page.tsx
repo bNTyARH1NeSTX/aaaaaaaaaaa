@@ -53,7 +53,7 @@ const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizat
     const baseColor = entityTypeColorMap[entityType] || 
                      (ENTITY_TYPE_COLORS as any)[entityType] || 
                      ENTITY_TYPE_COLORS.DEFAULT;
-    const backgroundColor = getLighterColor(baseColor, 35); // Lighter background
+    const backgroundColor = getLighterColor(baseColor, 10); // Less lightening for more vibrant backgrounds
     
     return {
       id: node.id,
@@ -68,18 +68,18 @@ const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizat
       type: 'default',
       style: {
         background: backgroundColor,
-        border: `3px solid ${baseColor}`,
-        borderRadius: '10px',
-        padding: '12px',
-        fontSize: '12px',
-        fontWeight: '600',
-        color: '#1f2937',
-        minWidth: '140px',
-        minHeight: '50px',
+        border: `4px solid ${baseColor}`, // Thicker border for better visibility
+        borderRadius: '12px',
+        padding: '14px',
+        fontSize: '13px',
+        fontWeight: '700', // Bolder text
+        color: '#111827', // Darker text for better contrast
+        minWidth: '150px',
+        minHeight: '55px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: `0 4px 6px rgba(0,0,0,0.1), 0 0 0 1px ${baseColor}20`,
+        boxShadow: `0 6px 12px rgba(0,0,0,0.15), 0 0 0 2px ${baseColor}30`, // Stronger shadow
         textAlign: 'center',
         transition: 'all 0.3s ease',
       },
@@ -87,17 +87,22 @@ const transformVisualizationDataToFlow = (visualizationData: api.GraphVisualizat
   });
 
   const edges: Edge[] = (visualizationData.links || []).map((link, index) => {
-    // Generate colors based on relationship type
+    // Generate more distinct colors based on relationship type
     const getEdgeColor = (type: string) => {
       const colors: { [key: string]: string } = {
-        'RELATED_TO': '#3b82f6',
-        'CONTAINS': '#10b981',
-        'PART_OF': '#8b5cf6',
-        'REFERENCES': '#f59e0b',
-        'DEPENDS_ON': '#ef4444',
-        'SIMILAR_TO': '#06b6d4',
-        'CONNECTED_TO': '#6b7280',
-        'DEFAULT': '#6b7280'
+        'RELATED_TO': '#2563eb',     // Vibrant blue
+        'CONTAINS': '#059669',       // Vibrant emerald  
+        'PART_OF': '#7c3aed',        // Vibrant violet
+        'REFERENCES': '#ea580c',     // Vibrant orange
+        'DEPENDS_ON': '#dc2626',     // Vibrant red
+        'SIMILAR_TO': '#0891b2',     // Vibrant cyan
+        'CONNECTED_TO': '#4b5563',   // Neutral gray
+        'USES': '#16a34a',           // Vibrant green
+        'IMPLEMENTS': '#9333ea',     // Vibrant purple
+        'EXTENDS': '#c2410c',        // Vibrant amber
+        'BELONGS_TO': '#be123c',     // Vibrant rose
+        'INCLUDES': '#0d9488',       // Vibrant teal
+        'DEFAULT': '#4b5563'         // Neutral gray
       };
       return colors[type.toUpperCase()] || colors['DEFAULT'];
     };
@@ -175,7 +180,7 @@ const transformApiGraphToFlow = (apiGraph: api.Graph): { nodes: Node[], edges: E
     const entityType = node.data?.type || 'DEFAULT';
     const typeKey = typeof entityType === 'string' ? entityType : 'DEFAULT';
     const baseColor = entityTypeColorMap[typeKey] || (ENTITY_TYPE_COLORS as any)[typeKey] || ENTITY_TYPE_COLORS.DEFAULT;
-    const backgroundColor = getLighterColor(baseColor, 35); // Lighter background
+    const backgroundColor = getLighterColor(baseColor, 5); // Much less lightening for more vibrant backgrounds
     
     return {
       id: node.id,

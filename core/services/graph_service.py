@@ -56,6 +56,11 @@ class GraphService:
         self.embedding_model = embedding_model
         self.completion_model = completion_model
         self.entity_resolver = EntityResolver()
+        
+        # Color registry for collision detection
+        self._color_registry = {}  # entity_id -> color
+        self._used_colors = set()  # Track all used colors
+        self._color_to_entity = {}  # color -> entity_id (for reverse lookup)
 
     async def update_graph(
         self,
@@ -1513,7 +1518,7 @@ class GraphService:
                     "label": entity.label,
                     "type": entity.type,
                     "properties": entity.properties,
-                    "color": self._get_node_color(entity.type),
+                    "color": self._get_node_color(entity.type, entity.label),
                 }
             )
 
@@ -1529,35 +1534,251 @@ class GraphService:
 
         return {"nodes": nodes, "links": links}
 
-    def _get_node_color(self, node_type: str) -> str:
-        """Obtiene el color para un tipo de nodo para coincidir con el esquema de colores de la UI."""
-        color_map = {
-            "persona": "#4f46e5",  # Índigo
-            "person": "#4f46e5",  # Índigo (mantener inglés para compatibilidad)
-            "organización": "#06b6d4",  # Cian
-            "organization": "#06b6d4",  # Cian (mantener inglés para compatibilidad)
-            "ubicación": "#10b981",  # Esmeralda
-            "location": "#10b981",  # Esmeralda (mantener inglés para compatibilidad)
-            "fecha": "#f59e0b",  # Ámbar
-            "date": "#f59e0b",  # Ámbar (mantener inglés para compatibilidad)
-            "concepto": "#8b5cf6",  # Violeta
-            "concept": "#8b5cf6",  # Violeta (mantener inglés para compatibilidad)
-            "evento": "#ec4899",  # Rosa
-            "event": "#ec4899",  # Rosa (mantener inglés para compatibilidad)
-            "producto": "#ef4444",  # Rojo
-            "product": "#ef4444",  # Rojo (mantener inglés para compatibilidad)
-            "entidad": "#4f46e5",  # Índigo (para entidades genéricas)
-            "entity": "#4f46e5",  # Índigo (para entidades genéricas)
-            "atributo": "#f59e0b",  # Ámbar
-            "attribute": "#f59e0b",  # Ámbar (mantener inglés para compatibilidad)
-            "relación": "#ec4899",  # Rosa
-            "relationship": "#ec4899",  # Rosa (mantener inglés para compatibilidad)
-            "elemento_alto_nivel": "#10b981",  # Esmeralda
-            "high_level_element": "#10b981",  # Esmeralda (mantener inglés para compatibilidad)
-            "unidad_semántica": "#8b5cf6",  # Violeta
-            "semantic_unit": "#8b5cf6",  # Violeta (mantener inglés para compatibilidad)
+    def _get_node_color(self, node_type: str, entity_label: str = None) -> str:
+        """Generate consistent, collision-free color for node type and entity."""
+        # Create unique entity identifier combining label and type for better uniqueness
+        if entity_label:
+            entity_id = f"{entity_label}:{node_type}"
+        else:
+            entity_id = node_type
+            
+        # Check if this entity already has an assigned color
+        if entity_id in self._color_registry:
+            return self._color_registry[entity_id]
+            
+        # Generate color with collision detection
+        color = self._generate_color_with_collision_detection(entity_id, node_type)
+        
+        # Register the color assignment
+        self._register_color(entity_id, color)
+        return color
+    
+    def _generate_color_with_collision_detection(self, entity_id: str, node_type: str) -> str:
+        """Generate a color with collision detection and avoidance."""
+        # Predefined colors for common Spanish entity types (matches frontend)
+        predefined_colors = {
+            "persona": "hsl(39, 95%, 42%)",
+            "organización": "hsl(120, 95%, 35%)",
+            "empresa": "hsl(120, 95%, 35%)",
+            "ubicación": "hsl(200, 95%, 42%)",
+            "lugar": "hsl(200, 95%, 42%)",
+            "país": "hsl(220, 95%, 42%)",
+            "ciudad": "hsl(180, 95%, 35%)",
+            "tecnología": "hsl(280, 95%, 50%)",
+            "producto": "hsl(300, 95%, 48%)",
+            "dinero": "hsl(60, 95%, 38%)",
+            "fecha": "hsl(270, 95%, 50%)",
+            "concepto": "hsl(240, 95%, 50%)",
+            "evento": "hsl(30, 95%, 42%)",
+            "documento": "hsl(120, 95%, 38%)",
+            "metodología": "hsl(350, 95%, 42%)",
+            "herramienta": "hsl(25, 95%, 42%)",
+            "procedimiento": "hsl(170, 95%, 35%)",
+            "default": "hsl(210, 95%, 42%)"
         }
-        return color_map.get(node_type.lower(), "#6b7280")  # Gris como predeterminado
+        
+        normalized_type = node_type.lower()
+        
+        # First try predefined color if available and not used
+        if normalized_type in predefined_colors:
+            predefined_color = predefined_colors[normalized_type]
+            # Convert HSL to hex for comparison
+            predefined_hex = self._hsl_to_hex_from_string(predefined_color)
+            if predefined_hex not in self._used_colors:
+                return predefined_hex
+        
+        # Generate color with collision avoidance
+        max_attempts = 50
+        for attempt in range(max_attempts):
+            color_hex = self._generate_consistent_color(entity_id, attempt)
+            
+            # Check if color is sufficiently distinct from used colors
+            if color_hex not in self._used_colors and self._is_color_sufficiently_distinct(color_hex):
+                return color_hex
+        
+        # Fallback: generate a completely different color using golden ratio
+        return self._generate_fallback_color()
+    
+    def _generate_consistent_color(self, seed_string: str, variation: int = 0) -> str:
+        """Generate a consistent color with optional variation."""
+        # Enhanced hash function with variation
+        hash_val = variation * 7919  # Prime number for better distribution
+        for char in seed_string:
+            hash_val = ((hash_val << 5) - hash_val + ord(char)) & 0xFFFFFFFF
+        
+        # Convert to signed 32-bit integer
+        if hash_val > 0x7FFFFFFF:
+            hash_val -= 0x100000000
+        
+        # Use the hash to generate a hue (0-359)
+        hue = abs(hash_val) % 360
+        
+        # Use different saturation and lightness values based on hash
+        saturation_variations = [95, 92, 88, 90, 85]
+        lightness_variations = [42, 38, 45, 35, 40]
+        
+        saturation = saturation_variations[abs(hash_val) % len(saturation_variations)]
+        lightness = lightness_variations[abs(hash_val >> 8) % len(lightness_variations)]
+        
+        return self._hsl_to_hex(hue, saturation, lightness)
+    
+    def _is_color_sufficiently_distinct(self, new_color_hex: str) -> bool:
+        """Check if a color is sufficiently distinct from all used colors."""
+        if not self._used_colors:
+            return True
+        
+        new_hsl = self._hex_to_hsl(new_color_hex)
+        if not new_hsl:
+            return True
+        
+        min_hue_difference = 20  # Minimum hue difference in degrees
+        min_saturation_difference = 15  # Minimum saturation difference
+        min_lightness_difference = 8  # Minimum lightness difference
+        
+        for existing_color_hex in self._used_colors:
+            existing_hsl = self._hex_to_hsl(existing_color_hex)
+            if not existing_hsl:
+                continue
+            
+            # Calculate hue difference (accounting for circular nature of hue)
+            hue_diff = abs(new_hsl['h'] - existing_hsl['h'])
+            hue_diff = min(hue_diff, 360 - hue_diff)
+            
+            sat_diff = abs(new_hsl['s'] - existing_hsl['s'])
+            light_diff = abs(new_hsl['l'] - existing_hsl['l'])
+            
+            # Colors are too similar if hue is close AND saturation/lightness are also close
+            if (hue_diff < min_hue_difference and 
+                sat_diff < min_saturation_difference and 
+                light_diff < min_lightness_difference):
+                return False
+        
+        return True
+    
+    def _generate_fallback_color(self) -> str:
+        """Generate a fallback color when all else fails."""
+        # Use golden ratio to find an unused hue space
+        golden_ratio = 0.618033988749895
+        used_hues = set()
+        
+        # Extract hues from used colors
+        for color_hex in self._used_colors:
+            hsl = self._hex_to_hsl(color_hex)
+            if hsl:
+                used_hues.add(hsl['h'])
+        
+        # Find an unused hue using golden ratio distribution
+        hue = 0
+        for attempt in range(360):
+            hue = (attempt * golden_ratio * 360) % 360
+            
+            # Check if this hue is far enough from used hues
+            is_distinct = True
+            for used_hue in used_hues:
+                hue_diff = abs(hue - used_hue)
+                hue_diff = min(hue_diff, 360 - hue_diff)
+                if hue_diff < 25:
+                    is_distinct = False
+                    break
+            
+            if is_distinct:
+                break
+        
+        return self._hsl_to_hex(int(hue), 90, 40)
+    
+    def _register_color(self, entity_id: str, color_hex: str) -> None:
+        """Register a color assignment."""
+        self._color_registry[entity_id] = color_hex
+        self._used_colors.add(color_hex)
+        self._color_to_entity[color_hex] = entity_id
+    
+    def _hsl_to_hex_from_string(self, hsl_string: str) -> str:
+        """Convert HSL string (e.g., 'hsl(210, 95%, 42%)') to hex."""
+        import re
+        match = re.match(r'hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)', hsl_string)
+        if not match:
+            return "#64748b"  # fallback color
+        
+        h = int(match.group(1))
+        s = int(match.group(2))
+        l = int(match.group(3))
+        
+        return self._hsl_to_hex(h, s, l)
+    
+    def _hex_to_hsl(self, hex_color: str) -> Optional[Dict[str, float]]:
+        """Convert hex color to HSL."""
+        try:
+            # Remove # if present
+            hex_color = hex_color.lstrip('#')
+            
+            # Convert hex to RGB
+            r = int(hex_color[0:2], 16) / 255.0
+            g = int(hex_color[2:4], 16) / 255.0
+            b = int(hex_color[4:6], 16) / 255.0
+            
+            # Convert RGB to HSL
+            max_val = max(r, g, b)
+            min_val = min(r, g, b)
+            diff = max_val - min_val
+            
+            # Lightness
+            l = (max_val + min_val) / 2
+            
+            if diff == 0:
+                h = s = 0  # achromatic
+            else:
+                # Saturation
+                if l > 0.5:
+                    s = diff / (2 - max_val - min_val)
+                else:
+                    s = diff / (max_val + min_val)
+                
+                # Hue
+                if max_val == r:
+                    h = (g - b) / diff + (6 if g < b else 0)
+                elif max_val == g:
+                    h = (b - r) / diff + 2
+                else:
+                    h = (r - g) / diff + 4
+                h /= 6
+            
+            return {
+                'h': h * 360,
+                's': s * 100,
+                'l': l * 100
+            }
+        except:
+            return None
+    
+    def _hsl_to_hex(self, h: float, s: float, l: float) -> str:
+        """Convert HSL values to hex color."""
+        h = h / 360.0
+        s = s / 100.0
+        l = l / 100.0
+        
+        def hue_to_rgb(p: float, q: float, t: float) -> float:
+            if t < 0:
+                t += 1
+            if t > 1:
+                t -= 1
+            if t < 1/6:
+                return p + (q - p) * 6 * t
+            if t < 1/2:
+                return q
+            if t < 2/3:
+                return p + (q - p) * (2/3 - t) * 6
+            return p
+        
+        if s == 0:
+            r = g = b = l  # achromatic
+        else:
+            q = l * (1 + s) if l < 0.5 else l + s - l * s
+            p = 2 * l - q
+            r = hue_to_rgb(p, q, h + 1/3)
+            g = hue_to_rgb(p, q, h)
+            b = hue_to_rgb(p, q, h - 1/3)
+        
+        return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
 
     async def _determine_adaptive_entity_types(
         self,

@@ -74,6 +74,7 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     postgresql-client \
     poppler-utils \
+    libreoffice \
     gcc \
     g++ \
     cmake \

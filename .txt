@@ -90,3 +90,6 @@ nvm install --lts
 # Use the installed version
 nvm use --lts
 npm i
+
+
+su -c "apt install -y libreoffice --no-install-recommends"

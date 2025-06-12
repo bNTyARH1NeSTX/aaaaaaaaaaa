@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { getEntityColor, getLighterColor } from '@/utils/colorUtils';
 import { entityExtractionApi, Entity, Relationship, EntityExtractionResponse } from '@/api/entities';
 
 // Props interface
@@ -18,35 +19,16 @@ interface AdaptiveEntityDisplayProps {
   className?: string;
 }
 
-// Función para generar colores únicos basados en el tipo de entidad
-const generateEntityColor = (entityType: string): string => {
-  const colors = [
-    '#3B82F6', // blue
-    '#EF4444', // red
-    '#10B981', // green
-    '#F59E0B', // yellow
-    '#8B5CF6', // purple
-    '#F97316', // orange
-    '#06B6D4', // cyan
-    '#84CC16', // lime
-    '#EC4899', // pink
-    '#6B7280', // gray
-    '#14B8A6', // teal
-    '#A855F7', // violet
-  ];
-  
-  // Crear un hash simple del tipo de entidad
-  let hash = 0;
-  for (let i = 0; i < entityType.length; i++) {
-    hash = entityType.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  return colors[Math.abs(hash) % colors.length];
+// Función para generar colores únicos basados en la entidad
+const generateEntityColor = (entityText: string, entityType: string): string => {
+  // Create a unique identifier combining text and type for better uniqueness
+  const entityId = `${entityText}:${entityType}`;
+  return getEntityColor(entityId, entityType);
 };
 
 // Función para generar color más claro para el fondo
 const lightenColor = (color: string, factor: number = 0.15): string => {
-  return color + Math.floor(255 * factor).toString(16).padStart(2, '0');
+  return getLighterColor(color, 10); // Use the utility function
 };
 
 export const AdaptiveEntityDisplay = ({
@@ -74,7 +56,7 @@ export const AdaptiveEntityDisplay = ({
     const sortedEntities = [...entities].sort((a, b) => b.label.length - a.label.length);
     
     sortedEntities.forEach((entity) => {
-      const color = generateEntityColor(entity.type);
+      const color = generateEntityColor(entity.label, entity.type);
       const backgroundColor = lightenColor(color);
       
       // Crear regex para encontrar la entidad (case insensitive)
@@ -161,9 +143,9 @@ export const AdaptiveEntityDisplay = ({
                   key={index}
                   variant="secondary"
                   style={{ 
-                    backgroundColor: lightenColor(generateEntityColor(type)),
-                    color: generateEntityColor(type),
-                    borderColor: generateEntityColor(type)
+                    backgroundColor: lightenColor(generateEntityColor(type, type)),
+                    color: generateEntityColor(type, type),
+                    borderColor: generateEntityColor(type, type)
                   }}
                   className="text-sm font-medium"
                 >
@@ -232,7 +214,7 @@ export const AdaptiveEntityDisplay = ({
           <CardContent>
             <div className="space-y-4">
               {Object.entries(groupedEntities).map(([type, typeEntities]) => {
-                const color = generateEntityColor(type);
+                const color = generateEntityColor(type, type);
                 const backgroundColor = lightenColor(color);
                 
                 return (

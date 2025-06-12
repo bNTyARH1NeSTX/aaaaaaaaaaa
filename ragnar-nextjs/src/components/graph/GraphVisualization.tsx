@@ -13,7 +13,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { GraphVisualizationData } from '@/api/apiService';
 import { Spinner } from '@chakra-ui/react';
-import { generateEntityTypeColorMap, getLighterColor } from '@/utils/colorUtils';
+import { generateEntityColorMap, getLighterColor, getEntityColor } from '@/utils/colorUtils';
 
 // Definición personalizada para nodos
 const CustomNode = ({ data }: { data: any }) => {
@@ -22,11 +22,13 @@ const CustomNode = ({ data }: { data: any }) => {
       className="px-4 py-2 rounded-md shadow-lg border-2 transition-all duration-200 hover:shadow-xl hover:scale-105"
       style={{ 
         backgroundColor: data.backgroundColor || '#ffffff',
-        borderColor: data.borderColor || '#e2e8f0'
+        borderColor: data.borderColor || '#e2e8f0',
+        minWidth: '120px',
+        textAlign: 'center'
       }}
     >
-      <div className="font-medium text-gray-800">{data.label}</div>
-      <div className="text-xs text-gray-600 font-medium">{data.type}</div>
+      <div className="font-semibold text-gray-800 text-sm">{data.label}</div>
+      <div className="text-xs text-gray-600 font-medium mt-1">{data.type}</div>
     </div>
   );
 };
@@ -55,18 +57,13 @@ export const GraphVisualization = ({
 
     useEffect(() => {
     if (visualizationData && !isLoading) {
-      // Extract unique entity types
-      const uniqueEntityTypes = Array.from(
-        new Set(visualizationData.nodes.map(node => node.type).filter(Boolean))
-      );
-
-      // Generate color map for entity types using rainbow colors
-      const entityColorMap = generateEntityTypeColorMap(uniqueEntityTypes);
-
       // Transformar la visualización al formato requerido por ReactFlow
       const flowNodes = visualizationData.nodes.map((node) => {
-        const baseColor = entityColorMap[node.type] || '#64748b';
-        const backgroundColor = getLighterColor(baseColor, 0.7);
+        // Use the new collision-free color system
+        // Create a unique entity ID combining name and type for better uniqueness
+        const entityId = `${node.label}:${node.type || 'UNKNOWN'}`;
+        const baseColor = getEntityColor(entityId, node.type);
+        const backgroundColor = getLighterColor(baseColor, 5); // Much less lightening for more vibrant backgrounds
         
         return {
           id: node.id,
