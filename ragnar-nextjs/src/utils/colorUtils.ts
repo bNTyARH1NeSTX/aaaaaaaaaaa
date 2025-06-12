@@ -154,9 +154,9 @@ class ColorRegistry {
     const newHsl = parseHslColor(newColor);
     if (!newHsl) return true;
     
-    const minHueDifference = 20; // Minimum hue difference in degrees
-    const minSaturationDifference = 15; // Minimum saturation difference
-    const minLightnessDifference = 8; // Minimum lightness difference
+    const minHueDifference = 45; // Increased from 20 to 45 degrees for much more distinct colors
+    const minSaturationDifference = 25; // Increased from 15 to 25%
+    const minLightnessDifference = 15; // Increased from 8 to 15%
     
     for (const existingColor of this.usedColors) {
       const existingHsl = parseHslColor(existingColor);
@@ -169,10 +169,9 @@ class ColorRegistry {
       const satDiff = Math.abs(newHsl.s - existingHsl.s);
       const lightDiff = Math.abs(newHsl.l - existingHsl.l);
       
-      // Colors are too similar if hue is close AND saturation/lightness are also close
-      if (hueDiff < minHueDifference && 
-          satDiff < minSaturationDifference && 
-          lightDiff < minLightnessDifference) {
+      // Colors are too similar if hue difference is small OR if other properties are too close
+      if (hueDiff < minHueDifference || 
+          (satDiff < minSaturationDifference && lightDiff < minLightnessDifference)) {
         return false;
       }
     }
@@ -185,7 +184,7 @@ class ColorRegistry {
    * @returns A distinct HSL color string
    */
   private generateFallbackColor(): string {
-    // Use golden ratio to find an unused hue space
+    // Use golden ratio to find an unused hue space with much larger gaps
     const goldenRatio = 0.618033988749;
     const usedHues = new Set<number>();
     
@@ -195,18 +194,18 @@ class ColorRegistry {
       if (hsl) usedHues.add(hsl.h);
     }
     
-    // Find an unused hue using golden ratio distribution
+    // Find an unused hue using golden ratio distribution with larger gaps
     let hue = 0;
     let attempts = 0;
     while (attempts < 360) {
       hue = (attempts * goldenRatio * 360) % 360;
       
-      // Check if this hue is far enough from used hues
+      // Check if this hue is far enough from used hues (increased minimum distance)
       let isDistinct = true;
       for (const usedHue of usedHues) {
         let hueDiff = Math.abs(hue - usedHue);
         hueDiff = Math.min(hueDiff, 360 - hueDiff);
-        if (hueDiff < 25) {
+        if (hueDiff < 60) { // Increased from 25 to 60 degrees
           isDistinct = false;
           break;
         }
@@ -216,7 +215,14 @@ class ColorRegistry {
       attempts++;
     }
     
-    return `hsl(${Math.round(hue)}, 90%, 40%)`;
+    // Use more varied saturation and lightness for even more distinction
+    const saturations = [95, 85, 90, 80, 88];
+    const lightnesses = [35, 45, 38, 42, 40];
+    
+    const satIndex = this.usedColors.size % saturations.length;
+    const lightIndex = Math.floor(this.usedColors.size / saturations.length) % lightnesses.length;
+    
+    return `hsl(${Math.round(hue)}, ${saturations[satIndex]}%, ${lightnesses[lightIndex]}%)`;
   }
 
   /**
@@ -353,32 +359,38 @@ export function generateDistinctColors(count: number, usedColors: Set<string> = 
   const maxAttempts = count * 10; // Prevent infinite loops
   let attempts = 0;
   
-  // Define a larger pool of highly distinct colors
+  // Define a larger pool of highly distinct colors with much larger hue gaps
   const colorPool = [
     'hsl(0, 95%, 42%)',     // Rojo vibrante
-    'hsl(120, 95%, 35%)',   // Verde vibrante 
-    'hsl(240, 95%, 52%)',   // Azul vibrante
-    'hsl(30, 95%, 42%)',    // Naranja vibrante
-    'hsl(280, 95%, 52%)',   // Púrpura vibrante
-    'hsl(180, 95%, 35%)',   // Cian vibrante
-    'hsl(320, 95%, 48%)',   // Magenta vibrante
-    'hsl(60, 95%, 38%)',    // Amarillo vibrante
-    'hsl(90, 95%, 35%)',    // Lima vibrante
-    'hsl(15, 95%, 42%)',    // Rojo-naranja vibrante
-    'hsl(270, 95%, 50%)',   // Violeta vibrante
-    'hsl(150, 95%, 32%)',   // Verde azulado vibrante
-    'hsl(45, 95%, 38%)',    // Oro vibrante
-    'hsl(195, 95%, 38%)',   // Azul cielo vibrante
-    'hsl(315, 95%, 45%)',   // Rosa vibrante
-    'hsl(135, 95%, 35%)',   // Verde esmeralda
-    'hsl(225, 95%, 48%)',   // Azul índigo
-    'hsl(75, 95%, 38%)',    // Verde lima
-    'hsl(345, 95%, 45%)',   // Rosa fucsia
-    'hsl(165, 95%, 35%)',   // Verde agua
-    'hsl(255, 95%, 50%)',   // Azul violeta
-    'hsl(105, 95%, 35%)',   // Verde primavera
-    'hsl(285, 95%, 48%)',   // Púrpura oscuro
-    'hsl(55, 95%, 40%)',    // Amarillo dorado
+    'hsl(60, 95%, 38%)',    // Amarillo vibrante (60° de diferencia)
+    'hsl(120, 95%, 35%)',   // Verde vibrante (60° de diferencia)
+    'hsl(180, 95%, 35%)',   // Cian vibrante (60° de diferencia)
+    'hsl(240, 95%, 52%)',   // Azul vibrante (60° de diferencia)
+    'hsl(300, 95%, 48%)',   // Magenta vibrante (60° de diferencia)
+    
+    // Segunda ronda con variaciones de saturación/luminosidad
+    'hsl(30, 88%, 40%)',    // Naranja 
+    'hsl(90, 88%, 32%)',    // Verde lima
+    'hsl(150, 88%, 32%)',   // Verde esmeralda
+    'hsl(210, 88%, 48%)',   // Azul cielo
+    'hsl(270, 88%, 50%)',   // Violeta
+    'hsl(330, 88%, 45%)',   // Rosa vibrante
+    
+    // Tercera ronda con más variaciones
+    'hsl(15, 92%, 38%)',    // Rojo-naranja
+    'hsl(75, 85%, 35%)',    // Amarillo-verde
+    'hsl(135, 90%, 30%)',   // Verde-azul
+    'hsl(195, 90%, 40%)',   // Azul-cian
+    'hsl(255, 90%, 48%)',   // Azul-violeta
+    'hsl(315, 85%, 42%)',   // Magenta-rosa
+    
+    // Cuarta ronda para casos extremos
+    'hsl(45, 95%, 35%)',    // Oro vibrante
+    'hsl(105, 85%, 30%)',   // Verde primavera
+    'hsl(165, 85%, 30%)',   // Verde agua
+    'hsl(225, 85%, 45%)',   // Azul índigo
+    'hsl(285, 85%, 45%)',   // Púrpura oscuro
+    'hsl(345, 85%, 40%)',   // Rosa fucsia
   ];
   
   // First, try colors from the pool that aren't used

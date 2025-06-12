@@ -1631,9 +1631,9 @@ class GraphService:
         if not new_hsl:
             return True
         
-        min_hue_difference = 20  # Minimum hue difference in degrees
-        min_saturation_difference = 15  # Minimum saturation difference
-        min_lightness_difference = 8  # Minimum lightness difference
+        min_hue_difference = 45  # Increased from 20 to 45 degrees for much more distinct colors
+        min_saturation_difference = 25  # Increased from 15 to 25%
+        min_lightness_difference = 15  # Increased from 8 to 15%
         
         for existing_color_hex in self._used_colors:
             existing_hsl = self._hex_to_hsl(existing_color_hex)
@@ -1647,10 +1647,9 @@ class GraphService:
             sat_diff = abs(new_hsl['s'] - existing_hsl['s'])
             light_diff = abs(new_hsl['l'] - existing_hsl['l'])
             
-            # Colors are too similar if hue is close AND saturation/lightness are also close
-            if (hue_diff < min_hue_difference and 
-                sat_diff < min_saturation_difference and 
-                light_diff < min_lightness_difference):
+            # Colors are too similar if hue difference is small OR if other properties are too close
+            if (hue_diff < min_hue_difference or 
+                (sat_diff < min_saturation_difference and light_diff < min_lightness_difference)):
                 return False
         
         return True
@@ -1672,12 +1671,12 @@ class GraphService:
         for attempt in range(360):
             hue = (attempt * golden_ratio * 360) % 360
             
-            # Check if this hue is far enough from used hues
+            # Check if this hue is far enough from used hues (increased minimum distance)
             is_distinct = True
             for used_hue in used_hues:
                 hue_diff = abs(hue - used_hue)
                 hue_diff = min(hue_diff, 360 - hue_diff)
-                if hue_diff < 25:
+                if hue_diff < 60:  # Increased from 25 to 60 degrees
                     is_distinct = False
                     break
             
