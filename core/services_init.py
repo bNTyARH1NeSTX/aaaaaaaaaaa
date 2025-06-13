@@ -18,6 +18,7 @@ from typing import Optional
 
 from core.cache.llama_cache_factory import LlamaCacheFactory
 from core.completion.litellm_completion import LiteLLMCompletionModel
+from core.completion.manual_generation_completion import ManualGenerationCompletionModel
 from core.config import get_settings
 from core.database.postgres_database import PostgresDatabase
 from core.embedding.colpali_api_embedding_model import ColpaliApiEmbeddingModel
@@ -27,6 +28,7 @@ from core.parser.morphik_parser import MorphikParser
 from core.reranker.flag_reranker import FlagReranker
 from core.services.document_service import DocumentService
 from core.services.chat_service import ChatService
+from core.services.manual_generator_service import ManualGeneratorService
 from core.storage.local_storage import LocalStorage
 from core.storage.s3_storage import S3Storage
 from core.vector_store.multi_vector_store import MultiVectorStore
@@ -52,6 +54,29 @@ logger.debug("Created PostgresDatabase singleton")
 
 vector_store = PGVectorStore(uri=settings.POSTGRES_URI)
 logger.debug("Created PGVectorStore singleton")
+
+# ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
+
+def create_completion_model(model_key: str):
+    """Create appropriate completion model based on the model configuration"""
+    if not model_key:
+        raise ValueError("Model key is required for completion model")
+    
+    model_config = settings.REGISTERED_MODELS.get(model_key, {})
+    if not model_config:
+        raise ValueError(f"Model '{model_key}' not found in registered_models configuration")
+    
+    provider = model_config.get("provider", "litellm")
+    
+    if provider == "manual_generation":
+        # Use ManualGeneratorService for manual generation models
+        manual_generator_service = ManualGeneratorService()
+        return ManualGenerationCompletionModel(manual_generator_service)
+    else:
+        # Default to LiteLLM for other models
+        return LiteLLMCompletionModel(model_key)
 
 # ---------------------------------------------------------------------------
 # Object storage
@@ -90,8 +115,8 @@ parser = MorphikParser(
 embedding_model = LiteLLMEmbeddingModel(model_key=settings.EMBEDDING_MODEL)
 logger.info("Initialized LiteLLM embedding model with model key: %s", settings.EMBEDDING_MODEL)
 
-completion_model = LiteLLMCompletionModel(model_key=settings.COMPLETION_MODEL)
-logger.info("Initialized LiteLLM completion model with model key: %s", settings.COMPLETION_MODEL)
+completion_model = create_completion_model(settings.COMPLETION_MODEL)
+logger.info("Initialized completion model with model key: %s", settings.COMPLETION_MODEL)
 
 # ---------------------------------------------------------------------------
 # Optional reranker

@@ -93,3 +93,5 @@ npm i
 
 
 su -c "apt install -y libreoffice --no-install-recommends"
+
+pip install --no-deps fast-plaid fastkmeans

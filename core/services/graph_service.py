@@ -7,6 +7,8 @@ import numpy as np
 from pydantic import BaseModel
 
 from core.completion.base_completion import BaseCompletionModel
+from core.completion.litellm_completion import LiteLLMCompletionModel
+from core.completion.manual_generation_completion import ManualGenerationCompletionModel
 from core.config import get_settings
 from core.database.base_database import BaseDatabase
 from core.embedding.base_embedding_model import BaseEmbeddingModel
@@ -16,6 +18,7 @@ from core.models.documents import ChunkResult, Document
 from core.models.graph import Entity, Graph, Relationship
 from core.models.prompts import EntityExtractionPromptOverride, GraphPromptOverrides, QueryPromptOverrides
 from core.services.entity_resolution import EntityResolver
+from core.services.manual_generator_service import ManualGeneratorService
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +64,28 @@ class GraphService:
         self._color_registry = {}  # entity_id -> color
         self._used_colors = set()  # Track all used colors
         self._color_to_entity = {}  # color -> entity_id (for reverse lookup)
+
+    def _create_graph_completion_model(self) -> BaseCompletionModel:
+        """Create appropriate completion model for graph operations based on GRAPH_MODEL setting"""
+        settings = get_settings()
+        graph_model_key = settings.GRAPH_MODEL
+        
+        if not graph_model_key:
+            raise ValueError("GRAPH_MODEL setting is required")
+        
+        model_config = settings.REGISTERED_MODELS.get(graph_model_key, {})
+        if not model_config:
+            raise ValueError(f"Graph model '{graph_model_key}' not found in registered_models configuration")
+        
+        provider = model_config.get("provider", "litellm")
+        
+        if provider == "manual_generation":
+            # Use ManualGeneratorService for manual generation models
+            manual_generator_service = ManualGeneratorService()
+            return ManualGenerationCompletionModel(manual_generator_service)
+        else:
+            # Default to LiteLLM for other models
+            return LiteLLMCompletionModel(graph_model_key)
 
     async def update_graph(
         self,
@@ -830,58 +855,65 @@ class GraphService:
                 ),
             }
 
-        # Get the model configuration from registered_models
-        model_config = settings.REGISTERED_MODELS.get(settings.GRAPH_MODEL, {})
-        if not model_config:
-            raise ValueError(f"Model '{settings.GRAPH_MODEL}' not found in registered_models configuration")
-
-        # Prepare the completion request parameters
-        model_params = {
-            "model": model_config.get("model_name"),
-            "messages": [system_message, user_message],
-            "response_format": ExtractionResult,
-        }
-
-        # Add all model-specific parameters from the config
-        for key, value in model_config.items():
-            if key != "model_name":  # Skip as we've already handled it
-                model_params[key] = value
-        import instructor
-        import litellm
-
-        # Use instructor with litellm to get structured responses
-        client = instructor.from_litellm(litellm.acompletion, mode=instructor.Mode.JSON)
-        try:
-            # Use LiteLLM with instructor for structured completion
-            logger.debug(f"Calling LiteLLM with instructor and params: {model_params}")
-            # Extract the model and messages from model_params
-            model = model_params.pop("model")
-            messages = model_params.pop("messages")
-            # Use instructor's chat.completions.create with response_model
-            response = await client.chat.completions.create(
-                model=model, messages=messages, response_model=ExtractionResult, **model_params
+        # Create the appropriate completion model for graph operations
+        graph_completion_model = self._create_graph_completion_model()
+        
+        # Prepare the completion request
+        context_chunks = [content_limited]
+        
+        # Create the query message based on whether custom prompts are provided
+        if custom_prompt:
+            query = custom_prompt.format(content=content_limited, examples=examples_str)
+        else:
+            query = (
+                "Extrae entidades nombradas y sus relaciones del siguiente texto. "
+                f"Para las entidades, incluye la etiqueta de la entidad y el tipo. Los tipos más relevantes identificados son: {entity_types_str}. "
+                "Puedes usar estos tipos o crear tipos más específicos según el contenido. "
+                "Para las relaciones, especifica la entidad fuente, la entidad destino y la relación entre ellas. "
+                "Los campos source y target deben ser cadenas simples que coincidan con las etiquetas de las entidades, no objetos. "
+                f"{examples_str}"
+                'Formato de ejemplo de relación: {"source": "Entidad A", "target": "Entidad B", '
+                '"relationship": "trabaja para"}\n\n'
+                "Devuelve tu respuesta como JSON válido."
             )
-
-            try:
-
-                logger.info(f"Extraction result type: {type(response)}")
-                extraction_result = response  # The response is already our Pydantic model
-
-                # Make sure the extraction_result has the expected properties
-                if not hasattr(extraction_result, "entities"):
-                    extraction_result.entities = []
-                if not hasattr(extraction_result, "relationships"):
-                    extraction_result.relationships = []
-
-            except AttributeError as e:
-                logger.error(f"Invalid response format from LiteLLM: {e}")
-                logger.debug(f"Raw response structure: {response.choices[0]}")
-                return [], []
+        
+        completion_request = CompletionRequest(
+            query=query,
+            context_chunks=context_chunks,
+            max_tokens=1000,
+            temperature=0.1,
+            schema=ExtractionResult
+        )
+        
+        try:
+            # Use the appropriate completion model
+            response = await graph_completion_model.complete(completion_request)
+            
+            # Extract the structured response
+            if isinstance(response.completion, ExtractionResult):
+                extraction_result = response.completion
+            elif isinstance(response.completion, dict):
+                extraction_result = ExtractionResult.model_validate(response.completion)
+            else:
+                # Try to parse as JSON if it's a string
+                try:
+                    if isinstance(response.completion, str):
+                        json_data = json.loads(response.completion)
+                        extraction_result = ExtractionResult.model_validate(json_data)
+                    else:
+                        raise ValueError("Unexpected response format")
+                except (json.JSONDecodeError, ValueError):
+                    logger.warning("Could not parse response as ExtractionResult, returning empty results")
+                    extraction_result = ExtractionResult(entities=[], relationships=[])
+            
+            # Make sure the extraction_result has the expected properties
+            if not hasattr(extraction_result, "entities"):
+                extraction_result.entities = []
+            if not hasattr(extraction_result, "relationships"):
+                extraction_result.relationships = []
 
         except Exception as e:
-            logger.error(f"Error during entity extraction with LiteLLM: {str(e)}")
-            # Enable this for more verbose debugging
-            # litellm.set_verbose = True
+            logger.error(f"Error during entity extraction: {str(e)}")
             return [], []
 
         # Process extraction results
@@ -1898,3 +1930,32 @@ class GraphService:
         default_types = ["PERSONA", "ORGANIZACIÓN", "UBICACIÓN", "CONCEPTO", "PRODUCTO"]
         logger.info(f"Using default entity types: {default_types}")
         return default_types
+    
+    def _get_graph_completion_model(self):
+        """
+        Get the appropriate completion model for graph operations based on the GRAPH_MODEL setting.
+        
+        Returns:
+            BaseCompletionModel: The completion model to use for graph operations
+        """
+        settings = get_settings()
+        
+        # Get the model configuration from registered_models
+        model_config = settings.REGISTERED_MODELS.get(settings.GRAPH_MODEL, {})
+        if not model_config:
+            logger.warning(f"Model '{settings.GRAPH_MODEL}' not found in registered_models, using default completion model")
+            return self.completion_model
+        
+        # Check if this is a manual generation model
+        model_provider = model_config.get("provider", "litellm")
+        
+        if model_provider == "manual_generation":
+            # Import here to avoid circular imports
+            from core.completion.manual_generation_completion import ManualGenerationCompletionModel
+            logger.info(f"Using Manual Generation completion model for graph operations: {settings.GRAPH_MODEL}")
+            return ManualGenerationCompletionModel(model_key=settings.GRAPH_MODEL)
+        else:
+            # Use LiteLLM or fallback to the default completion model
+            from core.completion.litellm_completion import LiteLLMCompletionModel
+            logger.info(f"Using LiteLLM completion model for graph operations: {settings.GRAPH_MODEL}")
+            return LiteLLMCompletionModel(model_key=settings.GRAPH_MODEL)

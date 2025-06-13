@@ -24,6 +24,7 @@ import WorkflowStatusMonitor from '@/components/graph/WorkflowStatusMonitor';
 import WorkflowStatusMonitorWrapper from '@/components/graph/WorkflowStatusMonitorWrapper';
 import GraphVisualization from '@/components/graph/GraphVisualization';
 import CreateGraphForm from '@/components/graph/CreateGraphForm';
+import ModelSelector from '@/components/graph/ModelSelector';
 import { generateEntityTypeColorMap, getLighterColor, ENTITY_TYPE_COLORS } from '@/utils/colorUtils';
 
 // Helper to transform visualization data to ReactFlow format
@@ -275,6 +276,10 @@ export default function GraphsPage() {
   // Estado para el monitoreo de flujos de trabajo
   const [monitoredWorkflow, setMonitoredWorkflow] = useState<string | null>(null);
   const [workflowGraphName, setWorkflowGraphName] = useState<string | null>(null);
+
+  // Model selection state
+  const [selectedGraphModel, setSelectedGraphModel] = useState<string>('');
+  const [modelConfigChanged, setModelConfigChanged] = useState(false);
 
   // Load documents on component mount
   useEffect(() => {
@@ -651,6 +656,14 @@ export default function GraphsPage() {
     }
   };
 
+  // Handle model selection change
+  const handleGraphModelChange = (modelKey: string) => {
+    setSelectedGraphModel(modelKey);
+    setModelConfigChanged(true);
+    // Show a toast notification or update indicator
+    console.log(`Graph model changed to: ${modelKey}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -662,6 +675,51 @@ export default function GraphsPage() {
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           Cree, visualice y gestione relaciones y conexiones en su colección de documentos.
         </p>
+      </div>
+
+      {/* Model Selection */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5" />
+            Configuración del Modelo para GraphRAG
+          </h2>
+          {modelConfigChanged && (
+            <div className="flex items-center text-sm text-green-600 dark:text-green-400">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+              Configuración actualizada
+            </div>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ModelSelector
+            modelType="graph"
+            currentModel={selectedGraphModel}
+            onModelChange={handleGraphModelChange}
+            label="Modelo para Extracción de Entidades y Relaciones"
+            className="w-full"
+          />
+          
+          <div className="flex flex-col justify-end">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <Network className="w-5 h-5 text-blue-500 mt-0.5" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Sobre GraphRAG
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    Este modelo se usa para extraer entidades y relaciones de los documentos. 
+                    El modelo personalizado "Qwen Manual Generator" está optimizado para manuales de ERP.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Error Display (General for graph list) */}

@@ -52,6 +52,7 @@ from core.routers.graphs import router as graphs_router
 from core.routers.health import router as health_router
 from core.routers.ingest import router as ingest_router
 from core.routers.manual_generation_router import manual_generation_router
+from core.routers.model_config import router as model_config_router
 from core.routers.query import router as query_router
 from core.routers.retrieval import router as retrieval_router
 from core.routers.rule_templates import router as rule_templates_router
@@ -179,3 +180,4 @@ app.include_router(chat_router)
 app.include_router(rule_templates_router)
 app.include_router(usage_router)
 app.include_router(cache_router)
+app.include_router(model_config_router)

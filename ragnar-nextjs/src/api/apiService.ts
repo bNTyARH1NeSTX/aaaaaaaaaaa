@@ -936,3 +936,60 @@ export const deleteChatFeedback = async (feedbackId: string): Promise<void> => {
     throw error;
   }
 };
+
+// Model Selection Interfaces
+export interface RegisteredModel {
+  model_name: string;
+  provider?: string;
+  api_base?: string;
+  api_version?: string;
+  deployment_id?: string;
+  vision?: boolean;
+}
+
+export interface RegisteredModelWithKey extends RegisteredModel {
+  key: string;
+}
+
+export interface ModelConfiguration {
+  completion_model: string;
+  graph_model: string;
+  embedding_model: string;
+  agent_model: string;
+  registered_models: { [key: string]: RegisteredModel };
+}
+
+export interface ModelSelectionRequest {
+  model_type: 'completion' | 'graph' | 'embedding' | 'agent';
+  model_key: string;
+}
+
+// Model Selection API Functions
+export const getAvailableModels = async (): Promise<ModelConfiguration> => {
+  try {
+    const response: AxiosResponse<ModelConfiguration> = await api.get('/models/configuration');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching available models:', error);
+    throw error;
+  }
+};
+
+export const updateModelSelection = async (request: ModelSelectionRequest): Promise<void> => {
+  try {
+    await api.post('/models/update', request);
+  } catch (error) {
+    console.error('Error updating model selection:', error);
+    throw error;
+  }
+};
+
+export const getCurrentModelConfiguration = async (): Promise<ModelConfiguration> => {
+  try {
+    const response: AxiosResponse<ModelConfiguration> = await api.get('/models/current');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current model configuration:', error);
+    throw error;
+  }
+};
